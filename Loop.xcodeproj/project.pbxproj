@@ -1198,6 +1198,9 @@
 		B66D1F3F2E6A5D6600471149 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		B66D1F412E6A5D6600471149 /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/Interface.xcstrings; sourceTree = "<group>"; };
 		B66D1F422E6A5D6600471149 /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/Main.xcstrings; sourceTree = "<group>"; };
+		B6F22EF52E95A03600CCA05F /* ce */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ce; path = ce.lproj/Intents.strings; sourceTree = "<group>"; };
+		B6F22EF72E95A03800CCA05F /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hu; path = hu.lproj/Intents.strings; sourceTree = "<group>"; };
+		B6F22EF92E95A03C00CCA05F /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Intents.strings; sourceTree = "<group>"; };
 		C1004DEF2981F5B700B8CF94 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1004DFD2981F67A00B8CF94 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = sv.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1004E052981F6A100B8CF94 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -2982,6 +2985,9 @@
 				sk,
 				cs,
 				hi,
+				ce,
+				hu,
+				uk,
 			);
 			mainGroup = 43776F831B8022E90074EA36;
 			packageReferences = (
@@ -3883,6 +3889,9 @@
 				C1C247882995823200371B88 /* sk */,
 				C1C5357529C6346A00E32DF9 /* cs */,
 				3D03C6DA2AACE6AC00FDE5D2 /* hi */,
+				B6F22EF52E95A03600CCA05F /* ce */,
+				B6F22EF72E95A03800CCA05F /* hu */,
+				B6F22EF92E95A03C00CCA05F /* uk */,
 			);
 			name = Intents.intentdefinition;
 			sourceTree = "<group>";

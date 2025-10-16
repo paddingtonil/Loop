@@ -1105,6 +1105,12 @@
             "state" : "translated",
             "value" : "g"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "克"
+          }
         }
       }
     },
@@ -1356,6 +1362,12 @@
             "state" : "translated",
             "value" : "mg/dL"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mg/dL"
+          }
         }
       }
     },
@@ -1471,6 +1483,12 @@
           }
         },
         "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mmol/L"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "mmol/L"

@@ -212,6 +212,12 @@
             "state" : "translated",
             "value" : "---"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "– – –"
+          }
         }
       }
     },
@@ -1125,7 +1131,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "追加胰岛素建议已更新"
+            "value" : "大剂量推荐值已更新"
           }
         }
       }
@@ -1615,6 +1621,12 @@
             "state" : "translated",
             "value" : "g"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "克"
+          }
         }
       }
     },
@@ -1936,6 +1948,12 @@
             "state" : "translated",
             "value" : "mg/dL"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mg/dL"
+          }
         }
       }
     },
@@ -2051,6 +2069,12 @@
           }
         },
         "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mmol/L"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "mmol/L"
@@ -2745,6 +2769,12 @@
             "state" : "translated",
             "value" : "Lütfen bolus miktarını tekrar onaylayın."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请重新确认大剂量。"
+          }
         }
       }
     },
@@ -2857,6 +2887,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trước bữa ăn"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "餐前"
           }
         }
       }
@@ -4201,7 +4237,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nu se poate conecta la iPhone"
+            "value" : "Nu se poate accesa iPhone-ul"
           }
         },
         "ru" : {

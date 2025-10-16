@@ -275,6 +275,12 @@
             "value" : "Appen bruger NFC til at parre sig med diabetesapparater."
           }
         },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App verwendet NFC zur Kopplung mit Diabetesgeräten."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -297,6 +303,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aplikacja wykorzystuje NFC do parowania z urządzeniami dla diabetyków."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplicația folosește NFC pentru a se conecta cu dispozitive pentru diabet."
           }
         },
         "zh-Hans" : {
@@ -1147,7 +1159,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loop 使用 Siri 允许您通过语音制定预设。"
+            "value" : "Loop 使用 Siri，让你可以通过语音来启动预设。"
           }
         }
       }

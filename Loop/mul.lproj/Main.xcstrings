@@ -320,7 +320,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Predicted"
+            "value" : "חזוי"
           }
         },
         "it" : {
@@ -1928,7 +1928,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Detail"
+            "value" : "Detaliu"
           }
         },
         "ru" : {
