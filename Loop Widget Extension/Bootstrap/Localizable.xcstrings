@@ -420,6 +420,12 @@
             "state" : "translated",
             "value" : "%@ U"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ U"
+          }
         }
       }
     },
@@ -535,6 +541,12 @@
           }
         },
         "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ v%2$@"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ v%2$@"

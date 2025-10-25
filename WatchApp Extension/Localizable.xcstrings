@@ -548,7 +548,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "活性碳水化合物"
+            "value" : "活性碳水"
           }
         }
       }
@@ -1107,7 +1107,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Actualizare Recomandare bolus"
+            "value" : "Actualizare recomandare de bolus"
           }
         },
         "ru" : {

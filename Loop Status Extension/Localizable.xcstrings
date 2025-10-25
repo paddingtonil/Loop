@@ -93,6 +93,12 @@
             "state" : "translated",
             "value" : "? gr"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "? g"
+          }
         }
       }
     },
@@ -187,6 +193,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "? Ü"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "? U"
           }
         }
       }
@@ -378,6 +390,12 @@
             "state" : "translated",
             "value" : "%1$@ Ü"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ U"
+          }
         }
       }
     },
@@ -493,6 +511,12 @@
           }
         },
         "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ v%2$@"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ v%2$@"
@@ -620,7 +644,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "活性碳水化合物"
+            "value" : "活性碳水"
           }
         }
       }
@@ -740,6 +764,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lượng Insulin còn hoạt động"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活性胰岛素"
           }
         }
       }
@@ -954,7 +984,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eventually %1$@"
+            "value" : "În cele din urmă %1$@"
           }
         },
         "ru" : {

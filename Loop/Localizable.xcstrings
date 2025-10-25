@@ -213,6 +213,12 @@
             "state" : "translated",
             "value" : "Yemek-Öncesi Ön Ayarı"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " 餐前预设"
+          }
         }
       }
     },
@@ -314,6 +320,12 @@
             "state" : "translated",
             "value" : "remaining"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " 剩余"
+          }
         }
       }
     },
@@ -390,6 +402,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Güvenlik Bildirimleri KAPALI"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " 安全提醒已关闭"
           }
         }
       }
@@ -479,6 +497,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Egzersiz Ön Ayarı"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " 运动预设"
           }
         }
       }
@@ -901,6 +925,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ kaldı"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剩余 %@"
           }
         }
       }
@@ -2235,6 +2265,12 @@
             "state" : "translated",
             "value" : "%1$@ Ü"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ U"
+          }
         }
       }
     },
@@ -3358,7 +3394,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comparație pe 30 min a glicemiei anticipate față de cea observată, continuată cu o diminuare pe 60 min."
+            "value" : "Comparație timp de 30 de minute între predicția glicemiei și valoarea reală, continuată cu scăderea valorii pe parcursul a 60 de minute"
           }
         },
         "ru" : {
@@ -3479,6 +3515,12 @@
             "state" : "translated",
             "value" : "Birkaç saniye kaldı"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剩余几秒"
+          }
         }
       }
     },
@@ -3542,7 +3584,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O intrare manuală de glicermie trebuie să fie între %1$@ și %2$@"
+            "value" : "O intrare manuală de glicemie trebuie să fie între %1$@ și %2$@"
           }
         },
         "ru" : {
@@ -3561,6 +3603,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manuel KŞ girişi %1$@ ile %2$@ arasında olmalıdır"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入 %@ 到 %@ 之间的血糖值"
           }
         }
       }
@@ -3638,6 +3686,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manuel KŞ girişi %1$@ ile %2$@ arasında olmalıdır."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入 %1$@ 到 %2$@ 之间的血糖值"
           }
         }
       }
@@ -4044,6 +4098,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yeni bir %@ sürümü mevcuttur."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@有新版本可用。"
           }
         }
       }
@@ -4681,7 +4741,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "活性碳水化合物"
+            "value" : "活性碳水"
           }
         }
       }
@@ -4997,7 +5057,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "添加喜欢的食物"
+            "value" : "添加常用食物"
           }
         }
       }
@@ -5972,6 +6032,12 @@
             "state" : "translated",
             "value" : "Experimente algoritmice"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "算法实验"
+          }
         }
       }
     },
@@ -6024,6 +6090,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Experimentele algoritmice sunt modificări opționale ale algoritmului de buclă. Aceste modificări sunt mai puțin testate decât algoritmul de buclă standard, așa că vă rugăm să le utilizați cu atenție."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "算法实验是对 Loop 算法的可选调整。这些调整的测试程度低于标准算法，请谨慎启用。"
           }
         }
       }
@@ -6168,6 +6240,12 @@
             "state" : "translated",
             "value" : "Toate alertele sunt dezactivate"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有警报已静音"
+          }
         }
       }
     },
@@ -6255,6 +6333,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toate favoritele"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部常用"
           }
         }
       }
@@ -6944,7 +7028,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "API Key"
+            "value" : "Cheie API"
           }
         },
         "ru" : {
@@ -7120,6 +7204,12 @@
             "state" : "translated",
             "value" : "API Secret"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Secret"
+          }
         }
       }
     },
@@ -7202,6 +7292,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uygulama Profili"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用配置"
           }
         }
       }
@@ -7351,6 +7447,12 @@
             "state" : "translated",
             "value" : "Bạn có chắc muốn xóa hết các dữ liệu cũ?"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确定要删除所有历史记录吗？"
+          }
         }
       }
     },
@@ -7439,6 +7541,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Günlüğe kaydedilen tüm doz girişlerini silmek istediğinizden emin misiniz?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是否确定删除全部注射记录？"
           }
         }
       }
@@ -7547,6 +7655,12 @@
             "state" : "translated",
             "value" : "Bạn có chắc muốn xóa hết mọi giá trị của ngăn chứa insulin?"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是否确定删除全部储液量记录？"
+          }
         }
       }
     },
@@ -7635,6 +7749,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tüm %@ Verilerinizi silmek istediğinizden emin misiniz?\n (Bu eylem geri alınamaz)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确定要删除所有 %@ 数据吗？（此操作无法恢复）"
           }
         }
       }
@@ -7801,6 +7921,12 @@
             "state" : "translated",
             "value" : "Sunteți sigur că doriți să ștergeți acest aliment?"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你确定要删除该食物吗？"
+          }
         }
       }
     },
@@ -7877,7 +8003,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ești sigur că vrei să ștergi acest serviciu?"
+            "value" : "Sunteți sigur că vreți să ștergeți acest serviciu?"
           }
         },
         "ru" : {
@@ -8222,7 +8348,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autentifică-te pentru a înregistra %@ unități"
+            "value" : "Autentificare pentru a înregistra %@ unități"
           }
         },
         "ru" : {
@@ -8241,6 +8367,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ Ünite günlüğe kaydetmek için kimlik doğrulaması yapın"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请验证身份以记录 %@U 胰岛素"
           }
         }
       }
@@ -8586,7 +8718,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "根据您的预测血糖值，当前不建议注射追加胰岛素。"
+            "value" : "根据您的预测血糖值，当前不建议注射大剂量。"
           }
         }
       }
@@ -8677,6 +8809,12 @@
             "state" : "translated",
             "value" : "Bluetooth\nKapalı"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蓝牙已关闭"
+          }
         }
       }
     },
@@ -8765,6 +8903,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bluetooth\nKullanılamıyor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蓝牙不可用"
           }
         }
       }
@@ -9334,7 +9478,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "大剂量汇总"
+            "value" : "大剂量概要"
           }
         }
       }
@@ -9893,7 +10037,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Întrerupere Bolus"
+            "value" : "Întrerupere bolus"
           }
         },
         "ru" : {
@@ -11766,6 +11910,12 @@
             "state" : "translated",
             "value" : "Alegeți Preferatul:"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择常用"
+          }
         }
       }
     },
@@ -11942,7 +12092,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loop automat"
+            "value" : "Buclă închisă"
           }
         },
         "ru" : {
@@ -12037,7 +12187,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Buclă închisă dezactivata"
+            "value" : "Buclă închisă dezactivată"
           }
         },
         "ru" : {
@@ -13134,7 +13284,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Monitorizare glicemică continuă"
+            "value" : "Senzor de monitorizare continuă a glicemiei"
           }
         },
         "ru" : {
@@ -13290,7 +13440,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "修正范围"
+            "value" : "校正范围"
           }
         }
       }
@@ -13841,7 +13991,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " Glicemia curentă de %1$@ se situează sub intervalul țintă de corecție."
+            "value" : "Glicemia actuală de %1$@ se situează sub intervalul țintă de corecție."
           }
         },
         "ru" : {
@@ -13877,7 +14027,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "当前葡萄糖%1$@低于修正范围"
+            "value" : "当前葡萄糖%1$@低于校正范围"
           }
         }
       }
@@ -14418,7 +14568,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Șterge"
+            "value" : "Ștergeți"
           }
         },
         "ru" : {
@@ -14501,6 +14651,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ștergeți „ %@ ”?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除”%@”？"
           }
         }
       }
@@ -15094,7 +15250,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Șterge date CGM de testare"
+            "value" : "Ștergeți datele CGM de testare"
           }
         },
         "ru" : {
@@ -15182,7 +15338,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Șterge date de testare"
+            "value" : "Ștergeți datele de testare"
           }
         },
         "ru" : {
@@ -15586,7 +15742,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tratament Diabet"
+            "value" : "Tratamentul diabetului"
           }
         },
         "ru" : {
@@ -15681,7 +15837,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你是想输入%1$@克作为此餐的碳水化合物含量？"
+            "value" : "你确定本餐包含 %1$@ g 碳水吗？"
           }
         }
       }
@@ -16104,6 +16260,12 @@
             "state" : "translated",
             "value" : "Doz Özeti"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "注射量摘要"
+          }
         }
       }
     },
@@ -16352,6 +16514,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Etkinleştir\nBluetooth"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用蓝牙"
           }
         }
       }
@@ -18175,7 +18343,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "喜欢的食物"
+            "value" : "常用食物"
           }
         }
       }
@@ -18234,7 +18402,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "喜欢的食物"
+            "value" : "常用食物"
           }
         }
       }
@@ -19332,7 +19500,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Glucoza"
+            "value" : "Glicemia"
           }
         },
         "ru" : {
@@ -19856,6 +20024,12 @@
             "state" : "translated",
             "value" : "KŞ Girişi Aralık Dışında"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入血糖超出范围"
+          }
         }
       }
     },
@@ -19943,7 +20117,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Momentum glicemie"
+            "value" : "Avânt glicemie"
           }
         },
         "ru" : {
@@ -20714,6 +20888,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Informaţii"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信息"
           }
         }
       }
@@ -21488,6 +21668,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İnsülin pompası"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "胰岛素泵"
           }
         }
       }
@@ -23392,6 +23578,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Günlük Doz"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录注射量"
           }
         }
       }
@@ -25665,7 +25857,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Efecte momentum"
+            "value" : "Efecte avânt"
           }
         },
         "ru" : {
@@ -26081,7 +26273,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "设备名称"
+            "value" : "名称"
           }
         }
       }
@@ -26290,6 +26482,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Noua mâncare preferată"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增常用食物"
           }
         }
       }
@@ -26741,7 +26939,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bolusul Maxim nu este setat"
+            "value" : "Bolusul maxim nu este setat"
           }
         },
         "ru" : {
@@ -27228,7 +27426,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不，编辑摄入量"
+            "value" : "不，修改含量"
           }
         }
       }
@@ -28817,6 +29015,12 @@
             "state" : "translated",
             "value" : "Tahmini KŞ aralık içinde."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预测血糖在目标范围内。"
+          }
         }
       }
     },
@@ -29202,7 +29406,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Efect integral: %1$@ \nEfect total al glucozei: %2$@"
+            "value" : "Efect integral: %1$@ \nEfect total al glicemiei: %2$@"
           }
         },
         "ru" : {
@@ -32466,7 +32670,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存为喜欢的食物"
+            "value" : "保存为常用食物"
           }
         }
       }
@@ -33796,6 +34000,12 @@
             "state" : "translated",
             "value" : "Başlangıç zamanı aralığın dışında: %@"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始时间超出范围：%@"
+          }
         }
       }
     },
@@ -34002,7 +34212,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start Bolus"
+            "value" : "Start bolus"
           }
         },
         "ru" : {
@@ -39498,7 +39708,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajustarea temporară de antrenament fost activată de mai mult de 24 de ore. Asigură-te că încă dorești să fie activată sau dezactiveaz-o din aplicație."
+            "value" : "Ajustarea temporară de antrenament fost activată de mai mult de 24 de ore. Asigurați-vă că încă doriți să fie activată sau dezactivați-o din aplicație."
           }
         },
         "ru" : {
@@ -39919,7 +40129,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Glicemia dumneavoastră este sub %1$@. Sunteți sigur/ă că doriți să bolusați?"
+            "value" : "Glicemia dumneavoastră este sub %1$@. Sunteți sigur că doriți să bolusați?"
           }
         },
         "ru" : {
@@ -40008,7 +40218,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Glicemia ta este sub sau se anticipează că va scădea sub limita de siguranță, %@."
+            "value" : "Glicemia dumneavoastră este sub sau se anticipează că va scădea sub limita de siguranță, %@."
           }
         },
         "ru" : {
@@ -40032,7 +40242,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的血糖已低于或预计将低于你的血糖安全范围：%@。"
+            "value" : "你的血糖已低于或预计将低于你的血糖安全下限：%@。"
           }
         }
       }
