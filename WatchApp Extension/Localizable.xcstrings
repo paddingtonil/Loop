@@ -3726,7 +3726,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存并注射追加胰岛素"
+            "value" : "保存并推注大剂量"
           }
         }
       }
@@ -3934,7 +3934,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "旋转数字表冠\n以注射追加胰岛素"
+            "value" : "旋转数字表冠\n以推注大剂量"
           }
         }
       }

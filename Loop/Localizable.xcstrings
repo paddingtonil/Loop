@@ -1278,6 +1278,12 @@
     "%1@%2@" : {
       "comment" : "Adds a full-stop to a statement (1: statement, 2: full stop character)",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$1@%2$2@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -4192,7 +4198,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在注射追加胰岛素前，必须先配置胰岛素泵。"
+            "value" : "在注射大剂量前，必须先配置胰岛素泵。"
           }
         }
       }
@@ -6600,7 +6606,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "当前启用的覆盖设置正在修改您的碳水比和胰岛素敏感系数。\n如果您不希望其影响追加胰岛素计算和预测血糖，请考虑关闭该覆盖设置。"
+            "value" : "当前启用的覆盖设置正在修改您的碳水比和胰岛素敏感系数。\n如果您不希望其影响大剂量的计算和预测血糖，请考虑关闭该覆盖设置。"
           }
         }
       }
@@ -7309,6 +7315,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apfel"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomme"
           }
         },
         "he" : {
@@ -9288,7 +9300,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "追加胰岛素问题"
+            "value" : "大剂量出现问题"
           }
         }
       }
@@ -9561,7 +9573,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "追加胰岛素剂量过小"
+            "value" : "大剂量太少"
           }
         }
       }
@@ -10305,6 +10317,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menge gegessen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quantité de glucides"
           }
         },
         "he" : {
@@ -12492,6 +12510,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "lúc %1$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 %1$@"
           }
         }
       }
@@ -16815,7 +16839,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请输入血糖仪测得的血糖值，以获取推荐的追加胰岛素剂量。"
+            "value" : "请输入血糖仪测得的血糖值，以获取推荐的大剂量。"
           }
         }
       }
@@ -17863,7 +17887,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "超出设定的最大追加胰岛素剂量限制"
+            "value" : "超出设定的最大剂量限制"
           }
         }
       }
@@ -18343,7 +18367,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "常用食物"
+            "value" : "食物库"
           }
         }
       }
@@ -18402,7 +18426,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "常用食物"
+            "value" : "食物库"
           }
         }
       }
@@ -22343,7 +22367,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "追加胰岛素剂量无效"
+            "value" : "大剂量无效"
           }
         }
       }
@@ -22887,7 +22911,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Raportare probleme"
+            "value" : "Generează raport"
           }
         },
         "ru" : {
@@ -24083,7 +24107,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loop 检测到您的蓝牙设置存在问题，在蓝牙启用之前将无法正常工作。\n您将无法接收血糖读数，也无法注射追加胰岛素。"
+            "value" : "Loop 检测到您的蓝牙设置存在问题，在蓝牙启用之前将无法正常工作。\n您将无法接收血糖读数，也无法推注大剂量。"
           }
         }
       }
@@ -24308,7 +24332,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loop 通常在每个给药周期中提供您预测胰岛素需求的 40%。\n\n启用“基于血糖的部分给药实验功能”后，Loop 将根据血糖水平调整每个周期实际注射的推荐追加胰岛素比例。\n\n当血糖接近矫正目标范围时，仅注射 20%（类似于临时基础率），血糖升高时比例会逐步增加，在高血糖状态（200 mg/dL，11.1 mmol/L）时最高可达 80%。\n\n请注意，当血糖快速上升（例如未申报的进食）时，该功能与血糖变化速度及回顾性矫正机制叠加，可能导致注射剂量超过由胰岛素敏感系数（ISF）计算出的剂量。"
+            "value" : "Loop 通常在每个给药周期中提供您预测胰岛素需求的 40%。\n\n启用“基于血糖的部分给药实验功能”后，Loop 将根据血糖水平调整每个周期实际推注的大剂量比例。\n\n当血糖接近矫正目标范围时，仅注射 20%（类似于临时基础率），血糖升高时比例会逐步增加，在高血糖状态（200 mg/dL，11.1 mmol/L）时最高可达 80%。\n\n请注意，当血糖快速上升（例如未申报的进食）时，该功能与血糖变化速度及回顾性矫正机制叠加，可能导致注射剂量超过由胰岛素敏感系数（ISF）计算出的剂量。"
           }
         }
       }
@@ -24397,7 +24421,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "当所需胰岛素高于计划基础率时，Loop 将自动注射追加胰岛素；当所需胰岛素低于计划基础率时，则使用临时基础率以减少胰岛素输注"
+            "value" : "当所需胰岛素高于计划基础率时，Loop 将自动推注大剂量；当所需胰岛素低于计划基础率时，则使用临时基础率以减少胰岛素输注"
           }
         }
       }
@@ -31870,7 +31894,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "推荐追加胰岛素剂量超出最大限制"
+            "value" : "推荐大剂量超出最大限制"
           }
         }
       }
@@ -32275,7 +32299,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "胰岛素容量"
+            "value" : "储药器"
           }
         }
       }
@@ -32800,7 +32824,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "仅保存，不注射追加胰岛素"
+            "value" : "仅保存，无大剂量"
           }
         }
       }
@@ -36415,7 +36439,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此选项仅在 Loop 的给药策略设为“自动追加胰岛素”时适用。"
+            "value" : "此选项仅在 Loop 的给药策略设为“自动大剂量”时适用。"
           }
         }
       }
@@ -39069,7 +39093,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "当前或预测的血糖低于血糖安全下限时，Loop 将不会推荐追加胰岛素，并始终建议将临时基础速率设为 0 单位/小时。"
+            "value" : "当前或预测的血糖低于血糖安全下限时，Loop 将不会推荐大剂量，并始终建议将临时基础速率设为 0 单位/小时。"
           }
         }
       }
@@ -40669,7 +40693,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的胰岛素泵数据已过期。%1$@ 无法推荐追加胰岛素剂量。"
+            "value" : "您的胰岛素泵数据已过期。%1$@ 无法推荐大剂量。"
           }
         }
       }
