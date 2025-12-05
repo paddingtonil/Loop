@@ -429,6 +429,19 @@
         }
       }
     },
+    "%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@"
+          }
+        }
+      }
+    },
+    "%@U" : {
+
+    },
     "%1$@ v%2$@" : {
       "comment" : "The format string for the app name and version number. (1: bundle name)(2: bundle version)",
       "localizations" : {
@@ -554,6 +567,12 @@
         }
       }
     },
+    "Color" : {
+
+    },
+    "Date" : {
+
+    },
     "dB" : {
       "comment" : "The short unit display string for decibles",
       "localizations" : {
@@ -672,6 +691,9 @@
           }
         }
       }
+    },
+    "End" : {
+
     },
     "Eventual" : {
       "localizations" : {
@@ -873,6 +895,12 @@
           }
         }
       }
+    },
+    "Glucose level" : {
+
+    },
+    "Glucose range" : {
+
     },
     "Loop Status Widget" : {
       "localizations" : {
@@ -1194,6 +1222,12 @@
         }
       }
     },
+    "Open the app to update the widget" : {
+      "comment" : "No comment"
+    },
+    "Preset override" : {
+
+    },
     "QUANTITY_VALUE_AND_UNIT" : {
       "comment" : "Format string for combining localized numeric value and unit. (1: numeric value)(2: unit)",
       "extractionState" : "extracted_with_value",
@@ -1395,6 +1429,9 @@
           }
         }
       }
+    },
+    "Start" : {
+
     },
     "U" : {
       "comment" : "The short unit display string for international units of insulin",

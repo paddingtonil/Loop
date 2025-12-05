@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     " (pending: %@)" : {
       "comment" : "The string format appended to active insulin that describes pending insulin. (1: pending insulin)",
       "extractionState" : "manual",
@@ -5318,6 +5321,9 @@
         }
       }
     },
+    "Add item to bottom row" : {
+      "comment" : "Title for Add item"
+    },
     "Add Meal" : {
       "comment" : "The label of the carb entry button",
       "localizations" : {
@@ -5442,6 +5448,9 @@
           }
         }
       }
+    },
+    "Add predictive line" : {
+      "comment" : "Title for predictive line toggle"
     },
     "Add Pump" : {
       "comment" : "Action sheet title selecting Pump\nThe title of the pump chooser in settings\nTitle text for button to add pump device\nTitle text for button to set up a Pump",
@@ -9828,8 +9837,14 @@
         }
       }
     },
+    "Bottom row" : {
+      "comment" : "Live activity Bottom row configuration title"
+    },
+    "Bottom row configuration" : {
+      "comment" : "Title for Bottom row configuration"
+    },
     "Cancel" : {
-      "comment" : "Button label for cancel\nCancel button for reset loop alert\nCancel export button title\nThe title of the cancel action in an action sheet",
+      "comment" : "Button label for cancel\nButton text to cancel\nCancel button for reset loop alert\nCancel export button title\nThe title of the cancel action in an action sheet",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14182,6 +14197,9 @@
         }
       }
     },
+    "Custom preset" : {
+      "comment" : "The title of the cell indicating a generic custom preset is enabled"
+    },
     "Custom Preset" : {
       "comment" : "The title of the cell indicating a generic custom preset is enabled",
       "localizations" : {
@@ -16629,6 +16647,9 @@
           }
         }
       }
+    },
+    "Enabled" : {
+      "comment" : "Title for enable live activity toggle"
     },
     "Enables" : {
       "comment" : "The action hint of the workout mode toggle button when disabled",
@@ -23404,6 +23425,9 @@
         }
       }
     },
+    "Live activity" : {
+      "comment" : "Alert Permissions live activity\nLive activity screen title"
+    },
     "Loading..." : {
       "comment" : "The loading message for the diagnostic report screen",
       "localizations" : {
@@ -25796,6 +25820,9 @@
           }
         }
       }
+    },
+    "Mode" : {
+      "comment" : "Title for mode live activity toggle"
     },
     "Momentum effects" : {
       "comment" : "Details for missing data error when momentum effects are missing",
@@ -38384,6 +38411,9 @@
           }
         }
       }
+    },
+    "Use BG coloring" : {
+      "comment" : "Title for BG coloring"
     },
     "Use Pre-Meal Preset" : {
       "comment" : "The title of the alert controller used to select a duration for pre-meal targets",
