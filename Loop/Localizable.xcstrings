@@ -14933,6 +14933,12 @@
             "state" : "translated",
             "value" : "Xóa hết"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除所有"
+          }
         }
       }
     },
@@ -16395,7 +16401,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "给药策略"
+            "value" : "剂量策略"
           }
         }
       }
@@ -18354,6 +18360,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İnsülin İletimine Devam Edilemedi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复胰岛素输注失败"
           }
         }
       }
@@ -23116,7 +23128,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已记录大份餐食"
+            "value" : "已输入大份餐"
           }
         }
       }
@@ -35997,6 +36009,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İzin verilen maksimum tutar %1$@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许的最大量为：%1$@"
           }
         }
       }
