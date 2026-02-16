@@ -1293,6 +1293,12 @@
             "value" : "%1$1@%2$2@"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$1@%2$2@"
+          }
+        },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2819,6 +2825,12 @@
             "value" : "%1$@ funktioniert in %2$@ nicht mehr. Sie müssen vorher einen Neuaufbau durchführen."
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ cessera de fonctionner dans %2$@. Il vous faudra recompiler avant cette échéance."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4215,6 +4227,12 @@
             "value" : "Resorptionsdauer"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temps d'absorption"
+          }
+        },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5027,6 +5045,12 @@
             "value" : "Füge ein neues Lieblingsessen hinzu"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un nouveau plat préféré"
+          }
+        },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5330,11 +5354,31 @@
             "state" : "translated",
             "value" : "Wert zur unteren Zeile hinzufügen"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un élément à la ligne inférieure"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adăugați elementul pe rândul de jos"
+          }
         }
       }
     },
     "Add item to Lock Screen / CarPlay display" : {
-      "comment" : "Title for Add item"
+      "comment" : "Title for Add item",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adăugați elementul la ecranul de blocare / afișajul CarPlay"
+          }
+        }
+      }
     },
     "Add Meal" : {
       "comment" : "The label of the carb entry button",
@@ -5469,6 +5513,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prognostizierten BZ-Verlauf hinzufügen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter une ligne prédictive"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adăugați o linie predictivă"
           }
         }
       }
@@ -5968,6 +6024,12 @@
             "value" : "Alarmberechtigungen und Stummschalten von Alarmen"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permissions d'alerte et désactivation des alertes auditives"
+          }
+        },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6247,6 +6309,12 @@
             "value" : "Alle Warnungen stummgeschaltet"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toutes les alertes sont en sourdine"
+          }
+        },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6300,6 +6368,12 @@
             "value" : "Alle Alarme stummgeschaltet bis"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toutes les alertes auditives sont désactivées jusqu'à"
+          }
+        },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6345,6 +6419,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle Favoriten"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les favoris"
           }
         },
         "it" : {
@@ -6618,7 +6698,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un modificator activa a schimbat raportul dintre carbohidrați și insulină cât și sensibilitatea la insulină. Dacă nu doriți ca acest lucru să vă afecteze calculul bolusului și gllicemia prognozată, luați în considerare dezactivarea modificatorului."
+            "value" : "Un modificator activ a schimbat raportul dintre carbohidrați și insulină cât și sensibilitatea la insulină. Dacă nu doriți ca acest lucru să vă afecteze calculul bolusului și gllicemia prognozată, luați în considerare dezactivarea modificatorului."
           }
         },
         "ru" : {
@@ -7315,7 +7395,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Profil"
+            "value" : "Profilul aplicației"
           }
         },
         "ru" : {
@@ -7772,7 +7852,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sunteţi sigur că doriţi să ştergeţi toate datele %@.\n(Această acţiune nu este reversibilă)"
+            "value" : "Sunteţi sigur/ă că vreți să ștergeţi toate datele %@.\n(Această acţiune nu este reversibilă)"
           }
         },
         "ru" : {
@@ -7885,7 +7965,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sunteți sigur că doriți să ștergeți acest CGM?"
+            "value" : "Sunteți sigur/ă că vreți să ștergeți acest CGM?"
           }
         },
         "ru" : {
@@ -7940,6 +8020,12 @@
             "value" : "Bist Du sicher, dass Du diesen Favoriten löschen möchtest?"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Êtes-vous sûr de vouloir supprimer cet aliment ?"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7961,7 +8047,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sunteți sigur că doriți să ștergeți acest aliment?"
+            "value" : "Sunteți sigur/ă că vreți să ștergeți acest aliment?"
           }
         },
         "zh-Hans" : {
@@ -8045,7 +8131,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sunteți sigur că vreți să ștergeți acest serviciu?"
+            "value" : "Sunteți sigur/ă că vreți să ștergeți acest serviciu?"
           }
         },
         "ru" : {
@@ -8289,7 +8375,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autentificare pentru bolus %@ unități"
+            "value" : "Autentificare pentru bolusare %@ unități"
           }
         },
         "ru" : {
@@ -9868,6 +9954,18 @@
             "value" : "Untere Zeile"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligne inférieure"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rândul de jos"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9884,6 +9982,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Konfiguration der unteren Zeile"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration de la ligne inférieure"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurația rândului de jos"
           }
         },
         "zh-Hans" : {
@@ -10347,7 +10457,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cantitate CH"
+            "value" : "Intrare carbohidrați"
           }
         },
         "ru" : {
@@ -10585,7 +10695,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Raport carbohidrați/insulină"
+            "value" : "Raport carbohidrați insulină"
           }
         },
         "ru" : {
@@ -11097,6 +11207,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Achtung"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attention"
           }
         },
         "he" : {
@@ -11969,6 +12085,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wähle Favorit:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez le favori :"
           }
         },
         "it" : {
@@ -13160,11 +13282,27 @@
       }
     },
     "Configure Display" : {
-      "comment" : "Title for the view to configure the lock screen display"
+      "comment" : "Title for the view to configure the lock screen display",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurați afișajul"
+          }
+        }
+      }
     },
     "Configure Lock Screen / Carplay Row" : {
       "comment" : "A link that takes the user to a view where they can configure the display of the live activity screen on their lock screen and in CarPlay.",
-      "isCommentAutoGenerated" : true
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurați ecranul de blocare / rândul Carplay"
+          }
+        }
+      }
     },
     "Continue" : {
       "comment" : "Button label for continue\nDefault alert dismissal",
@@ -13555,6 +13693,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ konnte nicht neu gestartet werden"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de redémarrer %1$@"
           }
         },
         "it" : {
@@ -14270,6 +14414,18 @@
             "value" : "Benutzerdefinierte Voreinstellung"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préréglage personnalisé"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Presetare personalizată"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14743,6 +14899,12 @@
             "value" : "„ %@ “ löschen?"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer \"%@\"?"
+          }
+        },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15157,6 +15319,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Essen löschen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer l'aliment"
           }
         },
         "it" : {
@@ -16225,17 +16393,49 @@
       }
     },
     "Display colors for glucose" : {
-      "comment" : "Title for glucose coloring"
+      "comment" : "Title for glucose coloring",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Culori de afișare pentru glicemie"
+          }
+        }
+      }
     },
     "Display Control Options" : {
       "comment" : "A section header in the live activity settings view, describing the control options for displaying glucose levels on the live activity screen.",
-      "isCommentAutoGenerated" : true
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opțiuni de control al afișajului"
+          }
+        }
+      }
     },
     "Display prediction in plot" : {
-      "comment" : "Title for prediction line toggle"
+      "comment" : "Title for prediction line toggle",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afișați predicția în grafic"
+          }
+        }
+      }
     },
     "Display up to 4 items. Display label is in parentheses." : {
-      "comment" : "Indicates the maximum number of items that can be displayed and how the label for each item is shortened."
+      "comment" : "Indicates the maximum number of items that can be displayed and how the label for each item is shortened.",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afișați până la 4 elemente. Eticheta de afișare este în paranteze."
+          }
+        }
+      }
     },
     "Done" : {
       "localizations" : {
@@ -16696,6 +16896,12 @@
             "value" : "Glucose Based Partial Application aktivieren"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permettre l'application partielle basée sur la glycémie"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16737,6 +16943,12 @@
             "value" : "Integral Retrospective Correction aktivieren"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer la correction rétrospective intégrale"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16770,6 +16982,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktiviert"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activé"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activat"
           }
         },
         "zh-Hans" : {
@@ -17882,7 +18106,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finalement %@"
+            "value" : "Éventuellement %@"
           }
         },
         "he" : {
@@ -18508,6 +18732,12 @@
             "value" : "Lieblingsessen"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aliments favoris"
+          }
+        },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18547,6 +18777,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Favorisiertes Essen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ALIMENTS FAVORIS"
           }
         },
         "he" : {
@@ -19094,7 +19330,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timp de %1$@"
+            "value" : "Pentru %1$@"
           }
         },
         "ru" : {
@@ -19144,6 +19380,12 @@
             "value" : "Aus Sicherheitsgründen solltest Du kritische Warnungen, zeitkritische Warnungen und Benachrichtigungsberechtigungen (nicht kritische Warnungen) auf Deinem Gerät zulassen, um %1$@ weiterhin verwenden zu können."
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour des raisons de sécurité, vous devriez autoriser les alertes critiques, les alertes urgentes et les autorisations de notification (alertes non-critiques) sur votre appareil pour continuer à utiliser %1$@ si vous ne pouvez pas désactiver les alarmes individuelles."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19165,7 +19407,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "În scopuri de siguranță, trebuie să permiteți alertele critice, sensibile la timp și permisiunile de notificare (alerte necritice) pe dispozitivul dvs. pentru a continua să utilizați %1$@ și nu puteți dezactiva alarmele individuale."
+            "value" : "În scopuri de siguranță, trebuie să permiteți alertele critice, sensibile la timp și permisiunile de notificare (alerte necritice) pe dispozitivul dumneavoastră pentru a continua să utilizați %1$@ și nu puteți dezactiva alarmele individuale."
           }
         },
         "ru" : {
@@ -19742,6 +19984,12 @@
             "value" : "Teilweise Anwendung auf Glukosebasis"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Application partielle basée sur la glycémie"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20104,6 +20352,12 @@
             "value" : "Glukoseeffekt der Unterbrechung der Insulinabgabe"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effet sur la glycémie de la suspension d'administration de l'insuline"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20196,7 +20450,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Valoarea glicemică introdusă este în afara intervalului"
+            "value" : "Valoarea glicemiei introdusă este în afara intervalului"
           }
         },
         "ru" : {
@@ -20533,6 +20787,12 @@
             "value" : "Wie kann ich nicht kritische Warnungen stummschalten?"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comment puis-je faire taire les alertes auditives non-critiques?"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20577,6 +20837,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wie kann ich nur zeitkritische und nicht kritische Warnungen stummschalten?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comment puis-je faire taire uniquement les alertes urgentes et non-critiques?"
           }
         },
         "it" : {
@@ -20933,6 +21199,12 @@
             "state" : "translated",
             "value" : "În versiunile viitoare ale Loop, aceste experimente se pot schimba, pot deveni părți standard ale algoritmului Loop sau pot fi eliminate complet din Loop. Vă rugăm să urmăriți chat-ul Loop Zulip pentru a fi la curent cu posibilele modificări ale acestor funcții."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Loop 的未来版本中，这些实验性功能可能会发生变化，可能会成为 Loop 算法的标准组成部分，也可能会被完全移除。请关注 Loop 的 Zulip 聊天频道，以便及时了解这些功能可能发生的变化。"
+          }
         }
       }
     },
@@ -21065,6 +21337,12 @@
     "Information" : {
       "localizations" : {
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Information"
@@ -22266,6 +22544,12 @@
             "value" : "Integrale retrospektive Korrektur"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correction rétrospective intégrale"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -22305,6 +22589,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Integral Retrospective Correction (IRC) ist eine Erweiterung der standardmäßigen Retrospective Correction (RC)-Algorithmuskomponente in Loop, die die Prognose basierend auf der Historie der Abweichungen zwischen vorhergesagten und tatsächlichen Glukosewerten anpasst. \n\nIm Gegensatz zu RC, das die Abweichungen der letzten 30 Minuten betrachtet, summiert sich bei IRC der Verlauf der Abweichungen im Laufe der Zeit. Daher führen anhaltende positive Abweichungen im Laufe der Zeit zu einer erhöhten Dosierung. Wenn die Abweichungen im Laufe der Zeit negativ sind, reduziert Loop die Dosierung weiter."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La correction rétrospective intégrale (IRC) est une extension de l'algorithme standard de correction rétrospective (RC) de Loop, qui ajuste les prévisions en fonction de l'historique des écarts entre les taux de glucose prévus et réels.\n\nContrairement à la correction correction rétrospective, qui prend en compte les écarts des 30 dernières minutes, la correction rétrospective intégrale (IRC) prend en compte l'historique des écarts au fil du temps. Ainsi, des écarts positifs continus au fil du temps entraîneront une augmentation du dosage. Si les écarts sont négatifs au fil du temps, Loop réduira encore le dosage."
           }
         },
         "it" : {
@@ -22429,6 +22719,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ungültige Resorptionszeit: %1$@ Stunden"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temps d'absorption invalide : %1$@ heures"
           }
         },
         "it" : {
@@ -23581,6 +23877,18 @@
             "value" : "Live-Aktivität"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activité en direct"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activitate live"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -23710,7 +24018,15 @@
     },
     "Lock Screen / Dynamic Island / CarPlay" : {
       "comment" : "The title of a section in the live activity settings view, related to lock screen, dynamic island, or carplay.",
-      "isCommentAutoGenerated" : true
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ecran de blocare / Insulă dinamică / CarPlay"
+          }
+        }
+      }
     },
     "Log Dose" : {
       "comment" : "Button text to log a dose\nTitle for dose logging screen",
@@ -24506,6 +24822,12 @@
             "value" : "Loop verabreicht normalerweise 40% Deines voraussichtlichen Insulinbedarfs pro Dosierungszyklus. \n\nWenn das Experiment zur glukosebasierten partiellen Verabreichung aktiviert ist (Glucose Based Partial Application), variiert Loop den Prozentsatz des empfohlenen Bolus, der pro Zyklus verabreicht wird, je nach Glukosespiegel. \n\nNahe dem unterem Korrekturbereich werden 20% verwendet (ähnlich wie bei Temp Basal) und bei hohem Glukosespiegel (200 mg/dl, 11,1 mmol/l) schrittweise auf maximal 80% erhöht. \n\nBitte beachte, dass diese Funktion bei schnell ansteigendem Glukosespiegel, etwa nach einer unangekündigten Mahlzeit, in Kombination mit Geschwindigkeits- und retrospektiven Korrektureffekten zu einer höheren Dosis führen kann, als Dein ISF erfordern würde."
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loop administre normalement 40 % des besoins prévus en insuline à chaque cycle de dosage.\n\nLorsque l'application partielle basée sur la glycémie est activée, Loop fait varier le pourcentage du bolus recommandé administré à chaque cycle en fonction du niveau de glucose.\n\nÀ proximité de la plage de correction, il utilisera 20 % (similaire à Temp Basal), et augmentera progressivement jusqu'à un maximum de 80 % à un niveau de glucose élevé (200 mg/dL, 11,1 mmol/L).\n\nVeuillez noter qu'en cas d'augmentation rapide du glucose, par exemple après un repas non annoncé, cette fonction, combinée aux effets de vitesse et de correction rétrospective, peut entraîner une dose plus importante que ce que votre ISF préconise."
+          }
+        },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
@@ -24758,7 +25080,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loop va stabili ratele bazale temporare pentru a crește și reduce cantitatea de insulina livrata."
+            "value" : "Loop va stabili ratele bazale temporare pentru a crește și reduce cantitatea de insulina livrată."
           }
         },
         "ru" : {
@@ -25995,6 +26317,18 @@
             "value" : "Modus"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mod"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26702,6 +27036,12 @@
             "value" : "Neues Lieblingsessen"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvel aliment préféré"
+          }
+        },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26869,6 +27209,12 @@
             "value" : "Bei Stummschaltung ertönen keine Warn- oder Alarmsignale. Wähle die Dauer der Stummschaltung aus."
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune alerte ni alarme auditive ne sera émise lorsque le mode silencieux est activé. Choisissez la durée du mode silencieux."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26980,6 +27326,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bolus Önerilmez"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有推荐的餐前剂量"
           }
         }
       }
@@ -28172,7 +28524,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Notificările vă oferă informații importante despre aplicație %1$@ fără a fi necesar să deschideți aplicația."
+            "value" : "Notificările vă oferă informații importante despre aplicația %1$@ fără a fi necesar să deschideți aplicația."
           }
         },
         "ru" : {
@@ -28255,7 +28607,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Notificările vă oferă informații importante despre aplicație %1$@ fără a fi necesar să deschideți aplicația. \n\n Păstrați-le activate în setările telefonului pentru a vă asigura că primiți notificări %1$@ , alerte critice și notificări sensibile la timp."
+            "value" : "Notificările vă oferă informații importante despre aplicația %1$@ fără a fi necesar să deschideți aplicația. \n\nPăstrați-le activate în setările telefonului pentru a vă asigura că primiți notificări %1$@ , alerte critice și notificări sensibile la timp."
           }
         },
         "ru" : {
@@ -28439,7 +28791,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oh nu! Loop s-a blocat în timpul administrării, iar ajustările insulinei au fost întrerupte până când acest dialog este închis. Istoricul administrării poate să nu fie exact. Vă rugăm să consultați tabelele de livrare a insulinei și să vă monitorizați cu atenție glicemia."
+            "value" : "Oh nu! Loop s-a blocat în timpul administrării, iar ajustările insulinei au fost întrerupte până la închiderea acestui dialog. Istoricul administrării poate să nu fie exact. Vă rugăm să consultați graficele de livrare a insulinei și să vă monitorizați cu atenție glicemia."
           }
         },
         "ru" : {
@@ -29005,7 +29357,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ținte preprandiale"
+            "value" : "Ținte înainte de masă"
           }
         },
         "ru" : {
@@ -29613,6 +29965,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Integral effect: %1$@\nTotal glucose effect: %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effet intégral: %1$@\nEffet total sur la glycémie: %2$@"
           }
         },
         "it" : {
@@ -32938,6 +33296,12 @@
             "value" : "Speichern und Abgeben"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer les glucides et administrer"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -33138,7 +33502,15 @@
     },
     "Select Lock Screen Display Options" : {
       "comment" : "A section header for the lock screen display options.",
-      "isCommentAutoGenerated" : true
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selectați opțiunile de afișare ale ecranului de blocare"
+          }
+        }
+      }
     },
     "Selecting a favorite food in the carb entry screen automatically fills in the carb quantity, food type, and absorption time fields! Tap the add button below to create your first favorite food!" : {
       "localizations" : {
@@ -33152,6 +33524,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wenn Du im Kohlenhydrat-Eingabebildschirm ein Lieblingsessen auswählst, werden die Felder für Kohlenhydratmenge, Lebensmittelart und Absorptionszeit automatisch ausgefüllt! Tippe unten auf die Schaltfläche „Hinzufügen“, um Dein erstes Lieblingsessen zu erstellen!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sélection d'un aliment favori dans l'écran de saisie des glucides remplit automatiquement les champs de quantité de glucides, de type d'aliment et de durée d'absorption! Appuyez sur le bouton d'ajout ci-dessous pour créer votre premier aliment préféré!"
           }
         },
         "it" : {
@@ -34735,6 +35113,12 @@
             "value" : "Unterbrechung der Insulinabgabe"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspension de l'administration d'insuline"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -35376,6 +35760,12 @@
             "value" : "Tippe, um die Stummschaltung von Benachrichtigungen aufzuheben"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapez pour réactiver les alertes sonores"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -35421,6 +35811,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippe auf Stummschaltung aufheben, um den Ton für Deine Warnungen und Alarme wieder aufzunehmen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapez Activer le son pour réactiver les alertes sonores et alarmes."
           }
         },
         "it" : {
@@ -36507,7 +36903,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trebuie sa configurați o valoare maxima pentru bolus înainte ca acesta să poată fi livrat."
+            "value" : "Trebuie sa configurați o valoare maximă pentru bolus înainte ca acesta să poată fi livrat."
           }
         },
         "ru" : {
@@ -38073,6 +38469,12 @@
             "value" : "Stummschaltung aufheben"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer le son"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -38126,6 +38528,12 @@
             "value" : "Stummschaltung für Warnungen aufheben?"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réactiver les alertes sonores?"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -38177,6 +38585,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht unterstützter Benachrichtigungsdienst: %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service de notification non pris en charge: %1$@"
           }
         },
         "it" : {
@@ -38349,6 +38763,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bis %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jusqu'à %1$@"
           }
         },
         "it" : {
@@ -38550,7 +38970,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Până mă opresc"
+            "value" : "Până când voi opri"
           }
         },
         "ru" : {
@@ -38639,6 +39059,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeige BZ-Kurve farbig an"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser la coloration de glycémie"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilizați colorarea glicemiei"
           }
         },
         "zh-Hans" : {
@@ -39779,6 +40211,12 @@
             "value" : "Beim Versuch %1$@ neu zu starten, ist ein Fehler aufgetreten. \n \n %2$@"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lors de la tentative de redémarrage de %1$@, une erreur s'est produite.\n\n%2$@"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -39895,7 +40333,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ținte de activitate sportivă"
+            "value" : "Ținte glicemice activitate sportivă"
           }
         },
         "ru" : {
@@ -40085,7 +40523,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajustare temporara antrenament încă activa"
+            "value" : "Ajustare temporară antrenament încă activă"
           }
         },
         "ru" : {
