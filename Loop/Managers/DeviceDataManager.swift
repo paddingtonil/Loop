@@ -535,7 +535,18 @@ final class DeviceDataManager {
             return nil
         }
 
-        return pumpManagerTypeByIdentifier(managerIdentifier)
+        if let pumpManager = pumpManagerTypeByIdentifier(managerIdentifier) {
+            return pumpManager
+        }
+
+        /// The pumpManager was not found for managerIdentifier. If this was for an "Omnipod" (OmniKit) or
+        /// "Omnipod-DASH" (OmniBLE), have the universal "Omni" pumpManager (OmnipodKit) handle instead.
+        let OmniStr = "Omni"
+        if managerIdentifier.hasPrefix(OmniStr) {
+            return pumpManagerTypeByIdentifier(OmniStr)
+        }
+
+        return nil
     }
 
     func pumpManagerFromRawValue(_ rawValue: [String: Any]) -> PumpManagerUI? {
