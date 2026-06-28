@@ -143,6 +143,12 @@
             "value" : "Glucides actifs"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actieve Koolhydraten"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -160,6 +166,12 @@
     "Active Carbohydrates (COB)" : {
       "comment" : "Description for the Carbohydrates On Board selection for the Live Activity configuration",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktive Kohlenhydrate (COB)"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -191,6 +203,12 @@
             "value" : "Glucides actifs"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actieve Koolhydraten"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -220,6 +238,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Insuline active"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actieve Insuline"
           }
         },
         "ro" : {
@@ -256,6 +280,12 @@
     "at" : {
       "comment" : "Label used for the Updated time value in the Live Activity view",
       "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "à"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -368,6 +398,12 @@
             "value" : "Basal"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basaal"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -408,6 +444,12 @@
             "value" : "Glycémie actuelle"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huidige BG"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -437,6 +479,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Glycémie actuelle"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huidige Glucose"
           }
         },
         "ro" : {
@@ -519,6 +567,12 @@
             "value" : "Glycémie éventuelle"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uiteindelijke BG"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -550,6 +604,12 @@
             "value" : "Éventuellement"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventueel"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -567,6 +627,12 @@
     "Forecasted Glucose (Eventual BG)" : {
       "comment" : "Description for the Forecasted Glucose selection for the Live Activity configuration",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prognostizierter Glukosewert (Endgültiger Blutzuckerwert)"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -591,6 +657,12 @@
             "value" : "Dans quel mode voulez-vous afficher les Activités en direct"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In which mode do you want to render the Live Activity"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -608,6 +680,18 @@
     "IOB" : {
       "comment" : "Label used for the Insulin On Board value in the Live Activity view",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IOB"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IAB"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -633,6 +717,12 @@
             "value" : "Grand"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groot"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -650,6 +740,18 @@
     "Plot and Row" : {
       "comment" : "Short name to choose the Lock Screen display including the the plot",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagramm und Zeile"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligne et graphique"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -667,6 +769,12 @@
     "Relative Basal Rate (Basal)" : {
       "comment" : "Description for the Basal Rate plot selection for the Live Activity configuration",
       "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Débit basal relatif (Basal)"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -678,6 +786,12 @@
     "Row Only" : {
       "comment" : "Short name to choose the Lock Screen display without the plot",
       "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligne seule"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -707,6 +821,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Petit"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klein"
           }
         },
         "ro" : {
@@ -850,6 +970,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktualisiert (am)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mis à jour (à)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bijgewerkt (op)"
           }
         },
         "ro" : {
