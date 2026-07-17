@@ -580,6 +580,7 @@ final class DeviceDataManager {
     private func processCGMReadingResult(_ manager: CGMManager, readingResult: CGMReadingResult, completion: @escaping () -> Void) {
         switch readingResult {
         case .newData(let values):
+            LoopInsights_BackfillDetector.shared.evaluateSamples(values)
             loopManager.addGlucoseSamples(values) { result in
                 if !values.isEmpty {
                     DispatchQueue.main.async {
@@ -1039,7 +1040,12 @@ extension DeviceDataManager: CGMManagerDelegate {
     func cgmManager(_ manager: CGMManager, didUpdate status: CGMManagerStatus) {
         DispatchQueue.main.async {
             if self.cgmHasValidSensorSession != status.hasValidSensorSession {
+                // Notify SiteAtlas — a false→true transition means a new sensor session started
+                let sessionStarted = !self.cgmHasValidSensorSession && status.hasValidSensorSession
                 self.cgmHasValidSensorSession = status.hasValidSensorSession
+                if sessionStarted {
+                    NotificationCenter.default.post(name: .cgmSensorSessionStarted, object: nil)
+                }
             }
         }
     }
@@ -1183,6 +1189,11 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 
     func pumpManagerPumpWasReplaced(_ pumpManager: PumpManager) {
+        // Notify SiteAtlas — a pod swap lands here (the manager stays alive,
+        // so pumpManagerWillDeactivate never fires for a routine pod change)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .pumpSiteDeactivated, object: nil)
+        }
     }
     
     func pumpManagerWillDeactivate(_ pumpManager: PumpManager) {
@@ -1194,6 +1205,9 @@ extension DeviceDataManager: PumpManagerDelegate {
             self.pumpManager = nil
             self.deliveryUncertaintyAlertManager = nil
             self.settingsManager.storeSettings()
+
+            // Notify SiteAtlas that a pump site was deactivated
+            NotificationCenter.default.post(name: .pumpSiteDeactivated, object: nil)
         }
     }
 
@@ -1660,6 +1674,27 @@ extension DeviceDataManager: TherapySettingsViewModelDelegate {
             settings.defaultRapidActingModel = therapySettings.defaultRapidActingModel
             settings.carbRatioSchedule = therapySettings.carbRatioSchedule
             settings.insulinSensitivitySchedule = therapySettings.insulinSensitivitySchedule
+        }
+
+        // DataLayer: therapy settings changed
+        var changedTypes: [String] = []
+        if therapySettings.carbRatioSchedule != nil { changedTypes.append("CarbRatio") }
+        if therapySettings.insulinSensitivitySchedule != nil { changedTypes.append("ISF") }
+        if therapySettings.basalRateSchedule != nil { changedTypes.append("BasalRate") }
+        if therapySettings.glucoseTargetRangeSchedule != nil { changedTypes.append("GlucoseTarget") }
+        if therapySettings.suspendThreshold != nil { changedTypes.append("SuspendThreshold") }
+
+        for settingType in changedTypes {
+            NotificationCenter.default.post(
+                name: Notification.Name("com.loopkit.Loop.therapySettingsChanged"),
+                object: nil,
+                userInfo: [
+                    "settingType": settingType,
+                    "timeBlocksChanged": 1,
+                    "wasAISuggested": false,
+                    "source": "manual"
+                ]
+            )
         }
     }
     

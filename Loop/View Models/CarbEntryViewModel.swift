@@ -81,6 +81,60 @@ final class CarbEntryViewModel: ObservableObject {
     
     @Published var favoriteFoods = UserDefaults.standard.favoriteFoods
     @Published var selectedFavoriteFoodIndex = -1
+
+    @Published var analysisHistory: [FoodFinder_AnalysisRecord] = []
+    @Published var selectedAnalysisHistoryIndex = -1
+    @Published var restoredAnalysisResult: AIFoodAnalysisResult?
+    @Published var restoredThumbnailID: String?
+
+    /// The FoodFinder analysis record tied to the meal the user is about to
+    /// commit. Set when FoodFinder records an analysis, the user picks from
+    /// the Recent Analyses dropdown, or Re-use restores a past record. Read
+    /// by `continueToBolus()` and archived to `MealArchive` so that
+    /// LoopInsights' Recent Meals tab can surface the meal with its
+    /// thumbnail and nutritional context. Lives on the VM (not a global
+    /// static) so it cannot be clobbered by a parallel CarbEntryView or
+    /// lost on background → foreground.
+    var pendingFoodFinderRecord: FoodFinder_AnalysisRecord?
+
+    /// BolusPro per-entry state (toggle, macros, slider position).
+    /// Mutated by `BolusPro_CarbEntrySection` and the FoodFinder
+    /// auto-populate hook. Consumed in `setBolusViewModel()` to build
+    /// the optional secondary FPU carb entry.
+    @Published var bolusProState: BolusProEntryState = .off
+
+    /// Called from CarbEntryView every time FoodFinder resolves new macros —
+    /// initial AI analysis, item exclusion, item deletion, serving override,
+    /// product/favorite selection. Updates `bolusProState.macros` and
+    /// re-evaluates the auto-detection toggle:
+    ///
+    /// - Above threshold + currently off: auto-enable (mark `autoDetected`).
+    /// - Below threshold + currently on AND was auto-detected: auto-disable.
+    /// - Below threshold + currently on AND user toggled manually: leave on.
+    ///
+    /// `source` is `"ai"`, `"product"`, or `"favorite"` from FoodFinder.
+    func applyBolusProMacrosFromFoodFinder(fat: Double, protein: Double, source: String) {
+        guard BolusPro_FeatureFlags.isEnabled else { return }
+        bolusProState.macros = BolusProMacroInputs(fatGrams: fat, proteinGrams: protein)
+        bolusProState.macrosSource = BolusProMacrosSource(rawValue: source)
+
+        guard BolusPro_FeatureFlags.autoDetectFromFoodFinder else { return }
+
+        let result = BolusPro_FPUCalculator.calculate(from: bolusProState)
+
+        if result.crossesAutoTriggerThreshold {
+            if !bolusProState.enabled {
+                bolusProState.enabled = true
+                bolusProState.autoDetected = true
+            }
+        } else if bolusProState.enabled && bolusProState.autoDetected {
+            // FPU dropped below threshold (e.g. user excluded the high-fat
+            // side dish). Auto-detection should walk it back, but only when
+            // it was the one that turned it on in the first place.
+            bolusProState.enabled = false
+            bolusProState.autoDetected = false
+        }
+    }
     
     weak var delegate: CarbEntryViewModelDelegate?
     
@@ -97,6 +151,12 @@ final class CarbEntryViewModel: ObservableObject {
         observeFavoriteFoodChange()
         observeFavoriteFoodIndexChange()
         observeLoopUpdates()
+        loadAnalysisHistory()
+        observeAnalysisHistoryIndexChange()
+
+        if FoodFinder_FeatureFlags.carbTrackingEnabled {
+            Task { await FoodFinder_CarbTrackingService.shared.fetchSnapshot() }
+        }
     }
     
     /// Initalizer for when`CarbEntryView` has an entry to edit
@@ -156,7 +216,11 @@ final class CarbEntryViewModel: ObservableObject {
         guard updatedCarbEntry != nil else {
             return
         }
-        
+        // We used to archive the FoodFinder analysis to MealArchive here,
+        // but tapping Continue is NOT a commit — the user can still cancel
+        // the bolus screen and the carb entry never actually lands in
+        // CarbStore. Archive is now deferred to `BolusEntryViewModel`'s
+        // `onCarbEntrySaved` callback, wired up in `setBolusViewModel()`.
         validateInputAndContinue()
     }
     
@@ -189,13 +253,65 @@ final class CarbEntryViewModel: ObservableObject {
             potentialCarbEntry: updatedCarbEntry,
             selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji
         )
+
+        // Snapshot the pending FoodFinder record now and hand off the
+        // archive responsibility to BolusEntryViewModel. The archive only
+        // fires after the carb entry persists to CarbStore — cancelling
+        // the bolus screen leaves nothing behind in Meal Insights.
+        let pendingRecord = pendingFoodFinderRecord
+        pendingFoodFinderRecord = nil
+        viewModel.onCarbEntrySaved = { _ in
+            if let record = pendingRecord {
+                FoodFinder_AnalysisHistoryStore.confirmMeal(record)
+            } else {
+                // Legacy static-handoff fallback — used by paths that set
+                // `FoodFinder_AnalysisHistoryStore.pendingRecord` but never
+                // populated the VM (e.g., a flow that bypasses
+                // `onAnalysisRecorded`). No-op when nothing is pending.
+                FoodFinder_AnalysisHistoryStore.confirmMeal()
+            }
+        }
+
+        // BolusPro — attach optional secondary FPU entry + analytics
+        // snapshot. Snapshot fires on every save when the master flag is
+        // on (even when the per-entry toggle is off) so we can study
+        // adoption vs. non-adoption.
+        if BolusPro_FeatureFlags.isEnabled,
+           let primary = updatedCarbEntry {
+            // Compute snapshot regardless of per-entry toggle state.
+            let fpu = BolusPro_FPUCalculator.calculate(from: bolusProState)
+            let primaryGrams = primary.quantity.doubleValue(for: preferredCarbUnit)
+            viewModel.bolusProAnalyticsSnapshot = BolusProAnalyticsSnapshot(
+                enabled: bolusProState.enabled,
+                autoDetected: bolusProState.enabled ? bolusProState.autoDetected : nil,
+                macrosSource: bolusProState.macrosSource,
+                fpuScore: fpu.fpuScore,
+                bonusGrams: bolusProState.enabled ? fpu.bonusGrams : 0,
+                sliderPosition: bolusProState.enabled ? bolusProState.sliderCoverage : nil,
+                coverageFactorPercent: BolusPro_FeatureFlags.coverageFactorPercent,
+                fpuDelayMinutes: BolusPro_FeatureFlags.fpuDelayMinutes,
+                fpuAbsorptionHours: BolusPro_FeatureFlags.fpuAbsorptionHours,
+                fatGramsInput: bolusProState.macros.fatGrams,
+                proteinGramsInput: bolusProState.macros.proteinGrams,
+                primaryCarbGrams: primaryGrams
+            )
+
+            // Secondary entry only when toggle is on AND bonus ≥1g.
+            if let secondary = BolusPro_FPUCalculator.makeSecondaryEntry(
+                primaryStartDate: primary.startDate,
+                state: bolusProState
+            ) {
+                viewModel.bolusProSecondaryEntry = secondary
+            }
+        }
+
         Task {
             await viewModel.generateRecommendationAndStartObserving()
         }
-        
+
         viewModel.analyticsServicesManager = delegate?.analyticsServicesManager
         bolusViewModel = viewModel
-        
+
         delegate?.analyticsServicesManager.didDisplayBolusScreen()
     }
     
@@ -256,6 +372,78 @@ final class CarbEntryViewModel: ObservableObject {
         }
     }
     
+    // MARK: - Analysis History
+    private func loadAnalysisHistory() {
+        let days = UserDefaults.standard.analysisHistoryRetentionDays
+        FoodFinder_AnalysisHistoryStore.pruneExpired(retentionDays: days)
+        analysisHistory = FoodFinder_AnalysisHistoryStore.loadRecords(retentionDays: days)
+    }
+
+    func clearAnalysisHistory() {
+        FoodFinder_AnalysisHistoryStore.clearAll()
+        analysisHistory = []
+        selectedAnalysisHistoryIndex = -1
+    }
+
+    /// If the user tapped "Re-use" in FoodFinder Settings, pre-fill the entry form.
+    /// Called from CarbEntryView.onAppear so the FoodFinder_EntryPoint's .onChange
+    /// observer is active and can restore the full analysis UI (nutrition circles, thumbnail, etc.).
+    func checkForPendingReUse() {
+        guard let record = FoodFinder_AnalysisHistoryStore.pendingReUseRecord else { return }
+        FoodFinder_AnalysisHistoryStore.pendingReUseRecord = nil
+        self.carbsQuantity = record.carbsGrams
+        self.foodType = record.foodType
+        self.absorptionTime = record.absorptionTime
+        self.absorptionTimeWasEdited = true
+        self.usesCustomFoodType = true
+        self.restoredThumbnailID = record.thumbnailID
+        // Re-used record represents the meal the user is about to commit —
+        // archive it on Continue so it shows up in LoopInsights Recent Meals.
+        // Reissue the ID so dedup-by-ID treats it as a fresh meal.
+        self.pendingFoodFinderRecord = record.withFreshID(date: Date())
+        // Set restoredAnalysisResult after a brief delay to ensure the view's
+        // .onChange observer is registered and can trigger the full UI restore.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.restoredAnalysisResult = record.analysisResult
+        }
+    }
+
+    private func observeAnalysisHistoryIndexChange() {
+        $selectedAnalysisHistoryIndex
+            .receive(on: RunLoop.main)
+            .dropFirst()
+            .sink { [weak self] index in
+                self?.analysisHistorySelected(at: index)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func analysisHistorySelected(at index: Int) {
+        self.absorptionEditIsProgrammatic = true
+        if index == -1 {
+            self.carbsQuantity = nil
+            self.foodType = ""
+            self.absorptionTime = defaultAbsorptionTimes.medium
+            self.absorptionTimeWasEdited = false
+            self.usesCustomFoodType = false
+            self.restoredAnalysisResult = nil
+            self.restoredThumbnailID = nil
+            self.pendingFoodFinderRecord = nil
+        } else {
+            let record = analysisHistory[index]
+            self.carbsQuantity = record.carbsGrams
+            self.foodType = record.foodType
+            self.absorptionTime = record.absorptionTime
+            self.absorptionTimeWasEdited = true
+            self.usesCustomFoodType = true
+            self.restoredThumbnailID = record.thumbnailID
+            self.restoredAnalysisResult = record.analysisResult
+            // Treat the picked record as the meal-to-be-committed for archival.
+            // Reissue the ID so dedup-by-ID treats it as a fresh meal.
+            self.pendingFoodFinderRecord = record.withFreshID(date: Date())
+        }
+    }
+
     // MARK: - Utility
     func restoreUserActivityState(_ activity: NSUserActivity) {
         if let entry = activity.newCarbEntry {

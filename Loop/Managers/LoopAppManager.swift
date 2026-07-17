@@ -84,6 +84,7 @@ class LoopAppManager: NSObject {
     private(set) var testingScenariosManager: TestingScenariosManager?
     private var resetLoopManager: ResetLoopManager!
     private var deeplinkManager: DeeplinkManager!
+    private var loopInsightsCoordinator: LoopInsights_Coordinator?
 
     private var overrideHistory = UserDefaults.appGroup?.overrideHistory ?? TemporaryScheduleOverrideHistory.init()
 
@@ -268,7 +269,52 @@ class LoopAppManager: NSObject {
             .assign(to: \.automaticDosingStatus.automaticDosingEnabled, on: self)
             .store(in: &cancellables)
 
+        AutoPresets_Coordinator.shared.displayGlucosePreference = deviceDataManager.displayGlucosePreference
+        LoopInsights_PreMealAdvisorService.shared.unitContext = LoopInsights_GlucoseUnitContext(displayGlucosePreference: deviceDataManager.displayGlucosePreference)
+
+        startLoopInsightsMonitorIfNeeded()
+
         state = state.next
+    }
+
+    private func startLoopInsightsMonitorIfNeeded() {
+        // The coordinator is always created when LoopInsights is enabled —
+        // independent of `backgroundMonitorEnabled`. Its `observeMealLogged()`
+        // is the *only* always-on path that captures Meal Debrief prediction
+        // snapshots when the user logs a FoodFinder meal. If we only created
+        // the coordinator when background monitoring was on, a meal logged
+        // before the user ever opened LoopInsights Settings would fire its
+        // `.foodFinderMealLogged` notification into the void and that meal
+        // could never get a debrief.
+        guard LoopInsights_FeatureFlags.isEnabled else { return }
+
+        let coordinator = LoopInsights_Coordinator(
+            glucoseStore: deviceDataManager.glucoseStore,
+            doseStore: deviceDataManager.doseStore,
+            carbStore: deviceDataManager.carbStore,
+            settingsProvider: settingsManager,
+            displayGlucosePreference: deviceDataManager.displayGlucosePreference,
+            settingsWriter: { [weak self] mutate in
+                self?.deviceDataManager.loopManager.mutateSettings(mutate)
+            }
+        )
+        // Inject a closure that pulls the predicted glucose curve directly
+        // from LoopDataManager — race-free vs. the StatusExtensionContext
+        // bridge that the legacy snapshot path read from. Used by Meal
+        // Debrief prediction capture on .LoopDataUpdated.
+        coordinator.predictedGlucoseProvider = { [weak self] completion in
+            guard let self = self else {
+                completion(nil)
+                return
+            }
+            self.deviceDataManager.loopManager.getLoopState { _, state in
+                completion(state.predictedGlucoseIncludingPendingInsulin)
+            }
+        }
+        if LoopInsights_FeatureFlags.backgroundMonitorEnabled {
+            coordinator.startBackgroundMonitoring()
+        }
+        loopInsightsCoordinator = coordinator
     }
 
     private func launchOnboarding() {
@@ -568,6 +614,14 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
                 alertManager?.acknowledgeAlert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier))
             }
         case UNNotificationDefaultActionIdentifier:
+            // LoopInsights caregiver digest reminder — open the digest's send view.
+            // Flag persists across a cold launch; post handles the warm case.
+            if response.notification.request.identifier == LoopInsights_CaregiverDigestService.reminderNotificationID {
+                LoopInsights_CaregiverDigestService.pendingOpenFromReminder = true
+                NotificationCenter.default.post(name: .loopInsightsOpenCaregiverDigest, object: nil)
+                break
+            }
+
             guard response.notification.request.identifier == LoopNotificationCategory.missedMeal.rawValue else {
                 break
             }

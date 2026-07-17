@@ -45,6 +45,22 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     lazy private var cancellables = Set<AnyCancellable>()
 
+    // GraphDetailView (long-hold popup) state
+    private var graphDetailHostingController: UIHostingController<AnyView>?
+    private var graphDetailViewModel: GraphDetailViewModel?
+    private var graphDetailLeadingConstraint: NSLayoutConstraint?
+    private var graphDetailTopConstraint: NSLayoutConstraint?
+    private lazy var graphDetailScrubFeedback = UISelectionFeedbackGenerator()
+    private var graphDetailLastScrubDate: Date?
+    private var graphDetailDismissTap: UITapGestureRecognizer?
+    private var graphDetailAutoFadeTimer: Timer?
+
+    /// Whether the popup is currently sitting above or below the user's
+    /// finger. Tracked so the placement logic can apply hysteresis and not
+    /// flip on tiny vertical touch wobbles. Cleared between scrub sessions.
+    private enum GraphDetailOrientation { case above, below }
+    private var graphDetailPopupOrientation: GraphDetailOrientation?
+
     override func viewDidLoad() {
 
         super.viewDidLoad()
@@ -54,6 +70,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
         tableView.register(AlertPermissionsDisabledWarningCell.self, forCellReuseIdentifier: AlertPermissionsDisabledWarningCell.className)
         tableView.register(MuteAlertsWarningCell.self, forCellReuseIdentifier: MuteAlertsWarningCell.className)
+        tableView.register(CGMSignalGapWarningCell.self, forCellReuseIdentifier: CGMSignalGapWarningCell.className)
 
         if FeatureFlags.predictedGlucoseChartClampEnabled {
             statusCharts.glucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBoundClamped
@@ -63,6 +80,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         registerPumpManager()
         registerCGMManager()
+
+        DataLayer_Coordinator.shared.configureStores(glucose: deviceManager.glucoseStore, dose: deviceManager.doseStore, carb: deviceManager.carbStore)
+        DataLayer_Coordinator.shared.start()
 
         let notificationCenter = NotificationCenter.default
 
@@ -116,6 +136,23 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     self?.reloadData(animated: true)
                 }
             },
+            notificationCenter.addObserver(forName: .foodFinderReUseAnalysis, object: nil, queue: nil) { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.dismiss(animated: true) {
+                        self?.presentCarbEntryScreen(nil)
+                    }
+                }
+            },
+            notificationCenter.addObserver(forName: .loopInsightsOpenCaregiverDigest, object: nil, queue: nil) { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.presentCaregiverDigestIfPending()
+                }
+            },
+            notificationCenter.addObserver(forName: .siteAtlasShouldPromptLog, object: nil, queue: nil) { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.presentSiteAtlasPromptIfPending()
+                }
+            },
         ]
 
         automaticDosingStatus.$automaticDosingEnabled
@@ -133,9 +170,17 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
             .store(in: &cancellables)
 
+        LoopInsights_BackfillDetector.shared.$recentGapEvent
+            .receive(on: DispatchQueue.main)
+            .removeDuplicates(by: { $0?.id == $1?.id })
+            .sink { [weak self] _ in self?.updateBannerRow(animated: true) }
+            .store(in: &cancellables)
+
         if let gestureRecognizer = charts.gestureRecognizer {
             tableView.addGestureRecognizer(gestureRecognizer)
         }
+
+        setupGraphDetailGesture()
 
         tableView.estimatedRowHeight = 74
 
@@ -198,6 +243,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
         deviceManager.analyticsServicesManager.didDisplayStatusScreen()
 
         deviceManager.checkDeliveryUncertaintyState()
+
+        // Cold-launch path: the digest reminder tap was handled before this screen was
+        // observing, so the flag (not the post) routes us here once the screen appears.
+        presentCaregiverDigestIfPending()
+
+        // Site change events fire while device setup UI is still up; retry here
+        // in case the pending prompt couldn't present at notification time.
+        presentSiteAtlasPromptIfPending()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -214,6 +267,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
         refreshContext.update(with: .size(size))
 
         maybeOpenDebugMenu()
+
+        // Dismiss GraphDetailView popup — position would be stale after rotation
+        if graphDetailHostingController != nil {
+            dismissGraphDetail()
+        }
 
         super.viewWillTransition(to: size, with: coordinator)
     }
@@ -564,9 +622,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 let lastPoint = self.statusCharts.glucose.predictedGlucosePoints.last?.y
             {
                 self.eventualGlucoseDescription = String(describing: lastPoint)
+                self.eventualGlucoseValueMgdl = predictedGlucoseValues?.last?.quantity.doubleValue(for: .milligramsPerDeciliter)
             } else {
                 // if the predicted glucose values are clamped, the eventually glucose description should not be displayed, since it may not align with what is being charted.
                 self.eventualGlucoseDescription = nil
+                self.eventualGlucoseValueMgdl = nil
             }
             if currentContext.contains(.targets) {
                 self.statusCharts.targetGlucoseSchedule = self.deviceManager.loopManager.settings.glucoseTargetRangeSchedule
@@ -677,6 +737,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     private var eventualGlucoseDescription: String?
 
+    /// Eventual (last predicted) glucose in mg/dL, kept alongside the display string so the
+    /// "Eventually" label can tint by clinical severity. Canonical mg/dL — unit-independent.
+    private var eventualGlucoseValueMgdl: Double?
+
     // MARK: IOB
 
     private var currentIOBDescription: String?
@@ -750,7 +814,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private var shouldShowBannerWarning: Bool {
-        alertPermissionsChecker.showWarning || alertMuter.configuration.shouldMute
+        alertPermissionsChecker.showWarning ||
+        alertMuter.configuration.shouldMute ||
+        (LoopInsights_FeatureFlags.cgmBackfillDetectionEnabled &&
+         LoopInsights_BackfillDetector.shared.recentGapEvent != nil)
     }
 
     private func updateBannerRow(animated: Bool) {
@@ -972,17 +1039,68 @@ final class StatusTableViewController: LoopChartsTableViewController {
             contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 6, leading: 0, bottom: 13, trailing: 0)
         }
     }
-    
+
+    private class CGMSignalGapWarningCell: UITableViewCell {
+        var gapEvent: LoopInsightsBackfillEvent?
+
+        override func updateConfiguration(using state: UICellConfigurationState) {
+            super.updateConfiguration(using: state)
+
+            let adjustViewForNarrowDisplay = bounds.width < 350
+
+            var contentConfig = defaultContentConfiguration().updated(for: state)
+            let titleImageAttachment = NSTextAttachment()
+            titleImageAttachment.image = UIImage(systemName: "antenna.radiowaves.left.and.right")?.withTintColor(.white)
+            let title = NSMutableAttributedString(string: NSLocalizedString(" CGM Signal Gap Detected", comment: "Warning text for CGM signal gap detection"))
+            let titleWithImage = NSMutableAttributedString(attachment: titleImageAttachment)
+            titleWithImage.append(title)
+            contentConfig.attributedText = titleWithImage
+            contentConfig.textProperties.color = .white
+            contentConfig.textProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 16 : 18, weight: .bold)
+            contentConfig.textProperties.adjustsFontSizeToFitWidth = true
+
+            if let event = gapEvent {
+                contentConfig.secondaryText = String(
+                    format: NSLocalizedString("Your sensor filled in %d min of readings. These may be estimated.", comment: "Secondary text for CGM signal gap warning (minutes)"),
+                    event.gapDurationMinutes
+                )
+            } else {
+                contentConfig.secondaryText = NSLocalizedString("Your sensor reconnected and filled in readings. These may be estimated.", comment: "Secondary text for CGM signal gap warning (generic)")
+            }
+            contentConfig.secondaryTextProperties.color = .white
+            contentConfig.secondaryTextProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 13 : 15)
+            contentConfiguration = contentConfig
+
+            var backgroundConfig = backgroundConfiguration?.updated(for: state)
+            backgroundConfig?.backgroundColor = .warning
+            backgroundConfiguration = backgroundConfig
+            backgroundConfiguration?.backgroundInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 5, trailing: 10)
+            backgroundConfiguration?.cornerRadius = 10
+
+            let dismissIndicator = UIImage(systemName: "xmark.circle")?.withTintColor(.white)
+            let imageView = UIImageView(image: dismissIndicator)
+            imageView.tintColor = .white
+            imageView.frame.size = CGSize(width: 24, height: 24)
+            accessoryView = imageView
+
+            contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 6, leading: 0, bottom: 13, trailing: 0)
+        }
+    }
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         switch Section(rawValue: indexPath.section)! {
         case .alertWarning:
             if alertPermissionsChecker.showWarning {
                 let cell = tableView.dequeueReusableCell(withIdentifier: AlertPermissionsDisabledWarningCell.className, for: indexPath) as! AlertPermissionsDisabledWarningCell
                 return cell
-            } else {
+            } else if alertMuter.configuration.shouldMute {
                 let cell = tableView.dequeueReusableCell(withIdentifier: MuteAlertsWarningCell.className, for: indexPath) as! MuteAlertsWarningCell
                 cell.formattedAlertMuteEndTime = alertMuter.formattedEndTime
                 cell.selectionStyle = .none
+                return cell
+            } else {
+                let cell = tableView.dequeueReusableCell(withIdentifier: CGMSignalGapWarningCell.className, for: indexPath) as! CGMSignalGapWarningCell
+                cell.gapEvent = LoopInsights_BackfillDetector.shared.recentGapEvent
                 return cell
             }
         case .hud:
@@ -1000,16 +1118,19 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 })
                 cell.setTitleLabelText(label: NSLocalizedString("Glucose", comment: "The title of the glucose and prediction graph"))
                 cell.doesNavigate = automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
+
+                // LoopInsights quick-access button
+                addLoopInsightsButton(to: cell)
             case .iob:
                 cell.setChartGenerator(generator: { [weak self] (frame) in
                     return self?.statusCharts.iobChart(withFrame: frame)?.view
                 })
-                cell.setTitleLabelText(label: NSLocalizedString("Active Insulin", comment: "The title of the Insulin On-Board graph"))
+                cell.setTitleLabelText(label: NSLocalizedString("Active Insulin on Board", comment: "The title of the Insulin On-Board graph"))
             case .dose:
                 cell.setChartGenerator(generator: { [weak self] (frame) in
                     return self?.statusCharts.doseChart(withFrame: frame)?.view
                 })
-                cell.setTitleLabelText(label: NSLocalizedString("Insulin Delivery", comment: "The title of the insulin delivery graph"))
+                cell.setTitleLabelText(label: NSLocalizedString("Insulin Delivery (today)", comment: "The title of the insulin delivery graph"))
             case .cob:
                 cell.setChartGenerator(generator: { [weak self] (frame) in
                     return self?.statusCharts.cobChart(withFrame: frame)?.view
@@ -1021,8 +1142,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
             let alpha: CGFloat = charts.gestureRecognizer?.state == .possible ? 1 : 0
             cell.setAlpha(alpha: alpha)
-
-            cell.setSubtitleTextColor(color: UIColor.secondaryLabel)
 
             return cell
         case .status:
@@ -1149,16 +1268,18 @@ final class StatusTableViewController: LoopChartsTableViewController {
             switch ChartRow(rawValue: indexPath.row)! {
             case .glucose:
                 if let eventualGlucose = eventualGlucoseDescription {
-                    cell.setSubtitleLabel(label: String(format: NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)"), eventualGlucose))
+                    let format = NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)")
+                    let prefix = format.components(separatedBy: "%@").first ?? ""
+                    cell.setSubtitleAttributedText(chartValueSubtitle(prefix: prefix, value: eventualGlucose, color: eventualGlucoseColor(forMgdl: eventualGlucoseValueMgdl)))
                 } else {
-                    cell.setSubtitleLabel(label: nil)
+                    cell.setSubtitleAttributedText(nil)
                 }
                 cell.doesNavigate = automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
             case .iob:
                 if let currentIOB = currentIOBDescription {
-                    cell.setSubtitleLabel(label: currentIOB)
+                    cell.setSubtitleAttributedText(chartValueSubtitle(prefix: nil, value: currentIOB, color: .insulinTintColor))
                 } else {
-                    cell.setSubtitleLabel(label: nil)
+                    cell.setSubtitleAttributedText(nil)
                 }
             case .dose:
                 let integerFormatter = NumberFormatter()
@@ -1166,20 +1287,73 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
                 if  let total = totalDelivery,
                     let totalString = integerFormatter.string(from: total) {
-                    cell.setSubtitleLabel(label: String(format: NSLocalizedString("%@ U Total", comment: "The subtitle format describing total insulin. (1: localized insulin total)"), totalString))
+                    let value = String(format: NSLocalizedString("%@ U Total", comment: "The subtitle format describing total insulin. (1: localized insulin total)"), totalString)
+                    cell.setSubtitleAttributedText(chartValueSubtitle(prefix: nil, value: value, color: .insulinTintColor))
                 } else {
-                    cell.setSubtitleLabel(label: nil)
+                    cell.setSubtitleAttributedText(nil)
                 }
             case .cob:
                 if let currentCOB = currentCOBDescription {
-                    cell.setSubtitleLabel(label: currentCOB)
+                    cell.setSubtitleAttributedText(chartValueSubtitle(prefix: nil, value: currentCOB, color: .carbTintColor))
                 } else {
-                    cell.setSubtitleLabel(label: nil)
+                    cell.setSubtitleAttributedText(nil)
                 }
             }
         case .hud, .status, .alertWarning:
             break
         }
+    }
+
+    /// Color for the "Eventually" glucose value, escalating from the in-range tint as the
+    /// predicted value leaves the target band. Thresholds (mg/dL) follow clinical glycemic
+    /// categories: 70 = Level 1 hypo / lower target, 54 = Level 2 hypo, 180 = upper target,
+    /// 250 = Level 2 hyper. The 80–140 blue band is the tighter "normal" range; amber triggers
+    /// the moment the value leaves it. mg/dL is canonical, so this is correct for mmol/L users too.
+    private func eventualGlucoseColor(forMgdl value: Double?) -> UIColor {
+        guard let v = value else { return .glucoseTintColor }
+        // Custom amber/orange (not systemYellow/systemOrange): tuned to read on the cell
+        // background and as obviously distinct escalation steps — amber → darker orange → red.
+        let amber  = UIColor(red: 230/255, green: 160/255, blue: 0/255, alpha: 1)
+        let orange = UIColor(red: 205/255, green:  85/255, blue: 0/255, alpha: 1)
+        // Low side
+        if v < 54 { return .systemRed }
+        if v < 70 { return orange }
+        if v < 80 { return amber }
+        // In range (blue)
+        if v <= 140 { return .glucoseTintColor }
+        // High side
+        if v <= 180 { return amber }
+        if v <= 250 { return orange }
+        return .systemRed
+    }
+
+    /// Builds a chart value subtitle: an optional grey prefix (e.g. "Eventually ") at the stock
+    /// size, then the numeric value enlarged & tinted, then its unit tinted at the stock size.
+    /// WHY: matches the L&L-style emphasis where the result number is the focal point.
+    private func chartValueSubtitle(prefix: String?, value: String, color: UIColor) -> NSAttributedString {
+        let prefixFont = UIFont.systemFont(ofSize: 16, weight: .regular)
+        let numberFont = UIFont.systemFont(ofSize: 24, weight: .bold)
+        let unitFont = UIFont.systemFont(ofSize: 16, weight: .regular)
+
+        let result = NSMutableAttributedString()
+        if let prefix = prefix, !prefix.isEmpty {
+            result.append(NSAttributedString(string: prefix, attributes: [.font: prefixFont, .foregroundColor: UIColor.secondaryLabel]))
+        }
+
+        // Split off the leading numeric run from the unit so the number can be enlarged
+        // independently. WHY: HealthKit quantity strings use a non-breaking space (not ASCII
+        // " ") between value and unit, so we can't split on a literal space.
+        let isNumberCharacter: (Character) -> Bool = { $0.isNumber || $0 == "." || $0 == "," || $0 == "-" || $0 == "−" || $0 == "+" }
+        let unitIndex = value.firstIndex(where: { !isNumberCharacter($0) }) ?? value.endIndex
+        let number = String(value[..<unitIndex])
+        let unit = String(value[unitIndex...])
+        if !number.isEmpty {
+            result.append(NSAttributedString(string: number, attributes: [.font: numberFont, .foregroundColor: color]))
+        }
+        if !unit.isEmpty {
+            result.append(NSAttributedString(string: unit, attributes: [.font: unitFont, .foregroundColor: color]))
+        }
+        return result
     }
 
     // MARK: - UITableViewDelegate
@@ -1209,9 +1383,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
             if alertPermissionsChecker.showWarning {
                 tableView.deselectRow(at: indexPath, animated: true)
                 AlertPermissionsChecker.gotoSettings()
-            } else {
+            } else if alertMuter.configuration.shouldMute {
                 tableView.deselectRow(at: indexPath, animated: true)
                 presentUnmuteAlertConfirmation()
+            } else {
+                tableView.deselectRow(at: indexPath, animated: true)
+                LoopInsights_BackfillDetector.shared.dismissBanner()
             }
         case .hud:
             break
@@ -1276,6 +1453,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 }
             }
         case .charts:
+            // Don't navigate away while the GraphDetailView popup is showing
+            guard graphDetailHostingController == nil else { return }
             switch ChartRow(rawValue: indexPath.row)! {
             case .glucose:
                 if automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled {
@@ -1640,12 +1819,38 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           availableSupports: supportManager.availableSupports,
                                           isOnboardingComplete: onboardingManager.isComplete,
                                           therapySettingsViewModelDelegate: deviceManager,
+                                          loopInsightsDataStores: { [weak self] in
+                                              guard let dm = self?.deviceManager else { return nil }
+                                              let writer: LoopInsightsSettingsWriter = { mutate in
+                                                  dm.loopManager.mutateSettings(mutate)
+                                              }
+                                              // Build the tuple with protocol-typed elements so the
+                                              // `as? (GlucoseStoreProtocol, ..., LatestStoredSettingsProvider, ...)`
+                                              // cast at the receiving end succeeds. Returning concrete
+                                              // class types makes the wrapped Any's runtime tuple type
+                                              // `(GlucoseStore, DoseStore, CarbStore, SettingsManager, ...)`,
+                                              // which Swift's tuple-of-existentials cast won't accept —
+                                              // and the fallback drops LoopInsights into test-data mode
+                                              // with a nil data provider bridge.
+                                              let glucose: GlucoseStoreProtocol = dm.glucoseStore
+                                              let dose: DoseStoreProtocol = dm.doseStore
+                                              let carb: CarbStoreProtocol = dm.carbStore
+                                              let settings: LatestStoredSettingsProvider = dm.settingsManager
+                                              return (glucose, dose, carb, settings, dm.displayGlucosePreference, writer)
+                                          },
                                           delegate: self)
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel, localizedAppNameAndVersion: supportManager.localizedAppNameAndVersion)
                 .environmentObject(deviceManager.displayGlucosePreference)
                 .environment(\.appName, Bundle.main.bundleDisplayName),
-            isModalInPresentation: false)
+            isModalInPresentation: false,
+            onDisappear: { [weak self] in
+                // Pod/CGM changes done from inside Settings pend a SiteAtlas prompt;
+                // present it once the settings sheet has fully cleared the screen.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self?.presentSiteAtlasPromptIfPending()
+                }
+            })
         present(hostingController, animated: true)
     }
 
@@ -2055,11 +2260,173 @@ extension UIAlertController {
     }
 }
 
+// MARK: - LoopInsights Quick Access
+
+extension StatusTableViewController {
+    private static let loopInsightsButtonTag = 9201
+    private static let loopInsightsBadgeTag = 9202
+
+    func addLoopInsightsButton(to cell: UITableViewCell) {
+        guard LoopInsights_FeatureFlags.isEnabled else {
+            cell.contentView.viewWithTag(Self.loopInsightsButtonTag)?.removeFromSuperview()
+            return
+        }
+
+        // Avoid duplicates on cell reuse
+        if cell.contentView.viewWithTag(Self.loopInsightsButtonTag) != nil {
+            updateLoopInsightsBadge(in: cell)
+            return
+        }
+
+        let size: CGFloat = 32
+        let button = UIButton(type: .custom)
+        button.tag = Self.loopInsightsButtonTag
+        button.backgroundColor = UIColor(red: 20/255, green: 110/255, blue: 128/255, alpha: 1)
+        button.layer.cornerRadius = size / 2
+        button.clipsToBounds = false
+
+        let label = UILabel()
+        label.text = "LI"
+        label.font = .systemFont(ofSize: 13, weight: .bold)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.isUserInteractionEnabled = false
+        label.translatesAutoresizingMaskIntoConstraints = false
+        button.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: button.centerYAnchor)
+        ])
+
+        // Red badge dot
+        let badgeSize: CGFloat = size * 0.35  // ~11pt, proportionate to 32pt circle
+        let badge = UIView()
+        badge.tag = Self.loopInsightsBadgeTag
+        badge.backgroundColor = .systemRed
+        badge.layer.cornerRadius = badgeSize / 2
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        badge.isHidden = true
+        badge.isUserInteractionEnabled = false
+        button.addSubview(badge)
+        NSLayoutConstraint.activate([
+            badge.widthAnchor.constraint(equalToConstant: badgeSize),
+            badge.heightAnchor.constraint(equalToConstant: badgeSize),
+            badge.topAnchor.constraint(equalTo: button.topAnchor, constant: -2),
+            badge.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: 2)
+        ])
+
+        button.translatesAutoresizingMaskIntoConstraints = false
+        cell.contentView.addSubview(button)
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: size),
+            button.heightAnchor.constraint(equalToConstant: size),
+            button.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -12),
+            button.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 52)
+        ])
+
+        button.addTarget(self, action: #selector(loopInsightsButtonTapped), for: .touchUpInside)
+
+        // Observe pending suggestions to update badge
+        LoopInsights_SuggestionStore.shared.$records
+            .receive(on: DispatchQueue.main)
+            .sink { [weak cell] _ in
+                guard let cell = cell else { return }
+                self.updateLoopInsightsBadge(in: cell)
+            }
+            .store(in: &cancellables)
+
+        updateLoopInsightsBadge(in: cell)
+    }
+
+    private func updateLoopInsightsBadge(in cell: UITableViewCell) {
+        guard let button = cell.contentView.viewWithTag(Self.loopInsightsButtonTag),
+              let badge = button.viewWithTag(Self.loopInsightsBadgeTag) else { return }
+
+        let hasPending = !LoopInsights_SuggestionStore.shared.pendingRecords.isEmpty
+        badge.isHidden = !hasPending
+    }
+
+    @objc private func loopInsightsButtonTapped() {
+        let wrapper = LoopInsights_TestDashboardWrapper(dataStoresProvider: { [weak self] in
+            guard let dm = self?.deviceManager else { return nil }
+            let writer: LoopInsightsSettingsWriter = { mutate in
+                dm.loopManager.mutateSettings(mutate)
+            }
+            // Must match the 6-tuple shape that LoopInsights_SettingsView casts to,
+            // and must be built with protocol-typed elements (see the other
+            // loopInsightsDataStores closure above for the why).
+            let glucose: GlucoseStoreProtocol = dm.glucoseStore
+            let dose: DoseStoreProtocol = dm.doseStore
+            let carb: CarbStoreProtocol = dm.carbStore
+            let settings: LatestStoredSettingsProvider = dm.settingsManager
+            return (glucose, dose, carb, settings, dm.displayGlucosePreference, writer)
+        })
+
+        let hostingController = UIHostingController(
+            rootView: NavigationView { wrapper }
+        )
+        present(hostingController, animated: true)
+    }
+
+    /// Open the Caregiver Digest and auto-present the pre-filled send sheet when the
+    /// user arrived via the digest reminder notification. Driven by a pending flag so it
+    /// fires exactly once whether the tap arrives warm (observer) or cold (viewDidAppear).
+    @objc private func presentCaregiverDigestIfPending() {
+        guard LoopInsights_CaregiverDigestService.pendingOpenFromReminder else { return }
+        LoopInsights_CaregiverDigestService.pendingOpenFromReminder = false
+
+        let view = LoopInsights_CaregiverDigestView(
+            dataStoresProvider: { [weak self] in
+                guard let dm = self?.deviceManager else { return nil }
+                let writer: LoopInsightsSettingsWriter = { mutate in
+                    dm.loopManager.mutateSettings(mutate)
+                }
+                let glucose: GlucoseStoreProtocol = dm.glucoseStore
+                let dose: DoseStoreProtocol = dm.doseStore
+                let carb: CarbStoreProtocol = dm.carbStore
+                let settings: LatestStoredSettingsProvider = dm.settingsManager
+                return (glucose, dose, carb, settings, dm.displayGlucosePreference, writer)
+            },
+            autoSend: true
+        )
+        let hostingController = UIHostingController(rootView: NavigationView { view })
+
+        // Dismiss any sheet that's already up (e.g. the dashboard) before presenting.
+        let present: () -> Void = { [weak self] in self?.present(hostingController, animated: true) }
+        if presentedViewController != nil {
+            dismiss(animated: true, completion: present)
+        } else {
+            present()
+        }
+    }
+
+    /// Present the SiteAtlas logging sheet if an auto-prompt is pending and the
+    /// status screen is clear. Pod/sensor change events fire while device setup
+    /// UI is still presented, so this is re-attempted from every return-to-status
+    /// path (notification, viewDidAppear, settings dismissal, flow completion)
+    /// rather than presented over the setup flow.
+    @objc private func presentSiteAtlasPromptIfPending() {
+        guard SiteAtlas_FeatureFlags.isEnabled,
+              SiteAtlas_FeatureFlags.autoPromptEnabled,
+              SiteAtlas_Coordinator.shared.pendingSiteLog,
+              presentedViewController == nil
+        else { return }
+
+        // Consume the pending flag now — a swipe-down dismissal shouldn't re-prompt later.
+        SiteAtlas_Coordinator.shared.pendingSiteLog = false
+
+        let hostingController = UIHostingController(rootView: SiteAtlas_SiteSelectionSheet())
+        present(hostingController, animated: true)
+    }
+}
+
 extension StatusTableViewController: CompletionDelegate {
     func completionNotifyingDidComplete(_ object: CompletionNotifying) {
         if let vc = object as? UIViewController {
             if presentedViewController === vc {
-                dismiss(animated: true, completion: nil)
+                dismiss(animated: true) { [weak self] in
+                    self?.presentSiteAtlasPromptIfPending()
+                }
             } else {
                 vc.dismiss(animated: true, completion: nil)
             }
@@ -2268,5 +2635,245 @@ extension StatusTableViewController: ServicesViewModelDelegate {
         settingsViewController.serviceOnboardingDelegate = deviceManager.servicesManager
         settingsViewController.completionDelegate = self
         show(settingsViewController, sender: self)
+    }
+
+    // MARK: - GraphDetailView (Long-Hold Detail Popup)
+
+    private func setupGraphDetailGesture() {
+        // Disable the original chart touch highlight gesture — GraphDetailView replaces it
+        charts.gestureRecognizer?.isEnabled = false
+
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleGraphDetailLongPress(_:)))
+        longPress.minimumPressDuration = 0.3
+        longPress.delegate = self
+        tableView.addGestureRecognizer(longPress)
+    }
+
+    @objc private func handleGraphDetailLongPress(_ recognizer: UILongPressGestureRecognizer) {
+        switch recognizer.state {
+        case .began:
+            let point = recognizer.location(in: tableView)
+            guard let indexPath = tableView.indexPathForRow(at: point),
+                  indexPath.section == Section.charts.rawValue,
+                  indexPath.row == ChartRow.glucose.rawValue else {
+                return
+            }
+            graphDetailScrubFeedback.prepare()
+            let touchedDate = dateForTouch(recognizer)
+            graphDetailLastScrubDate = touchedDate
+            presentGraphDetail(for: touchedDate, anchorPoint: point)
+
+        case .changed:
+            guard graphDetailHostingController != nil else { return }
+            let touchedDate = dateForTouch(recognizer)
+            // Update position
+            let point = recognizer.location(in: tableView)
+            guard let containerView = navigationController?.view ?? view.window else { return }
+            let touchInContainer = tableView.convert(point, to: containerView)
+            updateGraphDetailPosition(touchX: touchInContainer.x, touchY: touchInContainer.y, in: containerView)
+            // Tick haptic when crossing a 1-minute boundary
+            if let lastDate = graphDetailLastScrubDate,
+               Int(touchedDate.timeIntervalSinceReferenceDate / 60) != Int(lastDate.timeIntervalSinceReferenceDate / 60) {
+                graphDetailScrubFeedback.selectionChanged()
+            }
+            graphDetailLastScrubDate = touchedDate
+            // Update data
+            graphDetailViewModel?.update(for: touchedDate)
+
+        case .ended, .cancelled:
+            graphDetailLastScrubDate = nil
+            // Auto-fade after 5 seconds
+            graphDetailAutoFadeTimer?.invalidate()
+            graphDetailAutoFadeTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+                self?.dismissGraphDetail()
+            }
+            break
+
+        default:
+            break
+        }
+    }
+
+    /// Convert the current touch X position on the glucose chart to a Date
+    private func dateForTouch(_ recognizer: UIGestureRecognizer) -> Date {
+        let glucoseIndexPath = IndexPath(row: ChartRow.glucose.rawValue, section: Section.charts.rawValue)
+        let cell = tableView.cellForRow(at: glucoseIndexPath)
+
+        let touchInCell = recognizer.location(in: cell)
+        let chartLeading = charts.fixedHorizontalMargin
+        let chartWidth = (cell?.bounds.width ?? tableView.bounds.width) - chartLeading
+        let relativeX = (touchInCell.x - chartLeading) / chartWidth
+        let clampedX = max(0, min(1, relativeX))
+
+        let startDate = charts.startDate
+        let endDate = charts.maxEndDate
+        let timeRange = endDate.timeIntervalSince(startDate)
+        return startDate.addingTimeInterval(timeRange * Double(clampedX))
+    }
+
+    private func presentGraphDetail(for date: Date, anchorPoint: CGPoint) {
+        // Dismiss any existing popup immediately (no animation when replacing)
+        dismissGraphDetail(animated: false)
+
+        let glucoseUnit = deviceManager.displayGlucosePreference.unit
+        let viewModel = GraphDetailViewModel(date: date, glucoseUnit: glucoseUnit, deviceManager: deviceManager)
+        graphDetailViewModel = viewModel
+
+        let wrappedView = AnyView(
+            GraphDetailObservingView(viewModel: viewModel, onDismiss: { [weak self] in
+                self?.dismissGraphDetail()
+            })
+        )
+
+        let hostingController = UIHostingController(rootView: wrappedView)
+        hostingController.view.backgroundColor = .clear
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+
+        // Use the navigation controller's view (or window) so the popup floats above
+        // the table view and won't be affected by table reloads or scroll.
+        guard let containerView = navigationController?.view ?? view.window else { return }
+
+        // Add the popup as a child of the same VC that owns the container view
+        let parentVC: UIViewController = navigationController ?? self
+        parentVC.addChild(hostingController)
+        containerView.addSubview(hostingController.view)
+        hostingController.didMove(toParent: parentVC)
+
+        // Add a dismiss-on-tap gesture to the table view (delayed to avoid catching the long press lift)
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissGraphDetailTap))
+        tapGesture.isEnabled = false
+        tableView.addGestureRecognizer(tapGesture)
+        graphDetailDismissTap = tapGesture
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            tapGesture.isEnabled = true
+        }
+
+        // Position the popup to the upper-right of the touch point
+        let touchInContainer = tableView.convert(anchorPoint, to: containerView)
+
+        let leading = hostingController.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0)
+        let top = hostingController.view.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 0)
+        NSLayoutConstraint.activate([leading, top])
+        graphDetailLeadingConstraint = leading
+        graphDetailTopConstraint = top
+
+        // Set initial position
+        updateGraphDetailPosition(touchX: touchInContainer.x, touchY: touchInContainer.y, in: containerView)
+
+        // Animate in
+        hostingController.view.alpha = 0
+        hostingController.view.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        UIView.animate(withDuration: 0.2) {
+            hostingController.view.alpha = 1
+            hostingController.view.transform = .identity
+        }
+
+        graphDetailHostingController = hostingController
+
+        // Haptic feedback
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+    }
+
+    private func updateGraphDetailPosition(touchX: CGFloat, touchY: CGFloat, in containerView: UIView) {
+        let padding: CGFloat = 12
+        // Hysteresis band: a tiny finger wobble near the above/below boundary
+        // shouldn't flip the popup. We require the touch to move at least this
+        // many points past the flip threshold before changing orientation.
+        let flipHysteresis: CGFloat = 40
+
+        // Use the actual popup size (let it layout first if needed)
+        let popupView = graphDetailHostingController?.view
+        popupView?.layoutIfNeeded()
+        let popupWidth = popupView?.intrinsicContentSize.width ?? 200
+        let popupHeight = popupView?.intrinsicContentSize.height ?? 150
+
+        // Use window-level safe area insets — always reflects device cutout
+        let safeInsets = containerView.window?.safeAreaInsets ?? containerView.safeAreaInsets
+        let minY = safeInsets.top + padding
+        let maxY = containerView.bounds.height - popupHeight - max(padding, safeInsets.bottom)
+
+        // Decide which side to render on, using hysteresis to suppress
+        // oscillation when the user's finger wobbles near the boundary.
+        let abovePopupY = touchY - padding - popupHeight    // top of popup when above
+        let belowPopupY = touchY + padding                  // top of popup when below
+        let aboveFitsTightly = abovePopupY >= minY
+        let aboveFitsWithRoom = abovePopupY >= minY + flipHysteresis
+        let belowFitsTightly = belowPopupY <= maxY
+
+        let orientation: GraphDetailOrientation
+        switch graphDetailPopupOrientation {
+        case .above:
+            // Stay above unless we'd clip the top safe area at all.
+            orientation = aboveFitsTightly ? .above : .below
+        case .below:
+            // Stay below unless there's clearly room above (more than the
+            // hysteresis band). Prevents flipping back on micro-movements.
+            orientation = aboveFitsWithRoom ? .above : .below
+        case nil:
+            // First placement of this scrub session: prefer above unless it
+            // clips, in which case fall to below.
+            orientation = aboveFitsTightly ? .above : .below
+        }
+        graphDetailPopupOrientation = orientation
+
+        var popupY: CGFloat
+        switch orientation {
+        case .above:
+            popupY = abovePopupY
+        case .below:
+            popupY = belowFitsTightly ? belowPopupY : min(belowPopupY, maxY)
+        }
+
+        // Place to the right of the touch
+        var popupX = touchX + padding
+
+        // Clamp horizontal: respect safe areas on both sides
+        let maxX = containerView.bounds.width - popupWidth - max(padding, safeInsets.right)
+        let minX = max(padding, safeInsets.left)
+        popupX = max(minX, min(popupX, maxX))
+
+        graphDetailLeadingConstraint?.constant = popupX
+        graphDetailTopConstraint?.constant = popupY
+    }
+
+    @objc private func dismissGraphDetailTap() {
+        dismissGraphDetail()
+    }
+
+    private func dismissGraphDetail(animated: Bool = true) {
+        guard let hostingController = graphDetailHostingController else { return }
+
+        graphDetailAutoFadeTimer?.invalidate()
+        graphDetailAutoFadeTimer = nil
+
+        if let tap = graphDetailDismissTap {
+            tableView.removeGestureRecognizer(tap)
+            graphDetailDismissTap = nil
+        }
+
+        // Clear references immediately so a new popup can be created right away
+        graphDetailHostingController = nil
+        graphDetailViewModel = nil
+        graphDetailLeadingConstraint = nil
+        graphDetailTopConstraint = nil
+        graphDetailPopupOrientation = nil
+
+        let cleanup = {
+            hostingController.willMove(toParent: nil)
+            hostingController.view.removeFromSuperview()
+            hostingController.removeFromParent()
+        }
+
+        if animated {
+            UIView.animate(withDuration: 0.15, animations: {
+                hostingController.view.alpha = 0
+                hostingController.view.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+            }, completion: { _ in
+                cleanup()
+            })
+        } else {
+            cleanup()
+        }
     }
 }

@@ -1,0 +1,908 @@
+//
+//  LoopInsights_DashboardViewModel.swift
+//  Loop (AID) PowerPack — based on LoopKit/Loop.
+//
+//  Concept & design by Taylor Patterson. Coded & tested by Claude Code in February 2026.
+//  Copyright © 2026 LoopKit Authors and Taylor Patterson.
+//
+
+import Foundation
+import Combine
+import LoopKit
+import SwiftUI
+
+/// Main view model for the LoopInsights Dashboard. Orchestrates data aggregation,
+/// AI analysis, and suggestion state management.
+///
+/// Owned by DashboardView. Calls Coordinator services for data access and AI analysis.
+final class LoopInsights_DashboardViewModel: ObservableObject {
+
+    // MARK: - Published State
+
+    /// Current analysis state
+    @Published var isAnalyzing = false
+    @Published var isAnalyzingAll = false
+    @Published var analysisError: LoopInsightsError?
+    @Published var lastAnalysisDate: Date?
+
+    /// Current therapy snapshot
+    @Published var currentSnapshot: LoopInsightsTherapySnapshot?
+
+    /// AI analysis results
+    @Published var analysisResponse: LoopInsightsAnalysisResponse?
+    @Published var overallAssessment: String?
+
+    /// Suggestion records (pending)
+    @Published var pendingSuggestions: [LoopInsightsSuggestionRecord] = []
+
+    /// Recently applied suggestions (last 30 days) for the Settings Impact Tracker
+    var recentlyAppliedSuggestions: [LoopInsightsSuggestionRecord] {
+        let cutoff = Date().addingTimeInterval(-30 * 24 * 3600)
+        return coordinator.suggestionStore.resolvedRecords
+            .filter { ($0.status == .applied || $0.status == .autoApplied) && ($0.resolvedAt ?? $0.createdAt) > cutoff }
+            .sorted { ($0.resolvedAt ?? $0.createdAt) > ($1.resolvedAt ?? $1.createdAt) }
+    }
+
+    /// Selected setting type for analysis focus
+    @Published var focusSettingType: LoopInsightsSettingType = .basalRate
+
+    /// Analysis period
+    @Published var analysisPeriod: LoopInsightsAnalysisPeriod
+
+    /// Apply mode confirmation state
+    @Published var showingApplyConfirmation = false
+    @Published var showingPreFillEditor = false
+    @Published var recordToApply: LoopInsightsSuggestionRecord?
+
+    /// Aggregated stats (for display)
+    @Published var aggregatedStats: LoopInsightsAggregatedStats?
+
+    /// Setting types that have been analyzed — used to show green "OK" status
+    /// for settings that were reviewed and found to need no changes
+    @Published var analyzedSettingTypes: Set<LoopInsightsSettingType> = []
+
+    /// Detected glucose/insulin patterns from aggregated data
+    @Published var detectedPatterns: [LoopInsightsDetectedPattern] = []
+
+    /// Newly discovered behavior correction patterns (alert upon discovery)
+    @Published var newBehaviorDiscoveries: [LoopInsightsCorrectionPattern] = []
+
+    /// Suggestions that were just auto-applied (for notification display)
+    @Published var autoAppliedSuggestions: [LoopInsightsSuggestion] = []
+
+    /// Settings score (0-100) based on objective metrics
+    @Published var settingsScore: Int?
+    @Published var settingsScoreBreakdown: SettingsScoreBreakdown?
+
+    /// Whether current metrics indicate settings are already performing well
+    @Published var settingsAlreadyOptimal: Bool = false
+
+    /// P6: Pre-computed AGP data points — computed once when samples change, not on every view render
+    @Published var agpComputedData: [LoopInsightsAGPDataPoint] = []
+
+    /// True when the analysis period is 14 days (standard AGP 24-hour overlay mode)
+    var isAGPMode: Bool { analysisPeriod == .fourteenDays }
+
+    // MARK: - Dependencies
+
+    let coordinator: LoopInsights_Coordinator
+    private var cancellables = Set<AnyCancellable>()
+
+    /// Expose suggestion store for views that need direct access
+    var suggestionStore: LoopInsights_SuggestionStore {
+        coordinator.suggestionStore
+    }
+
+    /// Expose background monitor for banner overlay in DashboardView.
+    /// Returns nil if monitoring is disabled.
+    var backgroundMonitor: LoopInsights_BackgroundMonitor? {
+        guard LoopInsights_FeatureFlags.backgroundMonitorEnabled else { return nil }
+        return coordinator.backgroundMonitor
+    }
+
+    // MARK: - Initialization
+
+    init(coordinator: LoopInsights_Coordinator) {
+        self.coordinator = coordinator
+        self.analysisPeriod = LoopInsights_FeatureFlags.analysisPeriod
+
+        // Observe suggestion store changes
+        coordinator.suggestionStore.$records
+            .map { records in records.filter { $0.status == .pending }.sorted { $0.createdAt > $1.createdAt } }
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$pendingSuggestions)
+
+        // Load initial snapshot
+        loadCurrentSettings()
+
+        // Check for new behavior correction patterns (alert upon discovery)
+        checkBehaviorDiscoveries()
+    }
+
+    // MARK: - Actions
+
+    /// Load current therapy settings snapshot
+    func loadCurrentSettings() {
+        do {
+            currentSnapshot = try coordinator.captureCurrentSnapshot()
+        } catch {
+            LoopInsights_FeatureFlags.log.error("Failed to capture therapy snapshot: \(error)")
+        }
+    }
+
+    /// Check for newly discovered behavior correction patterns
+    func checkBehaviorDiscoveries() {
+        guard LoopInsights_FeatureFlags.foodResponseEnabled else { return }
+        DispatchQueue.global(qos: .utility).async {
+            let discoveries = LoopInsights_BehaviorInsightsStore.checkForNewDiscoveries()
+            DispatchQueue.main.async {
+                self.newBehaviorDiscoveries = discoveries
+            }
+        }
+    }
+
+    /// Dismiss the behavior discovery alert
+    func dismissBehaviorDiscoveries() {
+        newBehaviorDiscoveries = []
+    }
+
+    /// Run AI analysis for the focused setting type
+    func runAnalysis() {
+        guard !isAnalyzing else { return }
+
+        isAnalyzing = true
+        analysisError = nil
+        autoAppliedSuggestions = []
+
+        Task { @MainActor in
+            // User-initiated paid AI action — pass through the spend gate.
+            guard await PowerPack_APIUsage.shared.gate(actionLabel: "Therapy analysis", estCostUSD: 0.07) else {
+                self.isAnalyzing = false
+                return
+            }
+            do {
+                // Aggregate data
+                let stats = try await coordinator.dataAggregator.aggregateData(period: analysisPeriod)
+                self.aggregatedStats = stats
+
+                // P3+P6: Use cached data for chart and supplemental context
+                let cachedCarbs = coordinator.dataAggregator.lastFetchedCarbEntries
+                if LoopInsights_FeatureFlags.agpChartEnabled {
+                    let glucoseForChart = coordinator.dataAggregator.lastGlucoseForAGP
+                    if isAGPMode {
+                        self.agpComputedData = LoopInsights_AGPChartView.computeStandardAGP(from: glucoseForChart)
+                    } else {
+                        self.agpComputedData = LoopInsights_AGPChartView.computeProfile(from: glucoseForChart)
+                    }
+                }
+
+                // Capture current settings
+                let snapshot = try coordinator.captureCurrentSnapshot()
+                self.currentSnapshot = snapshot
+
+                // P3: Pass cached glucose + carbs to avoid re-fetching in supplemental context
+                let supplementalContext = await coordinator.buildSupplementalContext(
+                    stats: stats,
+                    glucoseSamples: coordinator.dataAggregator.lastFetchedGlucoseSamples,
+                    carbEntries: cachedCarbs
+                )
+
+                // Run AI analysis (include recent changes so AI knows data predates current settings)
+                let recentChanges = self.recentlyAppliedRecords()
+                let pastOutcomes = self.buildPastSuggestionOutcomes(stats: stats)
+                let response = try await coordinator.aiAnalysis.analyze(
+                    settingType: focusSettingType,
+                    currentSettings: snapshot,
+                    stats: stats,
+                    recentChanges: recentChanges,
+                    supplementalContext: supplementalContext,
+                    pastAppliedWithOutcomes: pastOutcomes,
+                    unitContext: coordinator.unitContext
+                )
+
+                // Apply outcome evaluations from the AI back to the store
+                self.applyReturnedEvaluations(response.pastEvaluations)
+
+                // Show patterns, score, and AI results together after analysis completes
+                self.detectedPatterns = Self.detectPatterns(from: stats, unitContext: coordinator.unitContext)
+                self.updateSettingsScore()
+                self.analysisResponse = response
+                self.overallAssessment = response.overallAssessment
+                self.lastAnalysisDate = Date()
+
+                // Track that this setting type has been analyzed
+                self.analyzedSettingTypes.insert(focusSettingType)
+
+                // Dismiss any existing pending suggestions for this setting type
+                for record in pendingSuggestions where record.suggestion.settingType == focusSettingType {
+                    coordinator.suggestionStore.markDismissed(recordID: record.id)
+                }
+
+                // Add new suggestions as pending records
+                let _ = coordinator.suggestionStore.addSuggestions(response.suggestions)
+
+                // Note: nextRecommendedFocus from AI is intentionally ignored
+                // for single-analysis — keep focus on what the user selected.
+
+                // Auto-apply if developer mode + auto-apply enabled
+                if LoopInsights_FeatureFlags.developerModeEnabled &&
+                   LoopInsights_FeatureFlags.applyMode == .autoApply {
+                    for suggestion in response.suggestions where suggestion.confidence >= .high {
+                        await autoApplySuggestion(suggestion)
+                    }
+                }
+
+                self.isAnalyzing = false
+
+            } catch let error as LoopInsightsError {
+                self.analysisError = error
+                self.isAnalyzing = false
+            } catch {
+                self.analysisError = .aiProviderError(error.localizedDescription)
+                self.isAnalyzing = false
+            }
+        }
+    }
+
+    /// Run AI analysis for all three setting types sequentially
+    func runAnalysisAll() {
+        guard !isAnalyzing else { return }
+
+        isAnalyzing = true
+        isAnalyzingAll = true
+        analysisError = nil
+        autoAppliedSuggestions = []
+
+        Task { @MainActor in
+            // User-initiated paid AI action — pass through the spend gate.
+            guard await PowerPack_APIUsage.shared.gate(actionLabel: "Therapy analysis (all settings)", estCostUSD: 0.21) else {
+                self.isAnalyzing = false
+                self.isAnalyzingAll = false
+                return
+            }
+            do {
+                // Aggregate data once for all analyses
+                let stats = try await coordinator.dataAggregator.aggregateData(period: analysisPeriod)
+                self.aggregatedStats = stats
+
+                // P3+P6: Use cached data for chart and supplemental context
+                let cachedCarbs = coordinator.dataAggregator.lastFetchedCarbEntries
+                if LoopInsights_FeatureFlags.agpChartEnabled {
+                    let glucoseForChart = coordinator.dataAggregator.lastGlucoseForAGP
+                    if isAGPMode {
+                        self.agpComputedData = LoopInsights_AGPChartView.computeStandardAGP(from: glucoseForChart)
+                    } else {
+                        self.agpComputedData = LoopInsights_AGPChartView.computeProfile(from: glucoseForChart)
+                    }
+                }
+
+                let snapshot = try coordinator.captureCurrentSnapshot()
+                self.currentSnapshot = snapshot
+
+                // P3: Pass cached glucose + carbs to avoid re-fetching in supplemental context
+                let supplementalContext = await coordinator.buildSupplementalContext(
+                    stats: stats,
+                    glucoseSamples: coordinator.dataAggregator.lastFetchedGlucoseSamples,
+                    carbEntries: cachedCarbs
+                )
+
+                // Analyze each setting type in tuning order: CR → ISF → BR
+                let recentChanges = self.recentlyAppliedRecords()
+                let pastOutcomes = self.buildPastSuggestionOutcomes(stats: stats)
+                for settingType in LoopInsightsSettingType.allCases {
+                    let response = try await coordinator.aiAnalysis.analyze(
+                        settingType: settingType,
+                        currentSettings: snapshot,
+                        stats: stats,
+                        recentChanges: recentChanges,
+                        supplementalContext: supplementalContext,
+                        pastAppliedWithOutcomes: pastOutcomes,
+                        unitContext: coordinator.unitContext
+                    )
+
+                    // Apply outcome evaluations from the AI back to the store
+                    self.applyReturnedEvaluations(response.pastEvaluations)
+
+                    self.overallAssessment = response.overallAssessment
+                    self.analyzedSettingTypes.insert(settingType)
+
+                    // Dismiss existing pending suggestions for this type
+                    for record in pendingSuggestions where record.suggestion.settingType == settingType {
+                        coordinator.suggestionStore.markDismissed(recordID: record.id)
+                    }
+
+                    let _ = coordinator.suggestionStore.addSuggestions(response.suggestions)
+
+                    // Auto-apply if developer mode + auto-apply enabled
+                    if LoopInsights_FeatureFlags.developerModeEnabled &&
+                       LoopInsights_FeatureFlags.applyMode == .autoApply {
+                        for suggestion in response.suggestions where suggestion.confidence >= .high {
+                            await autoApplySuggestion(suggestion)
+                        }
+                    }
+                }
+
+                // Show patterns and score after all analyses complete
+                self.detectedPatterns = Self.detectPatterns(from: stats, unitContext: coordinator.unitContext)
+                self.updateSettingsScore()
+
+                self.lastAnalysisDate = Date()
+                self.isAnalyzing = false
+                self.isAnalyzingAll = false
+
+            } catch let error as LoopInsightsError {
+                self.analysisError = error
+                self.isAnalyzing = false
+                self.isAnalyzingAll = false
+            } catch {
+                self.analysisError = .aiProviderError(error.localizedDescription)
+                self.isAnalyzing = false
+                self.isAnalyzingAll = false
+            }
+        }
+    }
+
+    /// Apply a suggestion based on the current apply mode
+    /// Build a glucose stats snapshot from the current aggregated stats for impact tracking
+    private var currentGlucoseStatsSnapshot: LoopInsightsGlucoseStatsSnapshot? {
+        guard let stats = aggregatedStats else { return nil }
+        return LoopInsightsGlucoseStatsSnapshot(
+            timeInRange: stats.glucoseStats.timeInRange,
+            timeBelowRange: stats.glucoseStats.timeBelowRange,
+            timeAboveRange: stats.glucoseStats.timeAboveRange,
+            averageGlucose: stats.glucoseStats.averageGlucose,
+            coefficientOfVariation: stats.glucoseStats.coefficientOfVariation,
+            gmi: stats.glucoseStats.gmi,
+            capturedAt: Date(),
+            periodDays: stats.period.rawValue
+        )
+    }
+
+    func applySuggestion(_ record: LoopInsightsSuggestionRecord) {
+        let mode = LoopInsights_FeatureFlags.applyMode
+
+        switch mode {
+        case .manual:
+            // Just mark as applied — user navigates to Therapy Settings manually
+            let snapshotBefore = try? coordinator.captureCurrentSnapshot()
+            coordinator.suggestionStore.markApplied(
+                recordID: record.id,
+                mode: .manual,
+                snapshotBefore: snapshotBefore,
+                snapshotAfter: nil,
+                glucoseStats: currentGlucoseStatsSnapshot
+            )
+
+        case .oneTap:
+            // Show confirmation dialog first
+            recordToApply = record
+            showingApplyConfirmation = true
+
+        case .preFill:
+            // Open editor pre-filled with proposed values for user review
+            recordToApply = record
+            showingPreFillEditor = true
+
+        case .autoApply:
+            // This path is only available in developer mode
+            Task { @MainActor in
+                await autoApplySuggestion(record.suggestion)
+            }
+        }
+    }
+
+    /// Confirm one-tap apply after user accepts disclaimer
+    func confirmApply() {
+        guard let record = recordToApply else { return }
+
+        // Hard block: cannot apply if any proposed value is outside absolute bounds
+        if record.suggestion.hasAbsoluteViolation {
+            LoopInsights_FeatureFlags.log.error("confirmApply BLOCKED: suggestion has absolute guardrail violation")
+            recordToApply = nil
+            showingApplyConfirmation = false
+            return
+        }
+
+        let snapshotBefore = try? coordinator.captureCurrentSnapshot()
+
+        // Write the therapy settings changes to Loop
+        coordinator.applyTherapyChanges(suggestion: record.suggestion)
+
+        let snapshotAfter = try? coordinator.captureCurrentSnapshot()
+
+        coordinator.suggestionStore.markApplied(
+            recordID: record.id,
+            mode: LoopInsights_FeatureFlags.applyMode,
+            snapshotBefore: snapshotBefore,
+            snapshotAfter: snapshotAfter,
+            glucoseStats: currentGlucoseStatsSnapshot
+        )
+
+        recordToApply = nil
+        showingApplyConfirmation = false
+        loadCurrentSettings()
+    }
+
+    /// Cancel apply confirmation
+    func cancelApply() {
+        recordToApply = nil
+        showingApplyConfirmation = false
+        showingPreFillEditor = false
+    }
+
+    /// Apply with user-edited values from the pre-fill editor
+    func applyEditedSuggestion(editedBlocks: [LoopInsightsTimeBlock]) {
+        guard let record = recordToApply else { return }
+
+        // Validate edited blocks against absolute bounds
+        let settingType = record.suggestion.settingType
+        for block in editedBlocks {
+            let classification = LoopInsights_SafetyGuardrails.classify(
+                value: block.proposedValue, settingType: settingType
+            )
+            if classification == .belowAbsolute || classification == .aboveAbsolute {
+                LoopInsights_FeatureFlags.log.error("applyEditedSuggestion BLOCKED: edited value \(block.proposedValue) outside absolute bounds for \(settingType.displayName)")
+                recordToApply = nil
+                showingPreFillEditor = false
+                return
+            }
+        }
+
+        let snapshotBefore = try? coordinator.captureCurrentSnapshot()
+
+        // Build a modified suggestion with the user's edited values
+        let editedSuggestion = LoopInsightsSuggestion(
+            id: record.suggestion.id,
+            settingType: record.suggestion.settingType,
+            timeBlocks: editedBlocks,
+            reasoning: record.suggestion.reasoning,
+            confidence: record.suggestion.confidence,
+            analysisPeriod: record.suggestion.analysisPeriod,
+            createdAt: record.suggestion.createdAt,
+            successCriteria: record.suggestion.successCriteria
+        )
+
+        coordinator.applyTherapyChanges(suggestion: editedSuggestion)
+
+        let snapshotAfter = try? coordinator.captureCurrentSnapshot()
+
+        coordinator.suggestionStore.markApplied(
+            recordID: record.id,
+            mode: .preFill,
+            snapshotBefore: snapshotBefore,
+            snapshotAfter: snapshotAfter,
+            glucoseStats: currentGlucoseStatsSnapshot
+        )
+
+        recordToApply = nil
+        showingPreFillEditor = false
+        loadCurrentSettings()
+    }
+
+    /// Dismiss a suggestion
+    func dismissSuggestion(_ record: LoopInsightsSuggestionRecord) {
+        coordinator.suggestionStore.markDismissed(recordID: record.id)
+    }
+
+    /// Dismiss all pending suggestions
+    func dismissAllPending() {
+        coordinator.suggestionStore.dismissAllPending()
+    }
+
+    /// Revert a previously applied suggestion by restoring the pre-apply snapshot.
+    /// Returns true if the revert succeeded.
+    @discardableResult
+    func revertSuggestion(_ record: LoopInsightsSuggestionRecord) -> Bool {
+        guard record.status.isRevertable else { return false }
+        guard let snapshotBefore = record.settingsSnapshotBefore else {
+            LoopInsights_FeatureFlags.log.error("Cannot revert: no pre-apply snapshot stored")
+            return false
+        }
+
+        let success = coordinator.revertToSnapshot(snapshotBefore)
+        if success {
+            coordinator.suggestionStore.markReverted(recordID: record.id)
+            loadCurrentSettings()
+        }
+        return success
+    }
+
+    /// Returns the analysis status for a setting type (used for color indicators)
+    func settingStatus(_ type: LoopInsightsSettingType) -> LoopInsightsSettingStatus {
+        let hasPending = pendingSuggestions.contains { $0.suggestion.settingType == type }
+        if hasPending {
+            return .hasSuggestions
+        } else if analyzedSettingTypes.contains(type) {
+            return .analyzedOK
+        }
+        return .notAnalyzed
+    }
+
+    /// Update analysis period and persist to settings
+    func updateAnalysisPeriod(_ period: LoopInsightsAnalysisPeriod) {
+        analysisPeriod = period
+        LoopInsights_FeatureFlags.analysisPeriod = period
+        // Clear stale chart data so labels don't show a mismatched date range
+        agpComputedData = []
+    }
+
+    /// The most recent AI debug log (system prompt, user prompt, raw response).
+    /// Available in developer mode for troubleshooting.
+    var lastDebugLog: LoopInsightsDebugLog? {
+        coordinator.aiAnalysis.lastDebugLog
+    }
+
+    /// Get records that were applied/auto-applied within the last 24 hours
+    /// AND whose changes are still reflected in the current settings.
+    /// If the user manually reverted settings, those records are excluded.
+    private func recentlyAppliedRecords() -> [LoopInsightsSuggestionRecord] {
+        let cutoff = Date().addingTimeInterval(-24 * 3600)
+        guard let currentSnapshot = currentSnapshot else { return [] }
+
+        return coordinator.suggestionStore.allRecords.filter { record in
+            guard (record.status == .applied || record.status == .autoApplied),
+                  (record.resolvedAt ?? record.createdAt) > cutoff else {
+                return false
+            }
+
+            // Verify the proposed changes are still in effect by comparing
+            // against current settings. If the user manually reverted, the
+            // current values won't match the proposed values.
+            let currentItems: [LoopInsightsTherapySnapshot.LoopInsightsScheduleItem]
+            switch record.suggestion.settingType {
+            case .carbRatio: currentItems = currentSnapshot.carbRatioItems
+            case .insulinSensitivity: currentItems = currentSnapshot.insulinSensitivityItems
+            case .basalRate: currentItems = currentSnapshot.basalRateItems
+            }
+
+            // P8: Pre-sort once for all time blocks in this record
+            let sortedItems = currentItems.sorted { $0.startTime < $1.startTime }
+
+            // Check if at least one proposed value still matches current settings
+            for block in record.suggestion.timeBlocks {
+                let currentValue = Self.effectiveValue(at: block.startTime, in: sortedItems)
+                if abs(currentValue - block.proposedValue) < 0.01 {
+                    return true // This change is still active
+                }
+            }
+            return false // None of the proposed values match — change was reverted
+        }
+    }
+
+    /// Find the effective value at a given time in a schedule snapshot.
+    /// P8: Expects pre-sorted items to avoid redundant sorting per call.
+    private static func effectiveValue(
+        at time: TimeInterval,
+        in sortedItems: [LoopInsightsTherapySnapshot.LoopInsightsScheduleItem]
+    ) -> Double {
+        var result = sortedItems.first?.value ?? 0
+        for item in sortedItems {
+            if item.startTime <= time {
+                result = item.value
+            } else {
+                break
+            }
+        }
+        return result
+    }
+
+    /// Build outcome data for past applied suggestions that need evaluation.
+    /// Limited to the 3 most recent unevaluated applied suggestions within 30 days.
+    /// Only includes hourly glucose averages for hours affected by each change.
+    private func buildPastSuggestionOutcomes(stats: LoopInsightsAggregatedStats) -> [LoopInsights_AIAnalysis.SuggestionWithOutcomeData] {
+        let cutoff = Date().addingTimeInterval(-30 * 24 * 3600)
+        let now = Date()
+
+        // Find applied records with success criteria, not yet evaluated, within 30 days
+        let candidates = coordinator.suggestionStore.allRecords.filter { record in
+            guard (record.status == .applied || record.status == .autoApplied),
+                  record.outcomeEvaluation == nil,
+                  record.suggestion.successCriteria != nil,
+                  (record.resolvedAt ?? record.createdAt) > cutoff else {
+                return false
+            }
+            return true
+        }
+        .sorted { ($0.resolvedAt ?? $0.createdAt) > ($1.resolvedAt ?? $1.createdAt) }
+        .prefix(3) // Limit to 3 most recent to control token budget
+
+        return candidates.map { record in
+            let appliedDate = record.resolvedAt ?? record.createdAt
+            let daysSince = max(1, Int(now.timeIntervalSince(appliedDate) / (24 * 3600)))
+
+            // Only include hourly glucose for hours affected by this change's time blocks
+            var relevantHours: Set<Int> = []
+            for block in record.suggestion.timeBlocks {
+                let startHour = Int(block.startTime) / 3600
+                let endHour = Int(block.endTime) / 3600
+                for h in startHour..<endHour {
+                    relevantHours.insert(h % 24)
+                }
+            }
+
+            var postChangeStats: [Int: Double] = [:]
+            for hour in relevantHours {
+                if let avg = stats.glucoseStats.hourlyAverages[hour] {
+                    postChangeStats[hour] = avg
+                }
+            }
+
+            return LoopInsights_AIAnalysis.SuggestionWithOutcomeData(
+                record: record,
+                postChangeGlucoseStats: postChangeStats,
+                daysSinceApplied: daysSince
+            )
+        }
+    }
+
+    /// Apply outcome evaluations returned by the AI to the suggestion store
+    private func applyReturnedEvaluations(_ evaluations: [String: LoopInsightsOutcomeEvaluation]) {
+        for (recordIDString, evaluation) in evaluations {
+            guard let recordID = UUID(uuidString: recordIDString) else { continue }
+            coordinator.suggestionStore.setOutcomeEvaluation(recordID: recordID, evaluation: evaluation)
+        }
+    }
+
+    // MARK: - Private
+
+    private func autoApplySuggestion(_ suggestion: LoopInsightsSuggestion) async {
+        // Stricter for automated changes: block if ANY value is outside recommended range
+        if suggestion.hasGuardrailWarning {
+            LoopInsights_FeatureFlags.log.error("autoApply BLOCKED: suggestion for \(suggestion.settingType.displayName) has guardrail warning — requires manual review")
+            return
+        }
+
+        let snapshotBefore = try? coordinator.captureCurrentSnapshot()
+
+        coordinator.applyTherapyChanges(suggestion: suggestion)
+
+        let snapshotAfter = try? coordinator.captureCurrentSnapshot()
+
+        if let record = coordinator.suggestionStore.pendingRecords.first(where: { $0.suggestion.id == suggestion.id }) {
+            coordinator.suggestionStore.markApplied(
+                recordID: record.id,
+                mode: .autoApply,
+                snapshotBefore: snapshotBefore,
+                snapshotAfter: snapshotAfter,
+                glucoseStats: currentGlucoseStatsSnapshot
+            )
+        }
+
+        autoAppliedSuggestions.append(suggestion)
+    }
+
+    // MARK: - Pattern Detection
+
+    /// Detect glucose/insulin patterns from aggregated statistics.
+    /// Returns patterns sorted by severity (high first).
+    /// Pattern detail strings use the user's preferred glucose unit; threshold comparisons
+    /// stay in canonical mg/dL because `g.hourlyAverages` and `glucoseValues` are mg/dL.
+    static func detectPatterns(from stats: LoopInsightsAggregatedStats, unitContext: LoopInsights_GlucoseUnitContext = .fallbackMgdl) -> [LoopInsightsDetectedPattern] {
+        var patterns: [LoopInsightsDetectedPattern] = []
+        let g = stats.glucoseStats
+        let period = stats.period
+
+        // Overnight lows: average glucose during hours 0-5 below 80 mg/dL
+        let overnightHours = (0...5)
+        let overnightAvgs = overnightHours.compactMap { g.hourlyAverages[$0] }
+        if !overnightAvgs.isEmpty {
+            let overnightAvg = overnightAvgs.reduce(0, +) / Double(overnightAvgs.count)
+            if overnightAvg < 70 {
+                patterns.append(LoopInsightsDetectedPattern(
+                    type: .overnightLows,
+                    detail: String(format: NSLocalizedString("Average overnight glucose %@ in %@", comment: "LoopInsights pattern detail: overnight lows"), unitContext.formatMgdl(overnightAvg), period.displayName),
+                    severity: .high
+                ))
+            } else if overnightAvg < 80 {
+                patterns.append(LoopInsightsDetectedPattern(
+                    type: .overnightLows,
+                    detail: String(format: NSLocalizedString("Average overnight glucose %@ in %@", comment: "LoopInsights pattern detail: overnight lows moderate"), unitContext.formatMgdl(overnightAvg), period.displayName),
+                    severity: .medium
+                ))
+            }
+        }
+
+        // Frequent lows: time below range > 4% (ADA target < 4%)
+        if g.timeBelowRange > 8 {
+            patterns.append(LoopInsightsDetectedPattern(
+                type: .frequentLows,
+                detail: String(format: NSLocalizedString("%.1f%% time below range in %@", comment: "LoopInsights pattern detail: frequent lows"), g.timeBelowRange, period.displayName),
+                severity: .high
+            ))
+        } else if g.timeBelowRange > 4 {
+            patterns.append(LoopInsightsDetectedPattern(
+                type: .frequentLows,
+                detail: String(format: NSLocalizedString("%.1f%% time below range in %@", comment: "LoopInsights pattern detail: frequent lows moderate"), g.timeBelowRange, period.displayName),
+                severity: .medium
+            ))
+        }
+
+        // Overnight highs: average glucose during hours 0-5 above 180 mg/dL
+        if !overnightAvgs.isEmpty {
+            let overnightAvg = overnightAvgs.reduce(0, +) / Double(overnightAvgs.count)
+            if overnightAvg > 200 {
+                patterns.append(LoopInsightsDetectedPattern(
+                    type: .overnightHighs,
+                    detail: String(format: NSLocalizedString("Average overnight glucose %@ in %@", comment: "LoopInsights pattern detail: overnight highs"), unitContext.formatMgdl(overnightAvg), period.displayName),
+                    severity: .high
+                ))
+            } else if overnightAvg > 180 {
+                patterns.append(LoopInsightsDetectedPattern(
+                    type: .overnightHighs,
+                    detail: String(format: NSLocalizedString("Average overnight glucose %@ in %@", comment: "LoopInsights pattern detail: overnight highs moderate"), unitContext.formatMgdl(overnightAvg), period.displayName),
+                    severity: .medium
+                ))
+            }
+        }
+
+        // Dawn phenomenon: glucose rises > 30 mg/dL between hours 3-7
+        let dawnStart = g.hourlyAverages[3] ?? g.hourlyAverages[4]
+        let dawnPeak = g.hourlyAverages[7] ?? g.hourlyAverages[6]
+        if let start = dawnStart, let peak = dawnPeak {
+            let rise = peak - start
+            if rise > 40 {
+                patterns.append(LoopInsightsDetectedPattern(
+                    type: .dawnPhenomenon,
+                    detail: String(format: NSLocalizedString("Average rise of %@ between 3 AM–7 AM", comment: "LoopInsights pattern detail: dawn phenomenon"), unitContext.formatMgdl(rise)),
+                    severity: .high
+                ))
+            } else if rise > 20 {
+                patterns.append(LoopInsightsDetectedPattern(
+                    type: .dawnPhenomenon,
+                    detail: String(format: NSLocalizedString("Average rise of %@ between 3 AM–7 AM", comment: "LoopInsights pattern detail: dawn phenomenon moderate"), unitContext.formatMgdl(rise)),
+                    severity: .medium
+                ))
+            }
+        }
+
+        // Post-meal spikes: high glucose during common meal hours relative to pre-meal
+        // Compare hours 7-8 (breakfast) vs 6, hours 12-13 (lunch) vs 11, hours 18-19 (dinner) vs 17
+        var spikeCount = 0
+        let mealWindows: [(pre: Int, post: Int)] = [(6, 8), (11, 13), (17, 19)]
+        for window in mealWindows {
+            if let pre = g.hourlyAverages[window.pre], let post = g.hourlyAverages[window.post] {
+                if post - pre > 50 { spikeCount += 1 }
+            }
+        }
+        if spikeCount >= 2 {
+            patterns.append(LoopInsightsDetectedPattern(
+                type: .postMealSpikes,
+                detail: String(format: NSLocalizedString("Post-meal glucose spikes detected at %d of 3 meal windows", comment: "LoopInsights pattern detail: post-meal spikes"), spikeCount),
+                severity: spikeCount >= 3 ? .high : .medium
+            ))
+        }
+
+        // High variability: CV > 36% (ADA target < 36%)
+        if g.coefficientOfVariation > 45 {
+            patterns.append(LoopInsightsDetectedPattern(
+                type: .highVariability,
+                detail: String(format: NSLocalizedString("Coefficient of variation %.1f%% (target <36%%)", comment: "LoopInsights pattern detail: high variability"), g.coefficientOfVariation),
+                severity: .high
+            ))
+        } else if g.coefficientOfVariation > 36 {
+            patterns.append(LoopInsightsDetectedPattern(
+                type: .highVariability,
+                detail: String(format: NSLocalizedString("Coefficient of variation %.1f%% (target <36%%)", comment: "LoopInsights pattern detail: high variability moderate"), g.coefficientOfVariation),
+                severity: .medium
+            ))
+        }
+
+        // Consistent highs: time above range > 25% (ADA target < 25%)
+        if g.timeAboveRange > 40 {
+            patterns.append(LoopInsightsDetectedPattern(
+                type: .consistentHighs,
+                detail: String(format: NSLocalizedString("%.1f%% time above range in %@", comment: "LoopInsights pattern detail: consistent highs"), g.timeAboveRange, period.displayName),
+                severity: .high
+            ))
+        } else if g.timeAboveRange > 25 {
+            patterns.append(LoopInsightsDetectedPattern(
+                type: .consistentHighs,
+                detail: String(format: NSLocalizedString("%.1f%% time above range in %@", comment: "LoopInsights pattern detail: consistent highs moderate"), g.timeAboveRange, period.displayName),
+                severity: .medium
+            ))
+        }
+
+        // Consistent lows: time below range with low average
+        if g.averageGlucose < 100 && g.timeBelowRange > 2 {
+            patterns.append(LoopInsightsDetectedPattern(
+                type: .consistentLows,
+                detail: String(format: NSLocalizedString("Average glucose %@ with %.1f%% below range", comment: "LoopInsights pattern detail: consistent lows"), unitContext.formatMgdl(g.averageGlucose), g.timeBelowRange),
+                severity: g.averageGlucose < 90 ? .high : .medium
+            ))
+        }
+
+        // Sort: high severity first
+        return patterns.sorted { $0.severity > $1.severity }
+    }
+
+    // MARK: - Settings Score
+
+    struct SettingsScoreBreakdown {
+        let tirScore: Int        // 0-40 points
+        let belowRangeScore: Int // 0-25 points
+        let cvScore: Int         // 0-20 points
+        let gmiScore: Int        // 0-15 points
+        let total: Int           // 0-100
+
+        var grade: String {
+            switch total {
+            case 90...100: return "A"
+            case 80..<90: return "B"
+            case 70..<80: return "C"
+            case 60..<70: return "D"
+            default: return "F"
+            }
+        }
+
+        var gradeColor: Color {
+            switch total {
+            case 90...100: return .green
+            case 80..<90: return .blue
+            case 70..<80: return .yellow
+            case 60..<70: return .orange
+            default: return .red
+            }
+        }
+
+        var summary: String {
+            switch total {
+            case 90...100: return NSLocalizedString("Excellent — your settings are well-optimized", comment: "LoopInsights score: excellent")
+            case 80..<90: return NSLocalizedString("Good — minor improvements possible", comment: "LoopInsights score: good")
+            case 70..<80: return NSLocalizedString("Fair — some adjustments recommended", comment: "LoopInsights score: fair")
+            case 60..<70: return NSLocalizedString("Needs attention — settings adjustments likely needed", comment: "LoopInsights score: needs attention")
+            default: return NSLocalizedString("Review recommended — significant adjustments may help", comment: "LoopInsights score: review")
+            }
+        }
+    }
+
+    /// Calculate an objective settings score from glucose metrics.
+    /// Based on international consensus targets (ADA/AACE).
+    static func calculateSettingsScore(from stats: LoopInsightsAggregatedStats.GlucoseStats) -> SettingsScoreBreakdown {
+        // TIR score: 40 points max. Target >70% (ADA consensus)
+        // 90%+ = 40, 80% = 32, 70% = 24, <50% = 0
+        let tirScore: Int
+        if stats.timeInRange >= 90 { tirScore = 40 }
+        else if stats.timeInRange >= 70 { tirScore = Int(((stats.timeInRange - 50) / 40) * 40) }
+        else if stats.timeInRange >= 50 { tirScore = Int(((stats.timeInRange - 50) / 20) * 16) }
+        else { tirScore = 0 }
+
+        // Below range score: 25 points max. Target <4% (ADA consensus)
+        // <1% = 25, <4% = 20, <8% = 10, >8% = 0
+        let belowRangeScore: Int
+        if stats.timeBelowRange < 1 { belowRangeScore = 25 }
+        else if stats.timeBelowRange < 4 { belowRangeScore = 20 }
+        else if stats.timeBelowRange < 8 { belowRangeScore = Int(25 - (stats.timeBelowRange * 2.5)) }
+        else { belowRangeScore = 0 }
+
+        // CV score: 20 points max. Target <36% (ADA consensus)
+        // <30% = 20, <36% = 15, <45% = 8, >45% = 0
+        let cvScore: Int
+        if stats.coefficientOfVariation < 30 { cvScore = 20 }
+        else if stats.coefficientOfVariation < 36 { cvScore = 15 }
+        else if stats.coefficientOfVariation < 45 { cvScore = 8 }
+        else { cvScore = 0 }
+
+        // GMI score: 15 points max. Target <7.0% (ADA)
+        // <6.5% = 15, <7.0% = 12, <7.5% = 8, <8.0% = 4, >8% = 0
+        let gmiScore: Int
+        if stats.gmi < 6.5 { gmiScore = 15 }
+        else if stats.gmi < 7.0 { gmiScore = 12 }
+        else if stats.gmi < 7.5 { gmiScore = 8 }
+        else if stats.gmi < 8.0 { gmiScore = 4 }
+        else { gmiScore = 0 }
+
+        let total = max(0, min(100, tirScore + belowRangeScore + cvScore + gmiScore))
+        return SettingsScoreBreakdown(tirScore: tirScore, belowRangeScore: belowRangeScore, cvScore: cvScore, gmiScore: gmiScore, total: total)
+    }
+
+    /// Update the settings score from current aggregated stats.
+    func updateSettingsScore() {
+        guard let stats = aggregatedStats else { return }
+        let breakdown = Self.calculateSettingsScore(from: stats.glucoseStats)
+        settingsScore = breakdown.total
+        settingsScoreBreakdown = breakdown
+
+        // Flag if settings are already performing well
+        settingsAlreadyOptimal = stats.glucoseStats.timeInRange > 85 && stats.glucoseStats.timeBelowRange < 4
+    }
+}

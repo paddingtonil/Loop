@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0069EFA11E7101DEB638B4C2 /* FoodFinder_AIProviderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD1A5B12D21DD26F7818B08 /* FoodFinder_AIProviderConfig.swift */; };
+		006C788DAD3BE961DC7DEF3F /* PowerPack_UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19EC8F84B4B01EE5546989D9 /* PowerPack_UpdateChecker.swift */; };
+		015042D80CDCC9F9B61B903F /* DataLayer_ReportGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8F547BCEE483F5F2DF323CE /* DataLayer_ReportGenerator.swift */; };
+		01BA2BE752047393AB59ED36 /* LoopInsights_MonitorSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE5833949817538698865F6 /* LoopInsights_MonitorSettingsView.swift */; };
+		051BB8037243680C0687EA79 /* LoopInsights_ReportGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29BFD6726CB3416DD8DE08BD /* LoopInsights_ReportGenerator.swift */; };
+		079EC1F06F2F6038756BDDF2 /* LoopInsights_AIAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CCCF9346DD7370B3975A83 /* LoopInsights_AIAnalysis.swift */; };
+		0BEF9B56D9BF491F2392550F /* DataLayer_ProviderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97E96DDA78152A5FE740FD4 /* DataLayer_ProviderProtocol.swift */; };
+		0C4E19D6352BAEBD22195CF3 /* LoopInsights_HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2570F1035D3A845E6230189B /* LoopInsights_HealthKitManager.swift */; };
+		0E01156F77D4B2E75523D557 /* FoodFinder_SearchRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB80A8355FAF1F4E646E111 /* FoodFinder_SearchRouter.swift */; };
+		0F344180B26115B3DB49A3F7 /* FoodFinder_LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B86683D6FC84C98C1021AC9 /* FoodFinder_LocationService.swift */; };
+		13295DEF172638BFE9207081 /* GraphDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D572EBABCCAB09715775926A /* GraphDetailView.swift */; };
 		1419606428D9550400BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
 		1419606928D9554E00BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
 		1419606A28D955BC00BA86E0 /* MockKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C101947127DD473C004E7EB8 /* MockKitUI.framework */; };
@@ -42,6 +53,12 @@
 		14B1738028AEDC6C006CCD7C /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892A5D58222F0A27008961AB /* Debug.swift */; };
 		14B1738128AEDC70006CCD7C /* StatusExtensionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F70C2111DE900EA006380B7 /* StatusExtensionContext.swift */; };
 		14D906F42A846510006EB79A /* FavoriteFoodsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14D906F32A846510006EB79A /* FavoriteFoodsViewModel.swift */; };
+		15CF9C0C36A50D07EDC72C04 /* LoopInsights_AlcoholTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD14B8265747D447C264D9A /* LoopInsights_AlcoholTracker.swift */; };
+		164EC6011323A48640046EB0 /* FoodFinder_AIServiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEA35D0C77CFBE73CBBAF290 /* FoodFinder_AIServiceManager.swift */; };
+		16990648A5D75816270ED7F8 /* DataLayer_ConsentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244F25FF57E564C904208F5E /* DataLayer_ConsentManager.swift */; };
+		188F8AEA1E65B52DBE1E0559 /* AutoPresets_RecommendationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47B91FB09EA02C1079290FA1 /* AutoPresets_RecommendationModels.swift */; };
+		1B21C0D879F682FD0DE7BB15 /* FoodFinder_ScannerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB316C0F6448184A5AD9AE5B /* FoodFinder_ScannerService.swift */; };
+		1B51AC4E311024D7A81A634B /* LoopInsights_SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A266A15E411B4AB60ABC4B /* LoopInsights_SettingsView.swift */; };
 		1D05219B2469E9DF000EBBDE /* StoredAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D05219A2469E9DF000EBBDE /* StoredAlert.swift */; };
 		1D05219D2469F1F5000EBBDE /* AlertStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D05219C2469F1F5000EBBDE /* AlertStore.swift */; };
 		1D080CBD2473214A00356610 /* AlertStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1D080CBB2473214A00356610 /* AlertStore.xcdatamodeld */; };
@@ -71,6 +88,24 @@
 		1DDE273E24AEA4B000796622 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */; };
 		1DDE274024AEA4F200796622 /* NotificationsCriticalAlertPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA46B5F2492E2E300D71A63 /* NotificationsCriticalAlertPermissionsView.swift */; };
 		1DFE9E172447B6270082C280 /* UserNotificationAlertSchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DFE9E162447B6270082C280 /* UserNotificationAlertSchedulerTests.swift */; };
+		1FDE947C49DDB9F909D27B01 /* LoopInsights_Phase5Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6FB47168C7C5E107309CC2F /* LoopInsights_Phase5Models.swift */; };
+		20E102D95123954D8F4384DB /* LoopInsights_SignalGapHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF73753CC874F5F7A949034D /* LoopInsights_SignalGapHistoryView.swift */; };
+		23EBC2AFF5B046DA71B8706B /* FoodFinder_CarbTrackingDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A071F1BBD88854C8B89CF0 /* FoodFinder_CarbTrackingDashboard.swift */; };
+		2606552720BC12164C272913 /* LoopInsights_AGPChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D16B2477081D3D5D1AB8694 /* LoopInsights_AGPChartView.swift */; };
+		262F44E876C2FCB3817DCC72 /* LoopInsights_BehaviorInsightsAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B55B850825FC159EF1082B /* LoopInsights_BehaviorInsightsAnalyzer.swift */; };
+		26BE764B796A172A22B27880 /* LoopInsights_ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3763C4E9526F83AB3F7D3F70 /* LoopInsights_ChatView.swift */; };
+		26D1850F1DD974F4393D5C02 /* DataLayer_EventModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB559C05A731CABF6F0B4201 /* DataLayer_EventModels.swift */; };
+		27764BB7F99C7CA1B3BB0AC4 /* FoodFinder_AIServiceAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1682483CAD20AB33DEC25ADA /* FoodFinder_AIServiceAdapter.swift */; };
+		27B6E7C065E532466B47E4FE /* BolusPro_SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A536BCBD1D2E24692C4600 /* BolusPro_SettingsView.swift */; };
+		2C52C27A9D699F9CD6DB6C56 /* LoopInsights_PreMealAdvisorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45AC2E89C78E9F2A46E75145 /* LoopInsights_PreMealAdvisorCard.swift */; };
+		2E34F5AB8320222407AAFC1E /* FoodFinder_VoiceSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBD734A20EE282EE164FC6B9 /* FoodFinder_VoiceSearchView.swift */; };
+		2F832679D4E5870ACDB7E9CF /* AutoPresets_GeofenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F77974BAD8C8B8D9D54A90F /* AutoPresets_GeofenceManager.swift */; };
+		31CEF90469CADD5F2D487BD5 /* BolusPro_BehaviorAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62BEBA2A70A789CFB845606 /* BolusPro_BehaviorAnalyzer.swift */; };
+		33CAAACE11A18DF26E8388A2 /* FoodFinder_AIAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DFB900EE960A218333F8BA1 /* FoodFinder_AIAnalysis.swift */; };
+		34B3412B2F90F59CDD867AFD /* SiteAtlas_SiteSelectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208917866187FCF5AD91FA4A /* SiteAtlas_SiteSelectionSheet.swift */; };
+		38CE2C9F6B29D4114D1A5D07 /* LoopInsights_MealDebriefModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854E048791BB6D8578CEE684 /* LoopInsights_MealDebriefModels.swift */; };
+		3BF5D5292FC8EDC6325FF0BD /* LoopInsights_PreMealAdvisorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB73B83059DB9B4CE5BA012 /* LoopInsights_PreMealAdvisorService.swift */; };
+		3C37B6236426D0E3EA651E6B /* FoodFinder_SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8B27AA086D7DAE137E9BA8 /* FoodFinder_SearchViewModel.swift */; };
 		3ED3198A2EB659E600820BCF /* GlucoseLiveActivityConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED319882EB659E600820BCF /* GlucoseLiveActivityConfiguration.swift */; };
 		3ED3198B2EB659E600820BCF /* ChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED319872EB659E600820BCF /* ChartView.swift */; };
 		3ED3198C2EB659E600820BCF /* BasalViewActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED319862EB659E600820BCF /* BasalViewActivity.swift */; };
@@ -86,6 +121,9 @@
 		3ED3199F2EB65AFE00820BCF /* LocalizedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED3199E2EB65AFE00820BCF /* LocalizedString.swift */; };
 		3ED319A12EB65B4100820BCF /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED319A02EB65B4100820BCF /* Bootstrap.swift */; };
 		3ED319A32EB65DA800820BCF /* LiveActivityManagerProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED319A22EB65DA300820BCF /* LiveActivityManagerProxy.swift */; };
+		4016E91E09EF6716B414F6CC /* FoodFinder_ImageCropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00960F09C394E3DEF2622168 /* FoodFinder_ImageCropView.swift */; };
+		417EF3DF7DBF043DB7A40D41 /* GraphDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C0003E6B5BB11FCF872A80 /* GraphDetailViewModel.swift */; };
+		41F847EDBA1E42D755FB492B /* FoodFinder_ImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EE1A34A28C4C2B264A50C0E /* FoodFinder_ImageStore.swift */; };
 		43027F0F1DFE0EC900C51989 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F526D5E1DF2459000A04910 /* HKUnit.swift */; };
 		4302F4E11D4E9C8900F0FCAF /* TextFieldTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4302F4E01D4E9C8900F0FCAF /* TextFieldTableViewController.swift */; };
 		4302F4E31D4EA54200F0FCAF /* InsulinDeliveryTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4302F4E21D4EA54200F0FCAF /* InsulinDeliveryTableViewController.swift */; };
@@ -116,6 +154,7 @@
 		4345E40221F67300009E00E5 /* PotentialCarbEntryUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DE92581C5479E4001FFDE1 /* PotentialCarbEntryUserInfo.swift */; };
 		4345E40421F68AD9009E00E5 /* TextRowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4345E40321F68AD9009E00E5 /* TextRowController.swift */; };
 		4345E40621F68E18009E00E5 /* CarbEntryListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4345E40521F68E18009E00E5 /* CarbEntryListController.swift */; };
+		434A06CECCA775D37EC1F136 /* LoopInsights_EndoReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B28DA4512332EE1123CAEF /* LoopInsights_EndoReportView.swift */; };
 		434FF1EE1CF27EEF000DB779 /* UITableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 434FF1ED1CF27EEF000DB779 /* UITableViewCell.swift */; };
 		43511CEE220FC61700566C63 /* HUDRowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43511CED220FC61700566C63 /* HUDRowController.swift */; };
 		43517917230A0E1A0072ECC0 /* WKInterfaceLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43517916230A0E1A0072ECC0 /* WKInterfaceLabel.swift */; };
@@ -206,6 +245,15 @@
 		43FCEEA9221A615B0013DD30 /* StatusChartsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FCEEA8221A615B0013DD30 /* StatusChartsManager.swift */; };
 		43FCEEAD221A66780013DD30 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FCEEAC221A66780013DD30 /* DateFormatter.swift */; };
 		43FCEEB1221A863E0013DD30 /* StatusChartsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FCEEB0221A863E0013DD30 /* StatusChartsManager.swift */; };
+		44BC1C4741CF7C18FCD7C58E /* LoopInsights_ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8238AB5C1F2E769273A52070 /* LoopInsights_ChatViewModel.swift */; };
+		45D21861D3C0ADF067F2767F /* FoodFinder_FavoritesHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2111B0756589CC6014EFC45F /* FoodFinder_FavoritesHelpers.swift */; };
+		486F9BD26CAB676035797E87 /* LoopInsights_SubstackPromo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B506730D8EFFA8AAEFA7B07 /* LoopInsights_SubstackPromo.swift */; };
+		48BF9CCC5A86BB2D426457F8 /* LoopInsights_GlucoseUnitContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCDB43605E57B0C8D17EEF2A /* LoopInsights_GlucoseUnitContext.swift */; };
+		49ED3DD0564A0DE7C8D9F19F /* FoodFinder_SearchResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A590E20E1E9607F379E770F1 /* FoodFinder_SearchResultsView.swift */; };
+		4A0942D447003E3056FF4639 /* LoopInsights_AlcoholLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BF4DD5B857DD1B4FA1E86CD /* LoopInsights_AlcoholLogView.swift */; };
+		4A937F594BC57E1644C24B50 /* FoodFinder_VoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47D58DB646F97C3C6A3EEF1E /* FoodFinder_VoiceService.swift */; };
+		4B080F13EF98718A7FEAB176 /* LoopInsights_SuggestionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C706C2A64F28AF9DDA6A067 /* LoopInsights_SuggestionStore.swift */; };
+		4D43F8C1B10A2B51E61714EA /* LoopInsights_SuggestionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96D5D4547C87D4BBA73BB44 /* LoopInsights_SuggestionDetailView.swift */; };
 		4F08DE8F1E7BB871006741EA /* CollectionType+Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F08DE8E1E7BB871006741EA /* CollectionType+Loop.swift */; };
 		4F11D3C020DCBEEC006E072C /* GlucoseBackfillRequestUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F11D3BF20DCBEEC006E072C /* GlucoseBackfillRequestUserInfo.swift */; };
 		4F11D3C220DD80B3006E072C /* WatchHistoricalGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F11D3C120DD80B3006E072C /* WatchHistoricalGlucose.swift */; };
@@ -248,8 +296,38 @@
 		4FF4D0F81E1725B000846527 /* NibLoadable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 434F54561D287FDB002A9274 /* NibLoadable.swift */; };
 		4FF4D1001E18374700846527 /* WatchContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF4D0FF1E18374700846527 /* WatchContext.swift */; };
 		4FF4D1011E18375000846527 /* WatchContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF4D0FF1E18374700846527 /* WatchContext.swift */; };
+		551DFE85CB80C4446AD0DDEC /* LoopInsights_CaregiverDigestService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7569E9F9E2299C7C7987190 /* LoopInsights_CaregiverDigestService.swift */; };
+		5562647A48360FA6CC36310A /* LoopInsights_ChatHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE09CA56245E040321AF4790 /* LoopInsights_ChatHistoryView.swift */; };
+		55BE7F21DF31665E36A26BC4 /* AutoPresets_CalendarSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9631794ADB2F9E56EBC98940 /* AutoPresets_CalendarSettingsView.swift */; };
+		57E3308FDEA7A8AF64F06581 /* SiteAtlas_SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 198AACDC4452FE16B9994FE8 /* SiteAtlas_SettingsView.swift */; };
+		5836831126B89B9E83041B1E /* FoodFinder_RestaurantItemEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3DAC536253098EBD013343 /* FoodFinder_RestaurantItemEntryView.swift */; };
+		594445C0AFBCCFCC6CC3137D /* FoodFinder_BarcodeScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7257AB964A1C8B6769E90882 /* FoodFinder_BarcodeScannerTests.swift */; };
+		5B762A5BD7D1D9B5170C72C1 /* DataLayer_ConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0115F4773826E9EAF5F96488 /* DataLayer_ConsentView.swift */; };
+		5BCE0389AEB6BC4EC80F57AA /* FoodFinder_SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43216BEA2637938B8B507F92 /* FoodFinder_SettingsView.swift */; };
+		5CA015D639F98929BB7D72F1 /* LoopInsights_DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2071DFD6173C252FCD9F7D /* LoopInsights_DashboardView.swift */; };
+		64212EA79692EB9338E53C85 /* FoodFinder_AnalysisRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B723766697B01A143A1CEEB /* FoodFinder_AnalysisRecord.swift */; };
+		68F370AB66AF0B853621CCDC /* AutoPresets_SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1603F6C219C5CF41BA200D92 /* AutoPresets_SettingsView.swift */; };
+		6A4BDC2EEE1179A2BE5C7754 /* LoopInsights_Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D0E736A1B253D37D9E9740 /* LoopInsights_Models.swift */; };
+		6C09652D8042E266E68049E5 /* DataLayer_SecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18958E699F8A7B9A6A2BA61E /* DataLayer_SecureStorage.swift */; };
+		6DB3F6A2D8AACF9650B59713 /* LoopInsights_BackfillDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2372E2DDBDA89A3B5B80EF44 /* LoopInsights_BackfillDetector.swift */; };
+		6F1B367F5EF09AEA30296F44 /* LoopInsights_AdvancedAnalyzers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1541ACC09ACED3D982BF7FC /* LoopInsights_AdvancedAnalyzers.swift */; };
+		6F46D284E8FC5724B0710162 /* FoodFinder_SpoonacularService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6108E9E6E96AFFB624DC7A8F /* FoodFinder_SpoonacularService.swift */; };
+		6F5FEB4509B4644C020BD08D /* DataLayer_DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D676C326CA848F36F10BE3A /* DataLayer_DashboardView.swift */; };
+		6F8D19EECE4E792342E07948 /* LoopInsights_ModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B59242D8B9C330608E795CA /* LoopInsights_ModelsTests.swift */; };
+		6FA9440793C0570952588B1A /* SiteAtlas_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7FDC6CA364C8884B65EEDB8 /* SiteAtlas_FeatureFlags.swift */; };
+		6FAD82D9474D5C9956440830 /* AutoPresets_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 024DE3B4146CA9D1B57F9FFD /* AutoPresets_FeatureFlags.swift */; };
+		70443A8B65CE1B2DA0B7F0B4 /* AutoPresets_Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A4DA4190E78392E5955B76 /* AutoPresets_Coordinator.swift */; };
+		7274C0B427751AA3CD81DEE4 /* FoodFinder_ScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB1877A28B05637D8792EAB /* FoodFinder_ScannerView.swift */; };
+		775AC761C750DEC6B6F81B72 /* DataLayer_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4516EF558EAE581A9ADCA97D /* DataLayer_FeatureFlags.swift */; };
+		7ADC7CCA827794317AA04776 /* FoodFinder_Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB107CACA4FC04E8652B531 /* FoodFinder_Models.swift */; };
 		7D23667D21250C7E0028B67D /* LocalizedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D23667C21250C7E0028B67D /* LocalizedString.swift */; };
+		7DCFF250905F69D973EE39C5 /* SiteAtlas_Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC6AC22FEC1D2B96A31C086 /* SiteAtlas_Models.swift */; };
+		7E6276F2F6941DBD86B6B218 /* PowerPack_BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF6BA22598ED9610071F30F3 /* PowerPack_BuildInfo.swift */; };
 		7E69CFFC2A16A77E00203CBD /* ResetLoopManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E69CFFB2A16A77E00203CBD /* ResetLoopManager.swift */; };
+		7F85981E95E056FD14C9E658 /* LoopInsights_AIServiceAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607D9750CD60D2C5FBDE13FD /* LoopInsights_AIServiceAdapter.swift */; };
+		809B4CFD31EA1434F93381DD /* AutoPresets_Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F0DCFE43E6DB3A4E74E2AC /* AutoPresets_Delegate.swift */; };
+		81E41B7390A5EF347772042E /* LoopInsights_MealDebriefService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E738F2B7D83C7CB38A604606 /* LoopInsights_MealDebriefService.swift */; };
+		83A73F5796F6A35551234E7D /* FoodFinder_OpenFoodFactsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705C20E7AC9F6FF2322C1D7 /* FoodFinder_OpenFoodFactsTests.swift */; };
 		84AA81D32A4A27A3000B658B /* LoopWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81D22A4A27A3000B658B /* LoopWidgets.swift */; };
 		84AA81D62A4A28AF000B658B /* WidgetBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81D52A4A28AF000B658B /* WidgetBackground.swift */; };
 		84AA81D82A4A2910000B658B /* StatusWidgetTimelimeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81D72A4A2910000B658B /* StatusWidgetTimelimeEntry.swift */; };
@@ -259,6 +337,8 @@
 		84AA81E52A4A3981000B658B /* DeeplinkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81E42A4A3981000B658B /* DeeplinkManager.swift */; };
 		84AA81E72A4A4DEF000B658B /* PumpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81E62A4A4DEF000B658B /* PumpView.swift */; };
 		84D2879F2AC756C8007ED283 /* ContentMargin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D2879E2AC756C8007ED283 /* ContentMargin.swift */; };
+		84E7E7B7A794D8AB75034AF4 /* LoopInsights_SuggestionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF038EAE6D8A0A10D2E65158 /* LoopInsights_SuggestionRecord.swift */; };
+		878B03AE9AE258294DDC879A /* AutoPresets_AIRecommendationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30AF2AF42DC12C3916774432 /* AutoPresets_AIRecommendationView.swift */; };
 		891B508524342BE1005DA578 /* CarbAndBolusFlowViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 891B508424342BE1005DA578 /* CarbAndBolusFlowViewModel.swift */; };
 		892A5D59222F0A27008961AB /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892A5D58222F0A27008961AB /* Debug.swift */; };
 		892A5D692230C41D008961AB /* RangeReplaceableCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892A5D682230C41D008961AB /* RangeReplaceableCollection.swift */; };
@@ -319,6 +399,29 @@
 		89F9119424358E4500ECCAF3 /* CarbAbsorptionTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F9119324358E4500ECCAF3 /* CarbAbsorptionTime.swift */; };
 		89F9119624358E6900ECCAF3 /* BolusPickerValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F9119524358E6900ECCAF3 /* BolusPickerValues.swift */; };
 		89FE21AD24AC57E30033F501 /* Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FE21AC24AC57E30033F501 /* Collection.swift */; };
+		8B34032136EAE8230DB056CE /* AutoPresets_GeofenceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7387EE5C4FD1515CE0B0A367 /* AutoPresets_GeofenceSettingsView.swift */; };
+		8BFC30BF06B08421B78F7649 /* BolusPro_FPUCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D30C208E0EAC573A3DCCE08 /* BolusPro_FPUCalculator.swift */; };
+		8F1C2592AAE578625FA1A663 /* LoopInsights_DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393D1967E1D7B498743CC283 /* LoopInsights_DashboardViewModel.swift */; };
+		8FBEA8E03A07EFDC5DF2AB6E /* SiteAtlas_Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FA590D26DEB8C1ED2B13EA4 /* SiteAtlas_Storage.swift */; };
+		92BBCC6A731B66E67AE015A1 /* LoopInsights_SecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 623C775B205EC24548B55C0A /* LoopInsights_SecureStorage.swift */; };
+		93621214B467806D9F09EEAA /* LoopInsights_MFPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E4F7C2FEA9818DFEDDB5F1 /* LoopInsights_MFPModels.swift */; };
+		955592F30284ED133EC150B3 /* LoopInsights_FoodResponseAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE15E9C010223EAC3F3FA6B8 /* LoopInsights_FoodResponseAnalyzer.swift */; };
+		97915790F5F734FDF0FD1922 /* LoopInsights_TrendsInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 959413A21CA05A5EC375390F /* LoopInsights_TrendsInsightsView.swift */; };
+		97EABDD24D213615C9F3891C /* DataLayer_EventCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA070556C9613A6DBC68559 /* DataLayer_EventCollector.swift */; };
+		99CDB0D68ECEA2FA30AB1556 /* LoopInsights_NightscoutImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97E4D5933C8B4305CE381143 /* LoopInsights_NightscoutImporter.swift */; };
+		9A49A3AC2016C9FA23C057E6 /* FoodFinder_AICameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 225333340D7B94B14ADB765D /* FoodFinder_AICameraView.swift */; };
+		9A5C88D1DFB3483CBD679519 /* LoopInsights_SuggestionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B2881360260A9CC9A72532 /* LoopInsights_SuggestionHistoryView.swift */; };
+		9B4B836A0130380A1787B685 /* AutoPresets_ActivityDetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56613E391A5E735E0235D4BE /* AutoPresets_ActivityDetectionManager.swift */; };
+		9C56E5C58F8504E0506D1B9F /* LoopInsights_MealInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA04C6FC8871A04AFFD27F7 /* LoopInsights_MealInsightsView.swift */; };
+		A07F0CC0E0A98BAEEE6EBB03 /* FoodFinder_SearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5ECE2E8754449F20840DD /* FoodFinder_SearchBar.swift */; };
+		A09C5F1497BF15D84FA10CB9 /* AutoPresets_CalendarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C369B8BD708323701C6E161 /* AutoPresets_CalendarManager.swift */; };
+		A1DAC248FAB1D0C3ED7FD490 /* FoodFinder_OpenFoodFactsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301CAEF6EB83C57116815C63 /* FoodFinder_OpenFoodFactsService.swift */; };
+		A395749AFFBA35E871EEBFD6 /* LoopInsights_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1859D44BC7E28548B1EF85 /* LoopInsights_FeatureFlags.swift */; };
+		A3BF84DA6D4C2FB3E4BF684D /* LoopInsights_CaregiverDigestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D255B89E3F58237EA2781A60 /* LoopInsights_CaregiverDigestView.swift */; };
+		A528A18F2ADB9529322801FC /* LoopInsights_BackgroundMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 268747E96E69E4D5AB82AEA7 /* LoopInsights_BackgroundMonitor.swift */; };
+		A5F64582330AEEC8A1FC5D5F /* LoopInsights_Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC8418A13BEB028E920F1A3 /* LoopInsights_Coordinator.swift */; };
+		A72377BC1BEF5896CCA8D123 /* BolusPro_ManualMacroFields.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08E470BA357FB4C37F45D3AD /* BolusPro_ManualMacroFields.swift */; };
+		A90894B1A9826F57A6F1FC03 /* LoopInsights_MealDebriefCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56616199181C51D1D00897F2 /* LoopInsights_MealDebriefCard.swift */; };
 		A90EF53C25DEF06200F32D61 /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16DA84122E8E112008624C2 /* PluginManager.swift */; };
 		A90EF54425DEF0A000F32D61 /* OSLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4374B5EE209D84BE00D17AA8 /* OSLog.swift */; };
 		A91D2A3F26CF0FF80023B075 /* IconTitleSubtitleTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91D2A3E26CF0FF80023B075 /* IconTitleSubtitleTableViewCell.swift */; };
@@ -422,6 +525,11 @@
 		B66D1F3C2E6A5D6600471149 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B66D1F3A2E6A5D6600471149 /* Localizable.xcstrings */; };
 		B66D1F3E2E6A5D6600471149 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B66D1F3D2E6A5D6600471149 /* Localizable.xcstrings */; };
 		B66D1F402E6A5D6600471149 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B66D1F3F2E6A5D6600471149 /* InfoPlist.xcstrings */; };
+		B68F5C5B648322AED1B96CF5 /* DataLayer_EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9A138F7FA663FBB33AA464 /* DataLayer_EventStore.swift */; };
+		B7F6252AE377538D14B924DF /* FoodFinder_CarbTrackingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCDBD9B90449DA0CDEA3299 /* FoodFinder_CarbTrackingService.swift */; };
+		B9D441B49A1EF902D4B4CD26 /* FoodFinder_EntryPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCED11B98BEAFD58C8AE941 /* FoodFinder_EntryPoint.swift */; };
+		BAE38CDF96BA1DA27FF080B7 /* LoopInsights_CaffeineLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF710A849EA6CD879BD5AB80 /* LoopInsights_CaffeineLogView.swift */; };
+		C0B209FC0F7923D3787F2CEF /* LoopInsights_ChatHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD28B7018C8109C3B352CBB8 /* LoopInsights_ChatHistoryStore.swift */; };
 		C110888D2A3913C600BA4898 /* BuildDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C110888C2A3913C600BA4898 /* BuildDetails.swift */; };
 		C11B9D5B286778A800500CF8 /* SwiftCharts in Frameworks */ = {isa = PBXBuildFile; productRef = C11B9D5A286778A800500CF8 /* SwiftCharts */; };
 		C11B9D5E286778D000500CF8 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C11B9D5D286778D000500CF8 /* LoopKitUI.framework */; };
@@ -497,19 +605,40 @@
 		C1F00C60285A802A006302C5 /* SwiftCharts in Frameworks */ = {isa = PBXBuildFile; productRef = C1F00C5F285A802A006302C5 /* SwiftCharts */; };
 		C1F00C78285A8256006302C5 /* SwiftCharts in Embed Frameworks */ = {isa = PBXBuildFile; productRef = C1F00C5F285A802A006302C5 /* SwiftCharts */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C1F2075C26D6F9B0007AB7EB /* AppExpirationAlerter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F2075B26D6F9B0007AB7EB /* AppExpirationAlerter.swift */; };
-		FADE0001000000000000DE02 /* DevelopmentBranchAlerter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADE0001000000000000DE01 /* DevelopmentBranchAlerter.swift */; };
 		C1F7822627CC056900C0919A /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F7822527CC056900C0919A /* SettingsManager.swift */; };
 		C1F8B243223E73FD00DD66CF /* BolusProgressTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F8B1D122375E4200DD66CF /* BolusProgressTableViewCell.swift */; };
 		C1FB428C217806A400FAB378 /* StateColorPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FB428B217806A300FAB378 /* StateColorPalette.swift */; };
 		C1FB428D21791D2500FAB378 /* PumpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C3B6F620BBCAA30026CAFA /* PumpManager.swift */; };
 		C1FB428F217921D600FAB378 /* PumpManagerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FB428E217921D600FAB378 /* PumpManagerUI.swift */; };
 		C1FB4290217922A100FAB378 /* PumpManagerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FB428E217921D600FAB378 /* PumpManagerUI.swift */; };
+		C726C1C782BA0888FC33899F /* FoodFinder_EmojiProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2C73FC463D2D989C3FD9922 /* FoodFinder_EmojiProvider.swift */; };
+		C786708D1FA4617924CC94E6 /* LoopInsights_TestDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE3E46FD43932AB074AB64C /* LoopInsights_TestDataProvider.swift */; };
+		C821648AEFA81F16B94EA7F7 /* BolusPro_CarbEntrySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77739597BDCBA74645DA2EE1 /* BolusPro_CarbEntrySection.swift */; };
+		CAA30084CF875CFBCE0FC974 /* FoodFinder_RestaurantMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC9516A4800B5EA0957F0AFD /* FoodFinder_RestaurantMenuView.swift */; };
+		CABFC02AD96BAD6DEF7EAE12 /* BolusPro_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = F221B5A0D5F6C925167C8635 /* BolusPro_FeatureFlags.swift */; };
+		CDCC9FBD90E8D25B15DD319E /* AutoPresets_Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDDE7C0162939A900342F8D8 /* AutoPresets_Logger.swift */; };
+		CFB644A4359EF71FA126A5C7 /* FoodFinder_VoiceSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FA666A9CB87C31C053C5E7 /* FoodFinder_VoiceSearchTests.swift */; };
+		D1C8CBB54EC80FF5B9A945C8 /* LoopInsights_BehaviorInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3684DFB8012A3E2F911692 /* LoopInsights_BehaviorInsightsView.swift */; };
+		D211C294E88C41B64BAEECB4 /* LoopInsights_MealInsightsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C30DF3D77528EAB3B5AC1D7B /* LoopInsights_MealInsightsViewModel.swift */; };
+		D51C54AAD5AECFE1CAB6F647 /* FoodFinder_AnalysisHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3890E0969AD9E1B01F4ED2 /* FoodFinder_AnalysisHistoryStore.swift */; };
+		D5B0EF5D0003524F988C3C0C /* FoodFinder_SecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC3D13CCFA264E81C0B863C /* FoodFinder_SecureStorage.swift */; };
+		DA8E68CC93178DE3066B9DEE /* AutoPresets_AIAdvisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDFA7D6D1EB9AE92410C6040 /* AutoPresets_AIAdvisor.swift */; };
+		DABC221B5F95D30484E6618D /* FoodFinder_ImageDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E5D19327F64963E3C5BBA52 /* FoodFinder_ImageDownloader.swift */; };
+		DBAF6D59067C2F54BC05F3F6 /* DataLayer_Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23C515F22083FAA5A4B0A5B8 /* DataLayer_Coordinator.swift */; };
 		DD3DBD292A33AFE9000F8B5B /* IntegralRetrospectiveCorrectionSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD3DBD282A33AFE9000F8B5B /* IntegralRetrospectiveCorrectionSelectionView.swift */; };
 		DDC389F62A2B61750066E2E8 /* ApplicationFactorStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC389F52A2B61750066E2E8 /* ApplicationFactorStrategy.swift */; };
 		DDC389F82A2B620B0066E2E8 /* GlucoseBasedApplicationFactorStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC389F72A2B620B0066E2E8 /* GlucoseBasedApplicationFactorStrategy.swift */; };
 		DDC389FA2A2B62470066E2E8 /* ConstantApplicationFactorStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC389F92A2B62470066E2E8 /* ConstantApplicationFactorStrategy.swift */; };
 		DDC389FC2A2BC6670066E2E8 /* SettingsView+algorithmExperimentsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC389FB2A2BC6670066E2E8 /* SettingsView+algorithmExperimentsSection.swift */; };
 		DDC389FE2A2C4C830066E2E8 /* GlucoseBasedApplicationFactorSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC389FD2A2C4C830066E2E8 /* GlucoseBasedApplicationFactorSelectionView.swift */; };
+		DE0D647625285C780D99D7B4 /* BolusPro_InfoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E67190B8BEF36D579A921BC /* BolusPro_InfoSheet.swift */; };
+		E0833959776966E1C62A992A /* LoopInsights_MFPImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E5FF49FA218599C1564C1AA /* LoopInsights_MFPImporter.swift */; };
+		E29D1EB46A2B91AE3FDFB347 /* DataLayer_ConsentModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19CF13B1F0B2354035C7019B /* DataLayer_ConsentModels.swift */; };
+		E37AEDC8DA85ECA437215F1E /* SiteAtlas_Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B86AFD123A8DE4987E3DF5 /* SiteAtlas_Coordinator.swift */; };
+		E49F383327456AA3DEF583AE /* LoopInsights_CaffeineTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108EFA414EC97DDAAF5FFBCB /* LoopInsights_CaffeineTracker.swift */; };
+		E5CEDCB52CCC33B2513C1B4B /* AutoPresets_ScannedEventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7AEA2ACE39D2EDEC0FC9C9 /* AutoPresets_ScannedEventsView.swift */; };
+		E66A3332FD30EDB211D3AA96 /* BolusPro_OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C429392299998C3DED65F8C /* BolusPro_OnboardingView.swift */; };
+		E88E68D68BF264F721AFC712 /* FoodFinder_InputResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E982E4777A460182F9FEE5D7 /* FoodFinder_InputResults.swift */; };
 		E90909D124E34AC500F963D2 /* high_and_rising_with_cob_momentum_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909CC24E34AC500F963D2 /* high_and_rising_with_cob_momentum_effect.json */; };
 		E90909D224E34AC500F963D2 /* high_and_rising_with_cob_insulin_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909CD24E34AC500F963D2 /* high_and_rising_with_cob_insulin_effect.json */; };
 		E90909D324E34AC500F963D2 /* high_and_rising_with_cob_predicted_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909CE24E34AC500F963D2 /* high_and_rising_with_cob_predicted_glucose.json */; };
@@ -589,6 +718,19 @@
 		E9C58A7E24DB529A00487A17 /* dynamic_glucose_effect_partially_observed.json in Resources */ = {isa = PBXBuildFile; fileRef = E9C58A7924DB529A00487A17 /* dynamic_glucose_effect_partially_observed.json */; };
 		E9C58A7F24DB529A00487A17 /* counteraction_effect_falling_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = E9C58A7A24DB529A00487A17 /* counteraction_effect_falling_glucose.json */; };
 		E9C58A8024DB529A00487A17 /* insulin_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E9C58A7B24DB529A00487A17 /* insulin_effect.json */; };
+		EADE8061E038FB45864CDA4E /* PowerPack_APIUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12084C085224FDD62FAA9840 /* PowerPack_APIUsage.swift */; };
+		EBF56903B5932834DF35599E /* LoopInsights_DataAggregatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B9798E5BC182FCB5A9B18BB /* LoopInsights_DataAggregatorTests.swift */; };
+		ECBCE1757156B9D960F1B4AC /* SiteAtlas_BodyMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E107DF73CEAD367E03462C46 /* SiteAtlas_BodyMapView.swift */; };
+		F0556225BFA7AD2532BF8CFE /* AutoPresets_Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDDFC1F29C2312E792516B13 /* AutoPresets_Storage.swift */; };
+		F06F348BBB58A7D7CDE9517F /* LoopInsights_SuggestionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA22E9E5FE02C94F490DD246 /* LoopInsights_SuggestionStoreTests.swift */; };
+		F1854618ACBD545751127F37 /* BolusPro_DataLayerHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2230C2D5F9392ADFBEC135E7 /* BolusPro_DataLayerHook.swift */; };
+		F56F1856A32E8160149B3149 /* LoopInsights_DataAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA32883A0045816CA3128E3E /* LoopInsights_DataAggregator.swift */; };
+		FA5A376108B402FC8D9281FA /* DataLayer_SyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBD5F1E94A947BB4A7B0823 /* DataLayer_SyncService.swift */; };
+		FA6D045C84509DA869E12BC6 /* BolusPro_Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA8D920DC3A8C85D0109D45 /* BolusPro_Models.swift */; };
+		FACBCAB9166B79546E7F6281 /* AutoPresets_Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F5172D47C81504B6F14D19 /* AutoPresets_Models.swift */; };
+		FADE0001000000000000DE02 /* DevelopmentBranchAlerter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADE0001000000000000DE01 /* DevelopmentBranchAlerter.swift */; };
+		FB788D1EE6ADB3446110A1E4 /* FoodFinder_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73404923E06307CDCF420FE4 /* FoodFinder_FeatureFlags.swift */; };
+		FDC7A8B99BD65BE3599AC8BD /* LoopInsights_VoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 253674AABEF3343CE2B3B0C2 /* LoopInsights_VoiceService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -759,6 +901,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		00960F09C394E3DEF2622168 /* FoodFinder_ImageCropView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_ImageCropView.swift; sourceTree = "<group>"; };
+		0115F4773826E9EAF5F96488 /* DataLayer_ConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_ConsentView.swift; sourceTree = "<group>"; };
+		024DE3B4146CA9D1B57F9FFD /* AutoPresets_FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_FeatureFlags.swift; sourceTree = "<group>"; };
+		05B55B850825FC159EF1082B /* LoopInsights_BehaviorInsightsAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_BehaviorInsightsAnalyzer.swift; sourceTree = "<group>"; };
+		08E470BA357FB4C37F45D3AD /* BolusPro_ManualMacroFields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_ManualMacroFields.swift; sourceTree = "<group>"; };
+		09FA666A9CB87C31C053C5E7 /* FoodFinder_VoiceSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_VoiceSearchTests.swift; sourceTree = "<group>"; };
+		0D16B2477081D3D5D1AB8694 /* LoopInsights_AGPChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_AGPChartView.swift; sourceTree = "<group>"; };
+		0D30C208E0EAC573A3DCCE08 /* BolusPro_FPUCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_FPUCalculator.swift; sourceTree = "<group>"; };
+		0EE1A34A28C4C2B264A50C0E /* FoodFinder_ImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_ImageStore.swift; sourceTree = "<group>"; };
+		108EFA414EC97DDAAF5FFBCB /* LoopInsights_CaffeineTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_CaffeineTracker.swift; sourceTree = "<group>"; };
+		12084C085224FDD62FAA9840 /* PowerPack_APIUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPack_APIUsage.swift; sourceTree = "<group>"; };
 		142CB7582A60BF2E0075748A /* EditMode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditMode.swift; sourceTree = "<group>"; };
 		142CB75A2A60BFC30075748A /* FavoriteFoodsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FavoriteFoodsView.swift; sourceTree = "<group>"; };
 		1452F4A82A851C9400F8B9E4 /* AddEditFavoriteFoodViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditFavoriteFoodViewModel.swift; sourceTree = "<group>"; };
@@ -780,6 +933,16 @@
 		14B1737028AEDBF6006CCD7C /* GlucoseView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlucoseView.swift; sourceTree = "<group>"; };
 		14B1737128AEDBF6006CCD7C /* LoopCircleView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoopCircleView.swift; sourceTree = "<group>"; };
 		14D906F32A846510006EB79A /* FavoriteFoodsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteFoodsViewModel.swift; sourceTree = "<group>"; };
+		1603F6C219C5CF41BA200D92 /* AutoPresets_SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_SettingsView.swift; sourceTree = "<group>"; };
+		1682483CAD20AB33DEC25ADA /* FoodFinder_AIServiceAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_AIServiceAdapter.swift; sourceTree = "<group>"; };
+		1705C20E7AC9F6FF2322C1D7 /* FoodFinder_OpenFoodFactsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_OpenFoodFactsTests.swift; sourceTree = "<group>"; };
+		17B86AFD123A8DE4987E3DF5 /* SiteAtlas_Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_Coordinator.swift; sourceTree = "<group>"; };
+		18958E699F8A7B9A6A2BA61E /* DataLayer_SecureStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_SecureStorage.swift; sourceTree = "<group>"; };
+		198AACDC4452FE16B9994FE8 /* SiteAtlas_SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_SettingsView.swift; sourceTree = "<group>"; };
+		19CF13B1F0B2354035C7019B /* DataLayer_ConsentModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_ConsentModels.swift; sourceTree = "<group>"; };
+		19EC8F84B4B01EE5546989D9 /* PowerPack_UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPack_UpdateChecker.swift; sourceTree = "<group>"; };
+		1B9798E5BC182FCB5A9B18BB /* LoopInsights_DataAggregatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_DataAggregatorTests.swift; sourceTree = "<group>"; };
+		1C3890E0969AD9E1B01F4ED2 /* FoodFinder_AnalysisHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_AnalysisHistoryStore.swift; sourceTree = "<group>"; };
 		1D05219A2469E9DF000EBBDE /* StoredAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredAlert.swift; sourceTree = "<group>"; };
 		1D05219C2469F1F5000EBBDE /* AlertStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStore.swift; sourceTree = "<group>"; };
 		1D080CBC2473214A00356610 /* AlertStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = AlertStore.xcdatamodel; sourceTree = "<group>"; };
@@ -806,6 +969,28 @@
 		1DC63E7325351BDF004605DA /* TrueTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TrueTime.framework; path = Carthage/Build/iOS/TrueTime.framework; sourceTree = "<group>"; };
 		1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		1DFE9E162447B6270082C280 /* UserNotificationAlertSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNotificationAlertSchedulerTests.swift; sourceTree = "<group>"; };
+		1FE3E46FD43932AB074AB64C /* LoopInsights_TestDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_TestDataProvider.swift; sourceTree = "<group>"; };
+		208917866187FCF5AD91FA4A /* SiteAtlas_SiteSelectionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_SiteSelectionSheet.swift; sourceTree = "<group>"; };
+		20C5ECE2E8754449F20840DD /* FoodFinder_SearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_SearchBar.swift; sourceTree = "<group>"; };
+		2111B0756589CC6014EFC45F /* FoodFinder_FavoritesHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_FavoritesHelpers.swift; sourceTree = "<group>"; };
+		2230C2D5F9392ADFBEC135E7 /* BolusPro_DataLayerHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_DataLayerHook.swift; sourceTree = "<group>"; };
+		225333340D7B94B14ADB765D /* FoodFinder_AICameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_AICameraView.swift; sourceTree = "<group>"; };
+		22C0003E6B5BB11FCF872A80 /* GraphDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphDetailViewModel.swift; sourceTree = "<group>"; };
+		22D0E736A1B253D37D9E9740 /* LoopInsights_Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_Models.swift; sourceTree = "<group>"; };
+		2372E2DDBDA89A3B5B80EF44 /* LoopInsights_BackfillDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_BackfillDetector.swift; sourceTree = "<group>"; };
+		23C515F22083FAA5A4B0A5B8 /* DataLayer_Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_Coordinator.swift; sourceTree = "<group>"; };
+		244F25FF57E564C904208F5E /* DataLayer_ConsentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_ConsentManager.swift; sourceTree = "<group>"; };
+		253674AABEF3343CE2B3B0C2 /* LoopInsights_VoiceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_VoiceService.swift; sourceTree = "<group>"; };
+		2570F1035D3A845E6230189B /* LoopInsights_HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_HealthKitManager.swift; sourceTree = "<group>"; };
+		268747E96E69E4D5AB82AEA7 /* LoopInsights_BackgroundMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_BackgroundMonitor.swift; sourceTree = "<group>"; };
+		26E4F7C2FEA9818DFEDDB5F1 /* LoopInsights_MFPModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_MFPModels.swift; sourceTree = "<group>"; };
+		29BFD6726CB3416DD8DE08BD /* LoopInsights_ReportGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_ReportGenerator.swift; sourceTree = "<group>"; };
+		301CAEF6EB83C57116815C63 /* FoodFinder_OpenFoodFactsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_OpenFoodFactsService.swift; sourceTree = "<group>"; };
+		30AF2AF42DC12C3916774432 /* AutoPresets_AIRecommendationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_AIRecommendationView.swift; sourceTree = "<group>"; };
+		33A071F1BBD88854C8B89CF0 /* FoodFinder_CarbTrackingDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_CarbTrackingDashboard.swift; sourceTree = "<group>"; };
+		3763C4E9526F83AB3F7D3F70 /* LoopInsights_ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_ChatView.swift; sourceTree = "<group>"; };
+		393D1967E1D7B498743CC283 /* LoopInsights_DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_DashboardViewModel.swift; sourceTree = "<group>"; };
+		3B86683D6FC84C98C1021AC9 /* FoodFinder_LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_LocationService.swift; sourceTree = "<group>"; };
 		3ED319862EB659E600820BCF /* BasalViewActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasalViewActivity.swift; sourceTree = "<group>"; };
 		3ED319872EB659E600820BCF /* ChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartView.swift; sourceTree = "<group>"; };
 		3ED319882EB659E600820BCF /* GlucoseLiveActivityConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseLiveActivityConfiguration.swift; sourceTree = "<group>"; };
@@ -828,6 +1013,7 @@
 		4311FB9A1F37FE1B00D4C0A7 /* TitleSubtitleTextFieldTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TitleSubtitleTextFieldTableViewCell.swift; sourceTree = "<group>"; };
 		431A8C3F1EC6E8AB00823B9C /* CircleMaskView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMaskView.swift; sourceTree = "<group>"; };
 		431E73471FF95A900069B5F7 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		43216BEA2637938B8B507F92 /* FoodFinder_SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_SettingsView.swift; sourceTree = "<group>"; };
 		4326BA631F3A44D9007CCAD4 /* ChartLineModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartLineModel.swift; sourceTree = "<group>"; };
 		4328E0151CFBE1DA00E199AA /* ActionHUDController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActionHUDController.swift; sourceTree = "<group>"; };
 		4328E01D1CFBE25F00E199AA /* CarbAndBolusFlowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarbAndBolusFlowController.swift; sourceTree = "<group>"; };
@@ -966,7 +1152,15 @@
 		43FCEEA8221A615B0013DD30 /* StatusChartsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusChartsManager.swift; sourceTree = "<group>"; };
 		43FCEEAC221A66780013DD30 /* DateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatter.swift; sourceTree = "<group>"; };
 		43FCEEB0221A863E0013DD30 /* StatusChartsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusChartsManager.swift; sourceTree = "<group>"; };
+		4516EF558EAE581A9ADCA97D /* DataLayer_FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_FeatureFlags.swift; sourceTree = "<group>"; };
+		45AC2E89C78E9F2A46E75145 /* LoopInsights_PreMealAdvisorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_PreMealAdvisorCard.swift; sourceTree = "<group>"; };
+		47B91FB09EA02C1079290FA1 /* AutoPresets_RecommendationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_RecommendationModels.swift; sourceTree = "<group>"; };
+		47D58DB646F97C3C6A3EEF1E /* FoodFinder_VoiceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_VoiceService.swift; sourceTree = "<group>"; };
+		4B59242D8B9C330608E795CA /* LoopInsights_ModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_ModelsTests.swift; sourceTree = "<group>"; };
+		4BBD5F1E94A947BB4A7B0823 /* DataLayer_SyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_SyncService.swift; sourceTree = "<group>"; };
+		4CD14B8265747D447C264D9A /* LoopInsights_AlcoholTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_AlcoholTracker.swift; sourceTree = "<group>"; };
 		4D3B40021D4A9DFE00BC6334 /* G4ShareSpy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = G4ShareSpy.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DFB900EE960A218333F8BA1 /* FoodFinder_AIAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_AIAnalysis.swift; sourceTree = "<group>"; };
 		4F08DE8E1E7BB871006741EA /* CollectionType+Loop.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CollectionType+Loop.swift"; sourceTree = "<group>"; };
 		4F11D3BF20DCBEEC006E072C /* GlucoseBackfillRequestUserInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseBackfillRequestUserInfo.swift; sourceTree = "<group>"; };
 		4F11D3C120DD80B3006E072C /* WatchHistoricalGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoricalGlucose.swift; sourceTree = "<group>"; };
@@ -996,6 +1190,28 @@
 		4FDDD23620DC51DF00D04B16 /* LoopDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopDataManager.swift; sourceTree = "<group>"; };
 		4FF4D0FF1E18374700846527 /* WatchContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WatchContext.swift; sourceTree = "<group>"; };
 		4FFEDFBE20E5CF22000BFC58 /* ChartHUDController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartHUDController.swift; sourceTree = "<group>"; };
+		51A4DA4190E78392E5955B76 /* AutoPresets_Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_Coordinator.swift; sourceTree = "<group>"; };
+		56613E391A5E735E0235D4BE /* AutoPresets_ActivityDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_ActivityDetectionManager.swift; sourceTree = "<group>"; };
+		56616199181C51D1D00897F2 /* LoopInsights_MealDebriefCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_MealDebriefCard.swift; sourceTree = "<group>"; };
+		58A536BCBD1D2E24692C4600 /* BolusPro_SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_SettingsView.swift; sourceTree = "<group>"; };
+		5B723766697B01A143A1CEEB /* FoodFinder_AnalysisRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_AnalysisRecord.swift; sourceTree = "<group>"; };
+		5C706C2A64F28AF9DDA6A067 /* LoopInsights_SuggestionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SuggestionStore.swift; sourceTree = "<group>"; };
+		5E67190B8BEF36D579A921BC /* BolusPro_InfoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_InfoSheet.swift; sourceTree = "<group>"; };
+		607D9750CD60D2C5FBDE13FD /* LoopInsights_AIServiceAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_AIServiceAdapter.swift; sourceTree = "<group>"; };
+		6108E9E6E96AFFB624DC7A8F /* FoodFinder_SpoonacularService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_SpoonacularService.swift; sourceTree = "<group>"; };
+		623C775B205EC24548B55C0A /* LoopInsights_SecureStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SecureStorage.swift; sourceTree = "<group>"; };
+		62F5172D47C81504B6F14D19 /* AutoPresets_Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_Models.swift; sourceTree = "<group>"; };
+		6B8B27AA086D7DAE137E9BA8 /* FoodFinder_SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_SearchViewModel.swift; sourceTree = "<group>"; };
+		6C369B8BD708323701C6E161 /* AutoPresets_CalendarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_CalendarManager.swift; sourceTree = "<group>"; };
+		6E5FF49FA218599C1564C1AA /* LoopInsights_MFPImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_MFPImporter.swift; sourceTree = "<group>"; };
+		6F77974BAD8C8B8D9D54A90F /* AutoPresets_GeofenceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_GeofenceManager.swift; sourceTree = "<group>"; };
+		7257AB964A1C8B6769E90882 /* FoodFinder_BarcodeScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_BarcodeScannerTests.swift; sourceTree = "<group>"; };
+		73404923E06307CDCF420FE4 /* FoodFinder_FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_FeatureFlags.swift; sourceTree = "<group>"; };
+		7387EE5C4FD1515CE0B0A367 /* AutoPresets_GeofenceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_GeofenceSettingsView.swift; sourceTree = "<group>"; };
+		77739597BDCBA74645DA2EE1 /* BolusPro_CarbEntrySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_CarbEntrySection.swift; sourceTree = "<group>"; };
+		7C429392299998C3DED65F8C /* BolusPro_OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_OnboardingView.swift; sourceTree = "<group>"; };
+		7C9A138F7FA663FBB33AA464 /* DataLayer_EventStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_EventStore.swift; sourceTree = "<group>"; };
+		7CB80A8355FAF1F4E646E111 /* FoodFinder_SearchRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_SearchRouter.swift; sourceTree = "<group>"; };
 		7D23667C21250C7E0028B67D /* LocalizedString.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LocalizedString.swift; path = LoopUI/Common/LocalizedString.swift; sourceTree = SOURCE_ROOT; };
 		7D9BEEE62335A6B3005DCFD6 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7D9BEEE82335A6B9005DCFD6 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
@@ -1055,8 +1271,11 @@
 		7D9BF13E23370E8C005DCFD6 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/Main.strings; sourceTree = "<group>"; };
 		7D9BF13F23370E8C005DCFD6 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7D9BF14623370E8D005DCFD6 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/Localizable.strings; sourceTree = "<group>"; };
+		7E5D19327F64963E3C5BBA52 /* FoodFinder_ImageDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_ImageDownloader.swift; sourceTree = "<group>"; };
 		7E69CFFB2A16A77E00203CBD /* ResetLoopManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetLoopManager.swift; sourceTree = "<group>"; };
+		7EC3D13CCFA264E81C0B863C /* FoodFinder_SecureStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_SecureStorage.swift; sourceTree = "<group>"; };
 		80F864E52433BF5D0026EC26 /* fi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fi; path = fi.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		8238AB5C1F2E769273A52070 /* LoopInsights_ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_ChatViewModel.swift; sourceTree = "<group>"; };
 		84AA81D22A4A27A3000B658B /* LoopWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopWidgets.swift; sourceTree = "<group>"; };
 		84AA81D52A4A28AF000B658B /* WidgetBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBackground.swift; sourceTree = "<group>"; };
 		84AA81D72A4A2910000B658B /* StatusWidgetTimelimeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusWidgetTimelimeEntry.swift; sourceTree = "<group>"; };
@@ -1065,7 +1284,10 @@
 		84AA81E22A4A36FB000B658B /* SystemActionLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemActionLink.swift; sourceTree = "<group>"; };
 		84AA81E42A4A3981000B658B /* DeeplinkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeeplinkManager.swift; sourceTree = "<group>"; };
 		84AA81E62A4A4DEF000B658B /* PumpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpView.swift; sourceTree = "<group>"; };
+		84CCCF9346DD7370B3975A83 /* LoopInsights_AIAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_AIAnalysis.swift; sourceTree = "<group>"; };
 		84D2879E2AC756C8007ED283 /* ContentMargin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentMargin.swift; sourceTree = "<group>"; };
+		854E048791BB6D8578CEE684 /* LoopInsights_MealDebriefModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_MealDebriefModels.swift; sourceTree = "<group>"; };
+		85F0DCFE43E6DB3A4E74E2AC /* AutoPresets_Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_Delegate.swift; sourceTree = "<group>"; };
 		891B508424342BE1005DA578 /* CarbAndBolusFlowViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbAndBolusFlowViewModel.swift; sourceTree = "<group>"; };
 		892A5D29222EF60A008961AB /* MockKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; name = MockKit.framework; path = Carthage/Build/iOS/MockKit.framework; sourceTree = SOURCE_ROOT; };
 		892A5D2B222EF60A008961AB /* MockKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; name = MockKitUI.framework; path = Carthage/Build/iOS/MockKitUI.framework; sourceTree = SOURCE_ROOT; };
@@ -1128,6 +1350,21 @@
 		89F9119324358E4500ECCAF3 /* CarbAbsorptionTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbAbsorptionTime.swift; sourceTree = "<group>"; };
 		89F9119524358E6900ECCAF3 /* BolusPickerValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPickerValues.swift; sourceTree = "<group>"; };
 		89FE21AC24AC57E30033F501 /* Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collection.swift; sourceTree = "<group>"; };
+		8AB73B83059DB9B4CE5BA012 /* LoopInsights_PreMealAdvisorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_PreMealAdvisorService.swift; sourceTree = "<group>"; };
+		8B506730D8EFFA8AAEFA7B07 /* LoopInsights_SubstackPromo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SubstackPromo.swift; sourceTree = "<group>"; };
+		8BB107CACA4FC04E8652B531 /* FoodFinder_Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_Models.swift; sourceTree = "<group>"; };
+		8BF4DD5B857DD1B4FA1E86CD /* LoopInsights_AlcoholLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_AlcoholLogView.swift; sourceTree = "<group>"; };
+		8EB1877A28B05637D8792EAB /* FoodFinder_ScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_ScannerView.swift; sourceTree = "<group>"; };
+		8FA590D26DEB8C1ED2B13EA4 /* SiteAtlas_Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_Storage.swift; sourceTree = "<group>"; };
+		959413A21CA05A5EC375390F /* LoopInsights_TrendsInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_TrendsInsightsView.swift; sourceTree = "<group>"; };
+		9631794ADB2F9E56EBC98940 /* AutoPresets_CalendarSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_CalendarSettingsView.swift; sourceTree = "<group>"; };
+		97E4D5933C8B4305CE381143 /* LoopInsights_NightscoutImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_NightscoutImporter.swift; sourceTree = "<group>"; };
+		9D676C326CA848F36F10BE3A /* DataLayer_DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_DashboardView.swift; sourceTree = "<group>"; };
+		9E3DAC536253098EBD013343 /* FoodFinder_RestaurantItemEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_RestaurantItemEntryView.swift; sourceTree = "<group>"; };
+		A1A266A15E411B4AB60ABC4B /* LoopInsights_SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SettingsView.swift; sourceTree = "<group>"; };
+		A2C73FC463D2D989C3FD9922 /* FoodFinder_EmojiProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_EmojiProvider.swift; sourceTree = "<group>"; };
+		A590E20E1E9607F379E770F1 /* FoodFinder_SearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_SearchResultsView.swift; sourceTree = "<group>"; };
+		A6B2881360260A9CC9A72532 /* LoopInsights_SuggestionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SuggestionHistoryView.swift; sourceTree = "<group>"; };
 		A900531A28D60862000BC15B /* Loop.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = Loop.shortcut; sourceTree = "<group>"; };
 		A900531B28D608CA000BC15B /* Cancel Override.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cancel Override.shortcut"; sourceTree = "<group>"; };
 		A900531C28D6090D000BC15B /* Loop Remote Overrides.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Loop Remote Overrides.shortcut"; sourceTree = "<group>"; };
@@ -1178,6 +1415,13 @@
 		A9F703742489C9A000C98AD8 /* GlucoseStore+SimulatedCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlucoseStore+SimulatedCoreData.swift"; sourceTree = "<group>"; };
 		A9F703762489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PersistentDeviceLog+SimulatedCoreData.swift"; sourceTree = "<group>"; };
 		A9FB75F0252BE320004C7D3F /* BolusDosingDecision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusDosingDecision.swift; sourceTree = "<group>"; };
+		AA22E9E5FE02C94F490DD246 /* LoopInsights_SuggestionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SuggestionStoreTests.swift; sourceTree = "<group>"; };
+		AD28B7018C8109C3B352CBB8 /* LoopInsights_ChatHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_ChatHistoryStore.swift; sourceTree = "<group>"; };
+		ADE5833949817538698865F6 /* LoopInsights_MonitorSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_MonitorSettingsView.swift; sourceTree = "<group>"; };
+		AEA35D0C77CFBE73CBBAF290 /* FoodFinder_AIServiceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_AIServiceManager.swift; sourceTree = "<group>"; };
+		AF6BA22598ED9610071F30F3 /* PowerPack_BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPack_BuildInfo.swift; sourceTree = "<group>"; };
+		AF73753CC874F5F7A949034D /* LoopInsights_SignalGapHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SignalGapHistoryView.swift; sourceTree = "<group>"; };
+		AFCDBD9B90449DA0CDEA3299 /* FoodFinder_CarbTrackingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_CarbTrackingService.swift; sourceTree = "<group>"; };
 		B4001CED28CBBC82002FB414 /* AlertManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertManagementView.swift; sourceTree = "<group>"; };
 		B40D07C6251A89D500C1C6D7 /* GlucoseDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseDisplay.swift; sourceTree = "<group>"; };
 		B42C951324A3C76000857C73 /* CGMStatusHUDViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGMStatusHUDViewModel.swift; sourceTree = "<group>"; };
@@ -1232,6 +1476,14 @@
 		B66D1F422E6A5D6600471149 /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/Main.xcstrings; sourceTree = "<group>"; };
 		B6F22EF72E95A03800CCA05F /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hu; path = hu.lproj/Intents.strings; sourceTree = "<group>"; };
 		B6F22EF92E95A03C00CCA05F /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Intents.strings; sourceTree = "<group>"; };
+		B6FB47168C7C5E107309CC2F /* LoopInsights_Phase5Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_Phase5Models.swift; sourceTree = "<group>"; };
+		B96D5D4547C87D4BBA73BB44 /* LoopInsights_SuggestionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SuggestionDetailView.swift; sourceTree = "<group>"; };
+		BA3684DFB8012A3E2F911692 /* LoopInsights_BehaviorInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_BehaviorInsightsView.swift; sourceTree = "<group>"; };
+		BB316C0F6448184A5AD9AE5B /* FoodFinder_ScannerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_ScannerService.swift; sourceTree = "<group>"; };
+		BB559C05A731CABF6F0B4201 /* DataLayer_EventModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_EventModels.swift; sourceTree = "<group>"; };
+		BB7AEA2ACE39D2EDEC0FC9C9 /* AutoPresets_ScannedEventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_ScannedEventsView.swift; sourceTree = "<group>"; };
+		BD1859D44BC7E28548B1EF85 /* LoopInsights_FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_FeatureFlags.swift; sourceTree = "<group>"; };
+		BF038EAE6D8A0A10D2E65158 /* LoopInsights_SuggestionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SuggestionRecord.swift; sourceTree = "<group>"; };
 		C1004DEF2981F5B700B8CF94 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1004DFD2981F67A00B8CF94 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = sv.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1004E052981F6A100B8CF94 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -1317,19 +1569,38 @@
 		C1EE9E802A38D0FB0064784A /* BuildDetails.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = BuildDetails.plist; sourceTree = "<group>"; };
 		C1EF747128D6A44A00C8C083 /* CrashRecoveryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashRecoveryManager.swift; sourceTree = "<group>"; };
 		C1F2075B26D6F9B0007AB7EB /* AppExpirationAlerter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppExpirationAlerter.swift; sourceTree = "<group>"; };
-		FADE0001000000000000DE01 /* DevelopmentBranchAlerter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevelopmentBranchAlerter.swift; sourceTree = "<group>"; };
 		C1F48FF62995821600C8BD69 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1F7822527CC056900C0919A /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		C1F8B1D122375E4200DD66CF /* BolusProgressTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusProgressTableViewCell.swift; sourceTree = "<group>"; };
 		C1F8B1DB223862D500DD66CF /* BolusProgressTableViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = BolusProgressTableViewCell.xib; sourceTree = "<group>"; };
 		C1FB428B217806A300FAB378 /* StateColorPalette.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StateColorPalette.swift; sourceTree = "<group>"; };
 		C1FB428E217921D600FAB378 /* PumpManagerUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpManagerUI.swift; sourceTree = "<group>"; };
+		C30DF3D77528EAB3B5AC1D7B /* LoopInsights_MealInsightsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_MealInsightsViewModel.swift; sourceTree = "<group>"; };
+		C8F547BCEE483F5F2DF323CE /* DataLayer_ReportGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_ReportGenerator.swift; sourceTree = "<group>"; };
+		CA2071DFD6173C252FCD9F7D /* LoopInsights_DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_DashboardView.swift; sourceTree = "<group>"; };
+		CAA070556C9613A6DBC68559 /* DataLayer_EventCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_EventCollector.swift; sourceTree = "<group>"; };
+		CC9516A4800B5EA0957F0AFD /* FoodFinder_RestaurantMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_RestaurantMenuView.swift; sourceTree = "<group>"; };
+		CCA8D920DC3A8C85D0109D45 /* BolusPro_Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_Models.swift; sourceTree = "<group>"; };
+		CDDE7C0162939A900342F8D8 /* AutoPresets_Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_Logger.swift; sourceTree = "<group>"; };
+		CF710A849EA6CD879BD5AB80 /* LoopInsights_CaffeineLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_CaffeineLogView.swift; sourceTree = "<group>"; };
+		D1541ACC09ACED3D982BF7FC /* LoopInsights_AdvancedAnalyzers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_AdvancedAnalyzers.swift; sourceTree = "<group>"; };
+		D255B89E3F58237EA2781A60 /* LoopInsights_CaregiverDigestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_CaregiverDigestView.swift; sourceTree = "<group>"; };
+		D572EBABCCAB09715775926A /* GraphDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphDetailView.swift; sourceTree = "<group>"; };
+		D62BEBA2A70A789CFB845606 /* BolusPro_BehaviorAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_BehaviorAnalyzer.swift; sourceTree = "<group>"; };
+		D97E96DDA78152A5FE740FD4 /* DataLayer_ProviderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_ProviderProtocol.swift; sourceTree = "<group>"; };
+		DA32883A0045816CA3128E3E /* LoopInsights_DataAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_DataAggregator.swift; sourceTree = "<group>"; };
 		DD3DBD282A33AFE9000F8B5B /* IntegralRetrospectiveCorrectionSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralRetrospectiveCorrectionSelectionView.swift; sourceTree = "<group>"; };
 		DDC389F52A2B61750066E2E8 /* ApplicationFactorStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationFactorStrategy.swift; sourceTree = "<group>"; };
 		DDC389F72A2B620B0066E2E8 /* GlucoseBasedApplicationFactorStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseBasedApplicationFactorStrategy.swift; sourceTree = "<group>"; };
 		DDC389F92A2B62470066E2E8 /* ConstantApplicationFactorStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantApplicationFactorStrategy.swift; sourceTree = "<group>"; };
 		DDC389FB2A2BC6670066E2E8 /* SettingsView+algorithmExperimentsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+algorithmExperimentsSection.swift"; sourceTree = "<group>"; };
 		DDC389FD2A2C4C830066E2E8 /* GlucoseBasedApplicationFactorSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseBasedApplicationFactorSelectionView.swift; sourceTree = "<group>"; };
+		DDD1A5B12D21DD26F7818B08 /* FoodFinder_AIProviderConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_AIProviderConfig.swift; sourceTree = "<group>"; };
+		DDDFC1F29C2312E792516B13 /* AutoPresets_Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_Storage.swift; sourceTree = "<group>"; };
+		DEC8418A13BEB028E920F1A3 /* LoopInsights_Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_Coordinator.swift; sourceTree = "<group>"; };
+		E107DF73CEAD367E03462C46 /* SiteAtlas_BodyMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_BodyMapView.swift; sourceTree = "<group>"; };
+		E738F2B7D83C7CB38A604606 /* LoopInsights_MealDebriefService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_MealDebriefService.swift; sourceTree = "<group>"; };
+		E7569E9F9E2299C7C7987190 /* LoopInsights_CaregiverDigestService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_CaregiverDigestService.swift; sourceTree = "<group>"; };
 		E90909CC24E34AC500F963D2 /* high_and_rising_with_cob_momentum_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_rising_with_cob_momentum_effect.json; sourceTree = "<group>"; };
 		E90909CD24E34AC500F963D2 /* high_and_rising_with_cob_insulin_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_rising_with_cob_insulin_effect.json; sourceTree = "<group>"; };
 		E90909CE24E34AC500F963D2 /* high_and_rising_with_cob_predicted_glucose.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_rising_with_cob_predicted_glucose.json; sourceTree = "<group>"; };
@@ -1371,6 +1642,7 @@
 		E95D380024EADE7C005E2F50 /* DoseStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseStoreProtocol.swift; sourceTree = "<group>"; };
 		E95D380224EADF36005E2F50 /* CarbStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbStoreProtocol.swift; sourceTree = "<group>"; };
 		E95D380424EADF78005E2F50 /* GlucoseStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseStoreProtocol.swift; sourceTree = "<group>"; };
+		E982E4777A460182F9FEE5D7 /* FoodFinder_InputResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_InputResults.swift; sourceTree = "<group>"; };
 		E98A55EC24EDD6380008715D /* LatestStoredSettingsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestStoredSettingsProvider.swift; sourceTree = "<group>"; };
 		E98A55EE24EDD6E60008715D /* DosingDecisionStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DosingDecisionStoreProtocol.swift; sourceTree = "<group>"; };
 		E98A55F024EDD85E0008715D /* MockDosingDecisionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDosingDecisionStore.swift; sourceTree = "<group>"; };
@@ -1405,6 +1677,10 @@
 		E9C58A7924DB529A00487A17 /* dynamic_glucose_effect_partially_observed.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = dynamic_glucose_effect_partially_observed.json; sourceTree = "<group>"; };
 		E9C58A7A24DB529A00487A17 /* counteraction_effect_falling_glucose.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = counteraction_effect_falling_glucose.json; sourceTree = "<group>"; };
 		E9C58A7B24DB529A00487A17 /* insulin_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = insulin_effect.json; sourceTree = "<group>"; };
+		EAC6AC22FEC1D2B96A31C086 /* SiteAtlas_Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_Models.swift; sourceTree = "<group>"; };
+		EBD734A20EE282EE164FC6B9 /* FoodFinder_VoiceSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_VoiceSearchView.swift; sourceTree = "<group>"; };
+		EDCED11B98BEAFD58C8AE941 /* FoodFinder_EntryPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_EntryPoint.swift; sourceTree = "<group>"; };
+		F221B5A0D5F6C925167C8635 /* BolusPro_FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_FeatureFlags.swift; sourceTree = "<group>"; };
 		F5D9C01727DABBE0002E48F6 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Intents.strings; sourceTree = "<group>"; };
 		F5D9C01C27DABBE1002E48F6 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Main.strings; sourceTree = "<group>"; };
 		F5D9C01E27DABBE2002E48F6 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -1413,6 +1689,14 @@
 		F5E0BDD827E1D71E0033557E /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Main.strings; sourceTree = "<group>"; };
 		F5E0BDDA27E1D71F0033557E /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F5E0BDE327E1D7230033557E /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F7B28DA4512332EE1123CAEF /* LoopInsights_EndoReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_EndoReportView.swift; sourceTree = "<group>"; };
+		F7FDC6CA364C8884B65EEDB8 /* SiteAtlas_FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_FeatureFlags.swift; sourceTree = "<group>"; };
+		FADE0001000000000000DE01 /* DevelopmentBranchAlerter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevelopmentBranchAlerter.swift; sourceTree = "<group>"; };
+		FBA04C6FC8871A04AFFD27F7 /* LoopInsights_MealInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_MealInsightsView.swift; sourceTree = "<group>"; };
+		FCDB43605E57B0C8D17EEF2A /* LoopInsights_GlucoseUnitContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_GlucoseUnitContext.swift; sourceTree = "<group>"; };
+		FDFA7D6D1EB9AE92410C6040 /* AutoPresets_AIAdvisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_AIAdvisor.swift; sourceTree = "<group>"; };
+		FE09CA56245E040321AF4790 /* LoopInsights_ChatHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_ChatHistoryView.swift; sourceTree = "<group>"; };
+		FE15E9C010223EAC3F3FA6B8 /* LoopInsights_FoodResponseAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_FoodResponseAnalyzer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1524,6 +1808,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		059476D1DA847AE832DFD124 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D30E34AA292C0FDFF382C173 /* AutoPresets */,
+				5BAE681AF68C7CEDE438E735 /* BolusPro */,
+				95EE87C37CEB4BDEE4977D24 /* FoodFinder */,
+				88CDF3C03FB7CEA878C97FA3 /* LoopInsights */,
+				C3FF320DE58F34A77D4D5254 /* DataLayer */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		1394E0FB790EB3D4C7A22A5E /* LoopInsights */ = {
+			isa = PBXGroup;
+			children = (
+				22D0E736A1B253D37D9E9740 /* LoopInsights_Models.swift */,
+				26E4F7C2FEA9818DFEDDB5F1 /* LoopInsights_MFPModels.swift */,
+				B6FB47168C7C5E107309CC2F /* LoopInsights_Phase5Models.swift */,
+				BF038EAE6D8A0A10D2E65158 /* LoopInsights_SuggestionRecord.swift */,
+				854E048791BB6D8578CEE684 /* LoopInsights_MealDebriefModels.swift */,
+			);
+			path = LoopInsights;
+			sourceTree = "<group>";
+		};
 		14B1736128AED9EC006CCD7C /* Loop Widget Extension */ = {
 			isa = PBXGroup;
 			children = (
@@ -1586,6 +1894,42 @@
 			path = Alerts;
 			sourceTree = "<group>";
 		};
+		280ADB89982455214AC18FC4 /* FoodFinder */ = {
+			isa = PBXGroup;
+			children = (
+				4DFB900EE960A218333F8BA1 /* FoodFinder_AIAnalysis.swift */,
+				DDD1A5B12D21DD26F7818B08 /* FoodFinder_AIProviderConfig.swift */,
+				1682483CAD20AB33DEC25ADA /* FoodFinder_AIServiceAdapter.swift */,
+				AEA35D0C77CFBE73CBBAF290 /* FoodFinder_AIServiceManager.swift */,
+				1C3890E0969AD9E1B01F4ED2 /* FoodFinder_AnalysisHistoryStore.swift */,
+				AFCDBD9B90449DA0CDEA3299 /* FoodFinder_CarbTrackingService.swift */,
+				A2C73FC463D2D989C3FD9922 /* FoodFinder_EmojiProvider.swift */,
+				7E5D19327F64963E3C5BBA52 /* FoodFinder_ImageDownloader.swift */,
+				0EE1A34A28C4C2B264A50C0E /* FoodFinder_ImageStore.swift */,
+				3B86683D6FC84C98C1021AC9 /* FoodFinder_LocationService.swift */,
+				301CAEF6EB83C57116815C63 /* FoodFinder_OpenFoodFactsService.swift */,
+				BB316C0F6448184A5AD9AE5B /* FoodFinder_ScannerService.swift */,
+				7CB80A8355FAF1F4E646E111 /* FoodFinder_SearchRouter.swift */,
+				7EC3D13CCFA264E81C0B863C /* FoodFinder_SecureStorage.swift */,
+				6108E9E6E96AFFB624DC7A8F /* FoodFinder_SpoonacularService.swift */,
+				47D58DB646F97C3C6A3EEF1E /* FoodFinder_VoiceService.swift */,
+			);
+			path = FoodFinder;
+			sourceTree = "<group>";
+		};
+		3843EC1C55890480A1C191FF /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				4DDBC27B39DEC22ED5C45698 /* AutoPresets */,
+				4272EC86F85C386B3F9DB4F8 /* BolusPro */,
+				280ADB89982455214AC18FC4 /* FoodFinder */,
+				4432E0AF82A533BD805DD582 /* LoopInsights */,
+				78A132379753FE176147ADB0 /* DataLayer */,
+				88BCD371CD92A6DE7BD76E64 /* SiteAtlas */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		3ED319892EB659E600820BCF /* Live Activity */ = {
 			isa = PBXGroup;
 			children = (
@@ -1605,6 +1949,25 @@
 				3ED3198F2EB65A2D00820BCF /* LiveActivityManager.swift */,
 			);
 			path = "Live Activity";
+			sourceTree = "<group>";
+		};
+		41FE167B28A4E1B5C20E5CD4 /* DataLayer */ = {
+			isa = PBXGroup;
+			children = (
+				0115F4773826E9EAF5F96488 /* DataLayer_ConsentView.swift */,
+				9D676C326CA848F36F10BE3A /* DataLayer_DashboardView.swift */,
+			);
+			path = DataLayer;
+			sourceTree = "<group>";
+		};
+		4272EC86F85C386B3F9DB4F8 /* BolusPro */ = {
+			isa = PBXGroup;
+			children = (
+				0D30C208E0EAC573A3DCCE08 /* BolusPro_FPUCalculator.swift */,
+				2230C2D5F9392ADFBEC135E7 /* BolusPro_DataLayerHook.swift */,
+				D62BEBA2A70A789CFB845606 /* BolusPro_BehaviorAnalyzer.swift */,
+			);
+			path = BolusPro;
 			sourceTree = "<group>";
 		};
 		4328E0121CFBE1B700E199AA /* Controllers */ = {
@@ -1679,6 +2042,12 @@
 				C1E3862428247B7100F561A4 /* StoredLoopNotRunningNotification.swift */,
 				4328E0311CFC068900E199AA /* WatchContext+LoopKit.swift */,
 				A987CD4824A58A0100439ADC /* ZipArchive.swift */,
+				B16CD42F8CE331111DC44DE7 /* AutoPresets */,
+				86A9B200E80797447E70777E /* BolusPro */,
+				D90350ACCDD06A242AEE33D7 /* FoodFinder */,
+				1394E0FB790EB3D4C7A22A5E /* LoopInsights */,
+				AB1ECE9B6639456C061F3765 /* DataLayer */,
+				5FCF96A1C249A48E19DBE423 /* SiteAtlas */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1745,6 +2114,8 @@
 				43F5C2CE1B92A2A0003EB13D /* View Controllers */,
 				43F5C2CF1B92A2ED003EB13D /* Views */,
 				897A5A9724C22DCE00C4E71D /* View Models */,
+				3843EC1C55890480A1C191FF /* Services */,
+				059476D1DA847AE832DFD124 /* Resources */,
 			);
 			path = Loop;
 			sourceTree = "<group>";
@@ -1998,6 +2369,13 @@
 				C1AF062229426300002C1B19 /* ManualGlucoseEntryRow.swift */,
 				DDC389FD2A2C4C830066E2E8 /* GlucoseBasedApplicationFactorSelectionView.swift */,
 				DD3DBD282A33AFE9000F8B5B /* IntegralRetrospectiveCorrectionSelectionView.swift */,
+				BD303AD1C160D7CC5C754B4D /* AutoPresets */,
+				E9C35EA3FE1F9797BBBD2B8F /* BolusPro */,
+				F132ADA2C8D7384DB2F2FE1D /* FoodFinder */,
+				73D1F909821AB044995D15C9 /* LoopInsights */,
+				41FE167B28A4E1B5C20E5CD4 /* DataLayer */,
+				6BA6EBD4F00FC2AD53BE5F63 /* SiteAtlas */,
+				D572EBABCCAB09715775926A /* GraphDetailView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -2043,6 +2421,10 @@
 				A96DAC2B2838F31200D94E38 /* SharedLogging.swift */,
 				7E69CFFB2A16A77E00203CBD /* ResetLoopManager.swift */,
 				84AA81E42A4A3981000B658B /* DeeplinkManager.swift */,
+				D5C648AD636FDE5276D80627 /* AutoPresets */,
+				70DE5AA0A23DBC5E57519E2B /* LoopInsights */,
+				CAC8868C9D604DCDDD42CE42 /* DataLayer */,
+				22C0003E6B5BB11FCF872A80 /* GraphDetailViewModel.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -2061,8 +2443,55 @@
 				A9DAE7CF2332D77F006AE942 /* LoopTests.swift */,
 				8968B113240C55F10074BB48 /* LoopSettingsTests.swift */,
 				E93E86AC24DDE02C00FF40C8 /* Mock Stores */,
+				DEFFCA5690808CDE50EF27AF /* FoodFinder */,
+				A9003624677C30C77E7B43C1 /* LoopInsights */,
 			);
 			path = LoopTests;
+			sourceTree = "<group>";
+		};
+		4432E0AF82A533BD805DD582 /* LoopInsights */ = {
+			isa = PBXGroup;
+			children = (
+				D1541ACC09ACED3D982BF7FC /* LoopInsights_AdvancedAnalyzers.swift */,
+				84CCCF9346DD7370B3975A83 /* LoopInsights_AIAnalysis.swift */,
+				607D9750CD60D2C5FBDE13FD /* LoopInsights_AIServiceAdapter.swift */,
+				4CD14B8265747D447C264D9A /* LoopInsights_AlcoholTracker.swift */,
+				2372E2DDBDA89A3B5B80EF44 /* LoopInsights_BackfillDetector.swift */,
+				05B55B850825FC159EF1082B /* LoopInsights_BehaviorInsightsAnalyzer.swift */,
+				108EFA414EC97DDAAF5FFBCB /* LoopInsights_CaffeineTracker.swift */,
+				E7569E9F9E2299C7C7987190 /* LoopInsights_CaregiverDigestService.swift */,
+				AD28B7018C8109C3B352CBB8 /* LoopInsights_ChatHistoryStore.swift */,
+				DA32883A0045816CA3128E3E /* LoopInsights_DataAggregator.swift */,
+				FE15E9C010223EAC3F3FA6B8 /* LoopInsights_FoodResponseAnalyzer.swift */,
+				FCDB43605E57B0C8D17EEF2A /* LoopInsights_GlucoseUnitContext.swift */,
+				2570F1035D3A845E6230189B /* LoopInsights_HealthKitManager.swift */,
+				97E4D5933C8B4305CE381143 /* LoopInsights_NightscoutImporter.swift */,
+				29BFD6726CB3416DD8DE08BD /* LoopInsights_ReportGenerator.swift */,
+				623C775B205EC24548B55C0A /* LoopInsights_SecureStorage.swift */,
+				5C706C2A64F28AF9DDA6A067 /* LoopInsights_SuggestionStore.swift */,
+				1FE3E46FD43932AB074AB64C /* LoopInsights_TestDataProvider.swift */,
+				253674AABEF3343CE2B3B0C2 /* LoopInsights_VoiceService.swift */,
+				E738F2B7D83C7CB38A604606 /* LoopInsights_MealDebriefService.swift */,
+				6E5FF49FA218599C1564C1AA /* LoopInsights_MFPImporter.swift */,
+				8AB73B83059DB9B4CE5BA012 /* LoopInsights_PreMealAdvisorService.swift */,
+			);
+			path = LoopInsights;
+			sourceTree = "<group>";
+		};
+		4518A52E78C49C9F320E25BE /* FoodFinder */ = {
+			isa = PBXGroup;
+			children = (
+				6B8B27AA086D7DAE137E9BA8 /* FoodFinder_SearchViewModel.swift */,
+			);
+			path = FoodFinder;
+			sourceTree = "<group>";
+		};
+		4DDBC27B39DEC22ED5C45698 /* AutoPresets */ = {
+			isa = PBXGroup;
+			children = (
+				FDFA7D6D1EB9AE92410C6040 /* AutoPresets_AIAdvisor.swift */,
+			);
+			path = AutoPresets;
 			sourceTree = "<group>";
 		};
 		4F70C1DF1DE8DCA7006380B7 /* Loop Status Extension */ = {
@@ -2222,6 +2651,81 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		5BAE681AF68C7CEDE438E735 /* BolusPro */ = {
+			isa = PBXGroup;
+			children = (
+				F221B5A0D5F6C925167C8635 /* BolusPro_FeatureFlags.swift */,
+			);
+			path = BolusPro;
+			sourceTree = "<group>";
+		};
+		5FCF96A1C249A48E19DBE423 /* SiteAtlas */ = {
+			isa = PBXGroup;
+			children = (
+				EAC6AC22FEC1D2B96A31C086 /* SiteAtlas_Models.swift */,
+			);
+			path = SiteAtlas;
+			sourceTree = "<group>";
+		};
+		6BA6EBD4F00FC2AD53BE5F63 /* SiteAtlas */ = {
+			isa = PBXGroup;
+			children = (
+				E107DF73CEAD367E03462C46 /* SiteAtlas_BodyMapView.swift */,
+				198AACDC4452FE16B9994FE8 /* SiteAtlas_SettingsView.swift */,
+				208917866187FCF5AD91FA4A /* SiteAtlas_SiteSelectionSheet.swift */,
+			);
+			path = SiteAtlas;
+			sourceTree = "<group>";
+		};
+		70DE5AA0A23DBC5E57519E2B /* LoopInsights */ = {
+			isa = PBXGroup;
+			children = (
+				268747E96E69E4D5AB82AEA7 /* LoopInsights_BackgroundMonitor.swift */,
+				DEC8418A13BEB028E920F1A3 /* LoopInsights_Coordinator.swift */,
+			);
+			path = LoopInsights;
+			sourceTree = "<group>";
+		};
+		73D1F909821AB044995D15C9 /* LoopInsights */ = {
+			isa = PBXGroup;
+			children = (
+				0D16B2477081D3D5D1AB8694 /* LoopInsights_AGPChartView.swift */,
+				8BF4DD5B857DD1B4FA1E86CD /* LoopInsights_AlcoholLogView.swift */,
+				BA3684DFB8012A3E2F911692 /* LoopInsights_BehaviorInsightsView.swift */,
+				D255B89E3F58237EA2781A60 /* LoopInsights_CaregiverDigestView.swift */,
+				F7B28DA4512332EE1123CAEF /* LoopInsights_EndoReportView.swift */,
+				FE09CA56245E040321AF4790 /* LoopInsights_ChatHistoryView.swift */,
+				CF710A849EA6CD879BD5AB80 /* LoopInsights_CaffeineLogView.swift */,
+				3763C4E9526F83AB3F7D3F70 /* LoopInsights_ChatView.swift */,
+				CA2071DFD6173C252FCD9F7D /* LoopInsights_DashboardView.swift */,
+				FBA04C6FC8871A04AFFD27F7 /* LoopInsights_MealInsightsView.swift */,
+				ADE5833949817538698865F6 /* LoopInsights_MonitorSettingsView.swift */,
+				A1A266A15E411B4AB60ABC4B /* LoopInsights_SettingsView.swift */,
+				B96D5D4547C87D4BBA73BB44 /* LoopInsights_SuggestionDetailView.swift */,
+				A6B2881360260A9CC9A72532 /* LoopInsights_SuggestionHistoryView.swift */,
+				959413A21CA05A5EC375390F /* LoopInsights_TrendsInsightsView.swift */,
+				56616199181C51D1D00897F2 /* LoopInsights_MealDebriefCard.swift */,
+				45AC2E89C78E9F2A46E75145 /* LoopInsights_PreMealAdvisorCard.swift */,
+				AF73753CC874F5F7A949034D /* LoopInsights_SignalGapHistoryView.swift */,
+				8B506730D8EFFA8AAEFA7B07 /* LoopInsights_SubstackPromo.swift */,
+			);
+			path = LoopInsights;
+			sourceTree = "<group>";
+		};
+		78A132379753FE176147ADB0 /* DataLayer */ = {
+			isa = PBXGroup;
+			children = (
+				18958E699F8A7B9A6A2BA61E /* DataLayer_SecureStorage.swift */,
+				244F25FF57E564C904208F5E /* DataLayer_ConsentManager.swift */,
+				7C9A138F7FA663FBB33AA464 /* DataLayer_EventStore.swift */,
+				CAA070556C9613A6DBC68559 /* DataLayer_EventCollector.swift */,
+				4BBD5F1E94A947BB4A7B0823 /* DataLayer_SyncService.swift */,
+				C8F547BCEE483F5F2DF323CE /* DataLayer_ReportGenerator.swift */,
+				D97E96DDA78152A5FE740FD4 /* DataLayer_ProviderProtocol.swift */,
+			);
+			path = DataLayer;
+			sourceTree = "<group>";
+		};
 		7D23667B21250C5A0028B67D /* Common */ = {
 			isa = PBXGroup;
 			children = (
@@ -2280,6 +2784,45 @@
 				14B1736F28AEDBF6006CCD7C /* SystemStatusWidget.swift */,
 			);
 			path = Widgets;
+			sourceTree = "<group>";
+		};
+		853E8B26A762B09BC2CC95B1 /* LoopInsights */ = {
+			isa = PBXGroup;
+			children = (
+				8238AB5C1F2E769273A52070 /* LoopInsights_ChatViewModel.swift */,
+				393D1967E1D7B498743CC283 /* LoopInsights_DashboardViewModel.swift */,
+				C30DF3D77528EAB3B5AC1D7B /* LoopInsights_MealInsightsViewModel.swift */,
+			);
+			path = LoopInsights;
+			sourceTree = "<group>";
+		};
+		86A9B200E80797447E70777E /* BolusPro */ = {
+			isa = PBXGroup;
+			children = (
+				CCA8D920DC3A8C85D0109D45 /* BolusPro_Models.swift */,
+			);
+			path = BolusPro;
+			sourceTree = "<group>";
+		};
+		88BCD371CD92A6DE7BD76E64 /* SiteAtlas */ = {
+			isa = PBXGroup;
+			children = (
+				17B86AFD123A8DE4987E3DF5 /* SiteAtlas_Coordinator.swift */,
+				F7FDC6CA364C8884B65EEDB8 /* SiteAtlas_FeatureFlags.swift */,
+				8FA590D26DEB8C1ED2B13EA4 /* SiteAtlas_Storage.swift */,
+			);
+			path = SiteAtlas;
+			sourceTree = "<group>";
+		};
+		88CDF3C03FB7CEA878C97FA3 /* LoopInsights */ = {
+			isa = PBXGroup;
+			children = (
+				BD1859D44BC7E28548B1EF85 /* LoopInsights_FeatureFlags.swift */,
+				AF6BA22598ED9610071F30F3 /* PowerPack_BuildInfo.swift */,
+				19EC8F84B4B01EE5546989D9 /* PowerPack_UpdateChecker.swift */,
+				12084C085224FDD62FAA9840 /* PowerPack_APIUsage.swift */,
+			);
+			path = LoopInsights;
 			sourceTree = "<group>";
 		};
 		891B508324342BCA005DA578 /* View Models */ = {
@@ -2355,6 +2898,8 @@
 				C174233B259BEB0F00399C9D /* ManualEntryDoseViewModel.swift */,
 				1DB619AB270BAD3D006C9D07 /* VersionUpdateViewModel.swift */,
 				3ED319952EB65A5C00820BCF /* LiveActivityManagementViewModel.swift */,
+				4518A52E78C49C9F320E25BE /* FoodFinder */,
+				853E8B26A762B09BC2CC95B1 /* LoopInsights */,
 			);
 			path = "View Models";
 			sourceTree = "<group>";
@@ -2385,6 +2930,14 @@
 				89F9119124358E2B00ECCAF3 /* CarbEntryInputMode.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		95EE87C37CEB4BDEE4977D24 /* FoodFinder */ = {
+			isa = PBXGroup;
+			children = (
+				73404923E06307CDCF420FE4 /* FoodFinder_FeatureFlags.swift */,
+			);
+			path = FoodFinder;
 			sourceTree = "<group>";
 		};
 		968DCD53F724DE56FFE51920 /* Frameworks */ = {
@@ -2430,6 +2983,16 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		A9003624677C30C77E7B43C1 /* LoopInsights */ = {
+			isa = PBXGroup;
+			children = (
+				1B9798E5BC182FCB5A9B18BB /* LoopInsights_DataAggregatorTests.swift */,
+				4B59242D8B9C330608E795CA /* LoopInsights_ModelsTests.swift */,
+				AA22E9E5FE02C94F490DD246 /* LoopInsights_SuggestionStoreTests.swift */,
+			);
+			path = LoopInsights;
+			sourceTree = "<group>";
+		};
 		A900531928D60852000BC15B /* Shortcuts */ = {
 			isa = PBXGroup;
 			children = (
@@ -2451,6 +3014,24 @@
 				A9BD28E6272226B40071DF15 /* TestLocalizedError.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		AB1ECE9B6639456C061F3765 /* DataLayer */ = {
+			isa = PBXGroup;
+			children = (
+				BB559C05A731CABF6F0B4201 /* DataLayer_EventModels.swift */,
+				19CF13B1F0B2354035C7019B /* DataLayer_ConsentModels.swift */,
+			);
+			path = DataLayer;
+			sourceTree = "<group>";
+		};
+		B16CD42F8CE331111DC44DE7 /* AutoPresets */ = {
+			isa = PBXGroup;
+			children = (
+				62F5172D47C81504B6F14D19 /* AutoPresets_Models.swift */,
+				47B91FB09EA02C1079290FA1 /* AutoPresets_RecommendationModels.swift */,
+			);
+			path = AutoPresets;
 			sourceTree = "<group>";
 		};
 		B42C950F24A3C44F00857C73 /* ViewModel */ = {
@@ -2478,6 +3059,18 @@
 				B4CAD8782549D2540057946B /* LoopCompletionFreshnessTests.swift */,
 			);
 			path = LoopCore;
+			sourceTree = "<group>";
+		};
+		BD303AD1C160D7CC5C754B4D /* AutoPresets */ = {
+			isa = PBXGroup;
+			children = (
+				30AF2AF42DC12C3916774432 /* AutoPresets_AIRecommendationView.swift */,
+				7387EE5C4FD1515CE0B0A367 /* AutoPresets_GeofenceSettingsView.swift */,
+				9631794ADB2F9E56EBC98940 /* AutoPresets_CalendarSettingsView.swift */,
+				BB7AEA2ACE39D2EDEC0FC9C9 /* AutoPresets_ScannedEventsView.swift */,
+				1603F6C219C5CF41BA200D92 /* AutoPresets_SettingsView.swift */,
+			);
+			path = AutoPresets;
 			sourceTree = "<group>";
 		};
 		C13072B82A76AF0A009A7C58 /* live_capture */ = {
@@ -2508,6 +3101,64 @@
 				C1092BFD29F8116700AE3D1C /* apply-info-customizations.sh */,
 			);
 			path = Scripts;
+			sourceTree = "<group>";
+		};
+		C3FF320DE58F34A77D4D5254 /* DataLayer */ = {
+			isa = PBXGroup;
+			children = (
+				4516EF558EAE581A9ADCA97D /* DataLayer_FeatureFlags.swift */,
+			);
+			path = DataLayer;
+			sourceTree = "<group>";
+		};
+		CAC8868C9D604DCDDD42CE42 /* DataLayer */ = {
+			isa = PBXGroup;
+			children = (
+				23C515F22083FAA5A4B0A5B8 /* DataLayer_Coordinator.swift */,
+			);
+			path = DataLayer;
+			sourceTree = "<group>";
+		};
+		D30E34AA292C0FDFF382C173 /* AutoPresets */ = {
+			isa = PBXGroup;
+			children = (
+				024DE3B4146CA9D1B57F9FFD /* AutoPresets_FeatureFlags.swift */,
+			);
+			path = AutoPresets;
+			sourceTree = "<group>";
+		};
+		D5C648AD636FDE5276D80627 /* AutoPresets */ = {
+			isa = PBXGroup;
+			children = (
+				56613E391A5E735E0235D4BE /* AutoPresets_ActivityDetectionManager.swift */,
+				51A4DA4190E78392E5955B76 /* AutoPresets_Coordinator.swift */,
+				85F0DCFE43E6DB3A4E74E2AC /* AutoPresets_Delegate.swift */,
+				6F77974BAD8C8B8D9D54A90F /* AutoPresets_GeofenceManager.swift */,
+				6C369B8BD708323701C6E161 /* AutoPresets_CalendarManager.swift */,
+				CDDE7C0162939A900342F8D8 /* AutoPresets_Logger.swift */,
+				DDDFC1F29C2312E792516B13 /* AutoPresets_Storage.swift */,
+			);
+			path = AutoPresets;
+			sourceTree = "<group>";
+		};
+		D90350ACCDD06A242AEE33D7 /* FoodFinder */ = {
+			isa = PBXGroup;
+			children = (
+				5B723766697B01A143A1CEEB /* FoodFinder_AnalysisRecord.swift */,
+				E982E4777A460182F9FEE5D7 /* FoodFinder_InputResults.swift */,
+				8BB107CACA4FC04E8652B531 /* FoodFinder_Models.swift */,
+			);
+			path = FoodFinder;
+			sourceTree = "<group>";
+		};
+		DEFFCA5690808CDE50EF27AF /* FoodFinder */ = {
+			isa = PBXGroup;
+			children = (
+				7257AB964A1C8B6769E90882 /* FoodFinder_BarcodeScannerTests.swift */,
+				1705C20E7AC9F6FF2322C1D7 /* FoodFinder_OpenFoodFactsTests.swift */,
+				09FA666A9CB87C31C053C5E7 /* FoodFinder_VoiceSearchTests.swift */,
+			);
+			path = FoodFinder;
 			sourceTree = "<group>";
 		};
 		E90909CB24E34A7A00F963D2 /* high_and_rising_with_cob */ = {
@@ -2642,6 +3293,18 @@
 			path = meal_detection;
 			sourceTree = "<group>";
 		};
+		E9C35EA3FE1F9797BBBD2B8F /* BolusPro */ = {
+			isa = PBXGroup;
+			children = (
+				5E67190B8BEF36D579A921BC /* BolusPro_InfoSheet.swift */,
+				7C429392299998C3DED65F8C /* BolusPro_OnboardingView.swift */,
+				08E470BA357FB4C37F45D3AD /* BolusPro_ManualMacroFields.swift */,
+				77739597BDCBA74645DA2EE1 /* BolusPro_CarbEntrySection.swift */,
+				58A536BCBD1D2E24692C4600 /* BolusPro_SettingsView.swift */,
+			);
+			path = BolusPro;
+			sourceTree = "<group>";
+		};
 		E9C58A7624DB510500487A17 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
@@ -2663,6 +3326,25 @@
 				E9C58A7724DB529A00487A17 /* momentum_effect_bouncing.json */,
 			);
 			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		F132ADA2C8D7384DB2F2FE1D /* FoodFinder */ = {
+			isa = PBXGroup;
+			children = (
+				225333340D7B94B14ADB765D /* FoodFinder_AICameraView.swift */,
+				CC9516A4800B5EA0957F0AFD /* FoodFinder_RestaurantMenuView.swift */,
+				9E3DAC536253098EBD013343 /* FoodFinder_RestaurantItemEntryView.swift */,
+				33A071F1BBD88854C8B89CF0 /* FoodFinder_CarbTrackingDashboard.swift */,
+				EDCED11B98BEAFD58C8AE941 /* FoodFinder_EntryPoint.swift */,
+				2111B0756589CC6014EFC45F /* FoodFinder_FavoritesHelpers.swift */,
+				00960F09C394E3DEF2622168 /* FoodFinder_ImageCropView.swift */,
+				8EB1877A28B05637D8792EAB /* FoodFinder_ScannerView.swift */,
+				20C5ECE2E8754449F20840DD /* FoodFinder_SearchBar.swift */,
+				A590E20E1E9607F379E770F1 /* FoodFinder_SearchResultsView.swift */,
+				43216BEA2637938B8B507F92 /* FoodFinder_SettingsView.swift */,
+				EBD734A20EE282EE164FC6B9 /* FoodFinder_VoiceSearchView.swift */,
+			);
+			path = FoodFinder;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -3581,6 +4263,142 @@
 				7E69CFFC2A16A77E00203CBD /* ResetLoopManager.swift in Sources */,
 				B40D07C7251A89D500C1C6D7 /* GlucoseDisplay.swift in Sources */,
 				43C2FAE11EB656A500364AFF /* GlucoseEffectVelocity.swift in Sources */,
+				417EF3DF7DBF043DB7A40D41 /* GraphDetailViewModel.swift in Sources */,
+				13295DEF172638BFE9207081 /* GraphDetailView.swift in Sources */,
+				9B4B836A0130380A1787B685 /* AutoPresets_ActivityDetectionManager.swift in Sources */,
+				70443A8B65CE1B2DA0B7F0B4 /* AutoPresets_Coordinator.swift in Sources */,
+				809B4CFD31EA1434F93381DD /* AutoPresets_Delegate.swift in Sources */,
+				2F832679D4E5870ACDB7E9CF /* AutoPresets_GeofenceManager.swift in Sources */,
+				A09C5F1497BF15D84FA10CB9 /* AutoPresets_CalendarManager.swift in Sources */,
+				CDCC9FBD90E8D25B15DD319E /* AutoPresets_Logger.swift in Sources */,
+				F0556225BFA7AD2532BF8CFE /* AutoPresets_Storage.swift in Sources */,
+				FACBCAB9166B79546E7F6281 /* AutoPresets_Models.swift in Sources */,
+				188F8AEA1E65B52DBE1E0559 /* AutoPresets_RecommendationModels.swift in Sources */,
+				DA8E68CC93178DE3066B9DEE /* AutoPresets_AIAdvisor.swift in Sources */,
+				6FAD82D9474D5C9956440830 /* AutoPresets_FeatureFlags.swift in Sources */,
+				878B03AE9AE258294DDC879A /* AutoPresets_AIRecommendationView.swift in Sources */,
+				8B34032136EAE8230DB056CE /* AutoPresets_GeofenceSettingsView.swift in Sources */,
+				55BE7F21DF31665E36A26BC4 /* AutoPresets_CalendarSettingsView.swift in Sources */,
+				E5CEDCB52CCC33B2513C1B4B /* AutoPresets_ScannedEventsView.swift in Sources */,
+				68F370AB66AF0B853621CCDC /* AutoPresets_SettingsView.swift in Sources */,
+				FA6D045C84509DA869E12BC6 /* BolusPro_Models.swift in Sources */,
+				CABFC02AD96BAD6DEF7EAE12 /* BolusPro_FeatureFlags.swift in Sources */,
+				8BFC30BF06B08421B78F7649 /* BolusPro_FPUCalculator.swift in Sources */,
+				F1854618ACBD545751127F37 /* BolusPro_DataLayerHook.swift in Sources */,
+				31CEF90469CADD5F2D487BD5 /* BolusPro_BehaviorAnalyzer.swift in Sources */,
+				DE0D647625285C780D99D7B4 /* BolusPro_InfoSheet.swift in Sources */,
+				E66A3332FD30EDB211D3AA96 /* BolusPro_OnboardingView.swift in Sources */,
+				A72377BC1BEF5896CCA8D123 /* BolusPro_ManualMacroFields.swift in Sources */,
+				C821648AEFA81F16B94EA7F7 /* BolusPro_CarbEntrySection.swift in Sources */,
+				27B6E7C065E532466B47E4FE /* BolusPro_SettingsView.swift in Sources */,
+				64212EA79692EB9338E53C85 /* FoodFinder_AnalysisRecord.swift in Sources */,
+				E88E68D68BF264F721AFC712 /* FoodFinder_InputResults.swift in Sources */,
+				7ADC7CCA827794317AA04776 /* FoodFinder_Models.swift in Sources */,
+				FB788D1EE6ADB3446110A1E4 /* FoodFinder_FeatureFlags.swift in Sources */,
+				33CAAACE11A18DF26E8388A2 /* FoodFinder_AIAnalysis.swift in Sources */,
+				0069EFA11E7101DEB638B4C2 /* FoodFinder_AIProviderConfig.swift in Sources */,
+				27764BB7F99C7CA1B3BB0AC4 /* FoodFinder_AIServiceAdapter.swift in Sources */,
+				164EC6011323A48640046EB0 /* FoodFinder_AIServiceManager.swift in Sources */,
+				D51C54AAD5AECFE1CAB6F647 /* FoodFinder_AnalysisHistoryStore.swift in Sources */,
+				B7F6252AE377538D14B924DF /* FoodFinder_CarbTrackingService.swift in Sources */,
+				C726C1C782BA0888FC33899F /* FoodFinder_EmojiProvider.swift in Sources */,
+				DABC221B5F95D30484E6618D /* FoodFinder_ImageDownloader.swift in Sources */,
+				41F847EDBA1E42D755FB492B /* FoodFinder_ImageStore.swift in Sources */,
+				0F344180B26115B3DB49A3F7 /* FoodFinder_LocationService.swift in Sources */,
+				A1DAC248FAB1D0C3ED7FD490 /* FoodFinder_OpenFoodFactsService.swift in Sources */,
+				1B21C0D879F682FD0DE7BB15 /* FoodFinder_ScannerService.swift in Sources */,
+				0E01156F77D4B2E75523D557 /* FoodFinder_SearchRouter.swift in Sources */,
+				D5B0EF5D0003524F988C3C0C /* FoodFinder_SecureStorage.swift in Sources */,
+				6F46D284E8FC5724B0710162 /* FoodFinder_SpoonacularService.swift in Sources */,
+				4A937F594BC57E1644C24B50 /* FoodFinder_VoiceService.swift in Sources */,
+				3C37B6236426D0E3EA651E6B /* FoodFinder_SearchViewModel.swift in Sources */,
+				9A49A3AC2016C9FA23C057E6 /* FoodFinder_AICameraView.swift in Sources */,
+				CAA30084CF875CFBCE0FC974 /* FoodFinder_RestaurantMenuView.swift in Sources */,
+				5836831126B89B9E83041B1E /* FoodFinder_RestaurantItemEntryView.swift in Sources */,
+				23EBC2AFF5B046DA71B8706B /* FoodFinder_CarbTrackingDashboard.swift in Sources */,
+				B9D441B49A1EF902D4B4CD26 /* FoodFinder_EntryPoint.swift in Sources */,
+				45D21861D3C0ADF067F2767F /* FoodFinder_FavoritesHelpers.swift in Sources */,
+				4016E91E09EF6716B414F6CC /* FoodFinder_ImageCropView.swift in Sources */,
+				7274C0B427751AA3CD81DEE4 /* FoodFinder_ScannerView.swift in Sources */,
+				A07F0CC0E0A98BAEEE6EBB03 /* FoodFinder_SearchBar.swift in Sources */,
+				49ED3DD0564A0DE7C8D9F19F /* FoodFinder_SearchResultsView.swift in Sources */,
+				5BCE0389AEB6BC4EC80F57AA /* FoodFinder_SettingsView.swift in Sources */,
+				2E34F5AB8320222407AAFC1E /* FoodFinder_VoiceSearchView.swift in Sources */,
+				A528A18F2ADB9529322801FC /* LoopInsights_BackgroundMonitor.swift in Sources */,
+				A5F64582330AEEC8A1FC5D5F /* LoopInsights_Coordinator.swift in Sources */,
+				DBAF6D59067C2F54BC05F3F6 /* DataLayer_Coordinator.swift in Sources */,
+				6A4BDC2EEE1179A2BE5C7754 /* LoopInsights_Models.swift in Sources */,
+				93621214B467806D9F09EEAA /* LoopInsights_MFPModels.swift in Sources */,
+				1FDE947C49DDB9F909D27B01 /* LoopInsights_Phase5Models.swift in Sources */,
+				84E7E7B7A794D8AB75034AF4 /* LoopInsights_SuggestionRecord.swift in Sources */,
+				38CE2C9F6B29D4114D1A5D07 /* LoopInsights_MealDebriefModels.swift in Sources */,
+				26D1850F1DD974F4393D5C02 /* DataLayer_EventModels.swift in Sources */,
+				E29D1EB46A2B91AE3FDFB347 /* DataLayer_ConsentModels.swift in Sources */,
+				A395749AFFBA35E871EEBFD6 /* LoopInsights_FeatureFlags.swift in Sources */,
+				7E6276F2F6941DBD86B6B218 /* PowerPack_BuildInfo.swift in Sources */,
+				006C788DAD3BE961DC7DEF3F /* PowerPack_UpdateChecker.swift in Sources */,
+				EADE8061E038FB45864CDA4E /* PowerPack_APIUsage.swift in Sources */,
+				775AC761C750DEC6B6F81B72 /* DataLayer_FeatureFlags.swift in Sources */,
+				6F1B367F5EF09AEA30296F44 /* LoopInsights_AdvancedAnalyzers.swift in Sources */,
+				079EC1F06F2F6038756BDDF2 /* LoopInsights_AIAnalysis.swift in Sources */,
+				7F85981E95E056FD14C9E658 /* LoopInsights_AIServiceAdapter.swift in Sources */,
+				15CF9C0C36A50D07EDC72C04 /* LoopInsights_AlcoholTracker.swift in Sources */,
+				6DB3F6A2D8AACF9650B59713 /* LoopInsights_BackfillDetector.swift in Sources */,
+				262F44E876C2FCB3817DCC72 /* LoopInsights_BehaviorInsightsAnalyzer.swift in Sources */,
+				E49F383327456AA3DEF583AE /* LoopInsights_CaffeineTracker.swift in Sources */,
+				551DFE85CB80C4446AD0DDEC /* LoopInsights_CaregiverDigestService.swift in Sources */,
+				C0B209FC0F7923D3787F2CEF /* LoopInsights_ChatHistoryStore.swift in Sources */,
+				F56F1856A32E8160149B3149 /* LoopInsights_DataAggregator.swift in Sources */,
+				955592F30284ED133EC150B3 /* LoopInsights_FoodResponseAnalyzer.swift in Sources */,
+				48BF9CCC5A86BB2D426457F8 /* LoopInsights_GlucoseUnitContext.swift in Sources */,
+				0C4E19D6352BAEBD22195CF3 /* LoopInsights_HealthKitManager.swift in Sources */,
+				99CDB0D68ECEA2FA30AB1556 /* LoopInsights_NightscoutImporter.swift in Sources */,
+				051BB8037243680C0687EA79 /* LoopInsights_ReportGenerator.swift in Sources */,
+				92BBCC6A731B66E67AE015A1 /* LoopInsights_SecureStorage.swift in Sources */,
+				4B080F13EF98718A7FEAB176 /* LoopInsights_SuggestionStore.swift in Sources */,
+				C786708D1FA4617924CC94E6 /* LoopInsights_TestDataProvider.swift in Sources */,
+				FDC7A8B99BD65BE3599AC8BD /* LoopInsights_VoiceService.swift in Sources */,
+				81E41B7390A5EF347772042E /* LoopInsights_MealDebriefService.swift in Sources */,
+				E0833959776966E1C62A992A /* LoopInsights_MFPImporter.swift in Sources */,
+				3BF5D5292FC8EDC6325FF0BD /* LoopInsights_PreMealAdvisorService.swift in Sources */,
+				6C09652D8042E266E68049E5 /* DataLayer_SecureStorage.swift in Sources */,
+				16990648A5D75816270ED7F8 /* DataLayer_ConsentManager.swift in Sources */,
+				B68F5C5B648322AED1B96CF5 /* DataLayer_EventStore.swift in Sources */,
+				97EABDD24D213615C9F3891C /* DataLayer_EventCollector.swift in Sources */,
+				FA5A376108B402FC8D9281FA /* DataLayer_SyncService.swift in Sources */,
+				015042D80CDCC9F9B61B903F /* DataLayer_ReportGenerator.swift in Sources */,
+				0BEF9B56D9BF491F2392550F /* DataLayer_ProviderProtocol.swift in Sources */,
+				44BC1C4741CF7C18FCD7C58E /* LoopInsights_ChatViewModel.swift in Sources */,
+				8F1C2592AAE578625FA1A663 /* LoopInsights_DashboardViewModel.swift in Sources */,
+				D211C294E88C41B64BAEECB4 /* LoopInsights_MealInsightsViewModel.swift in Sources */,
+				2606552720BC12164C272913 /* LoopInsights_AGPChartView.swift in Sources */,
+				4A0942D447003E3056FF4639 /* LoopInsights_AlcoholLogView.swift in Sources */,
+				D1C8CBB54EC80FF5B9A945C8 /* LoopInsights_BehaviorInsightsView.swift in Sources */,
+				A3BF84DA6D4C2FB3E4BF684D /* LoopInsights_CaregiverDigestView.swift in Sources */,
+				434A06CECCA775D37EC1F136 /* LoopInsights_EndoReportView.swift in Sources */,
+				5562647A48360FA6CC36310A /* LoopInsights_ChatHistoryView.swift in Sources */,
+				BAE38CDF96BA1DA27FF080B7 /* LoopInsights_CaffeineLogView.swift in Sources */,
+				26BE764B796A172A22B27880 /* LoopInsights_ChatView.swift in Sources */,
+				5CA015D639F98929BB7D72F1 /* LoopInsights_DashboardView.swift in Sources */,
+				9C56E5C58F8504E0506D1B9F /* LoopInsights_MealInsightsView.swift in Sources */,
+				01BA2BE752047393AB59ED36 /* LoopInsights_MonitorSettingsView.swift in Sources */,
+				1B51AC4E311024D7A81A634B /* LoopInsights_SettingsView.swift in Sources */,
+				4D43F8C1B10A2B51E61714EA /* LoopInsights_SuggestionDetailView.swift in Sources */,
+				9A5C88D1DFB3483CBD679519 /* LoopInsights_SuggestionHistoryView.swift in Sources */,
+				97915790F5F734FDF0FD1922 /* LoopInsights_TrendsInsightsView.swift in Sources */,
+				A90894B1A9826F57A6F1FC03 /* LoopInsights_MealDebriefCard.swift in Sources */,
+				2C52C27A9D699F9CD6DB6C56 /* LoopInsights_PreMealAdvisorCard.swift in Sources */,
+				20E102D95123954D8F4384DB /* LoopInsights_SignalGapHistoryView.swift in Sources */,
+				486F9BD26CAB676035797E87 /* LoopInsights_SubstackPromo.swift in Sources */,
+				5B762A5BD7D1D9B5170C72C1 /* DataLayer_ConsentView.swift in Sources */,
+				6F5FEB4509B4644C020BD08D /* DataLayer_DashboardView.swift in Sources */,
+				7DCFF250905F69D973EE39C5 /* SiteAtlas_Models.swift in Sources */,
+				E37AEDC8DA85ECA437215F1E /* SiteAtlas_Coordinator.swift in Sources */,
+				6FA9440793C0570952588B1A /* SiteAtlas_FeatureFlags.swift in Sources */,
+				8FBEA8E03A07EFDC5DF2AB6E /* SiteAtlas_Storage.swift in Sources */,
+				ECBCE1757156B9D960F1B4AC /* SiteAtlas_BodyMapView.swift in Sources */,
+				57E3308FDEA7A8AF64F06581 /* SiteAtlas_SettingsView.swift in Sources */,
+				34B3412B2F90F59CDD867AFD /* SiteAtlas_SiteSelectionSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3763,6 +4581,12 @@
 				C1900900252271BB00721625 /* SimpleBolusCalculatorTests.swift in Sources */,
 				A9C1719725366F780053BCBD /* WatchHistoricalGlucoseTest.swift in Sources */,
 				E93E86B224DDE21D00FF40C8 /* MockCarbStore.swift in Sources */,
+				594445C0AFBCCFCC6CC3137D /* FoodFinder_BarcodeScannerTests.swift in Sources */,
+				83A73F5796F6A35551234E7D /* FoodFinder_OpenFoodFactsTests.swift in Sources */,
+				CFB644A4359EF71FA126A5C7 /* FoodFinder_VoiceSearchTests.swift in Sources */,
+				EBF56903B5932834DF35599E /* LoopInsights_DataAggregatorTests.swift in Sources */,
+				6F8D19EECE4E792342E07948 /* LoopInsights_ModelsTests.swift in Sources */,
+				F06F348BBB58A7D7CDE9517F /* LoopInsights_SuggestionStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4111,7 +4935,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Loop Widget Extension/Bootstrap/LoopWidgetExtension.entitlements";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_DEBUG)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -4160,7 +4984,7 @@
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_RELEASE)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Loop Widget Extension/Bootstrap/Info.plist";
@@ -4425,7 +5249,7 @@
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_DEBUG)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = Loop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4454,7 +5278,7 @@
 				CODE_SIGN_ENTITLEMENTS = "$(LOOP_ENTITLEMENTS)";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_RELEASE)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = Loop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4480,7 +5304,7 @@
 				CODE_SIGN_ENTITLEMENTS = "WatchApp Extension/WatchApp Extension.entitlements";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_DEBUG)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4507,7 +5331,7 @@
 				CODE_SIGN_ENTITLEMENTS = "WatchApp Extension/WatchApp Extension.entitlements";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_RELEASE)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4534,7 +5358,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "$(APPICON_NAME)";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_DEBUG)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				FRAMEWORK_SEARCH_PATHS = "";
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Info.plist;
@@ -4558,7 +5382,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "$(APPICON_NAME)";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_RELEASE)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				FRAMEWORK_SEARCH_PATHS = "";
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Info.plist;
@@ -4726,7 +5550,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Loop Status Extension/Loop Status Extension.entitlements";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_DEBUG)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = "Loop Status Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4752,7 +5576,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Loop Status Extension/Loop Status Extension.entitlements";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_RELEASE)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = "Loop Status Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4828,7 +5652,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Loop Intent Extension/Loop Intent Extension.entitlements";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_DEBUG)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Loop Intent Extension/Info.plist";
@@ -4855,7 +5679,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Loop Intent Extension/Loop Intent Extension.entitlements";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_RELEASE)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Loop Intent Extension/Info.plist";

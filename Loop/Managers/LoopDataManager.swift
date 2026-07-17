@@ -126,6 +126,12 @@ final class LoopDataManager {
         self.automaticDosingStatus = automaticDosingStatus
 
         self.trustedTimeOffset = trustedTimeOffset
+
+        // Set up AutoPresets coordinator delegate
+        AutoPresets_Coordinator.shared.delegate = self
+
+        // Initialize SiteAtlas coordinator
+        _ = SiteAtlas_Coordinator.shared
         
         if #available(iOS 16.2, *) {
             self.liveActivityManager = LiveActivityManager(
@@ -2613,4 +2619,52 @@ extension LoopDataManager: ServicesManagerDelegate {
         }
     }
     
+}
+
+
+// MARK: - AutoPresets_Delegate
+
+extension LoopDataManager: AutoPresets_Delegate {
+
+    func autoPresets(_ coordinator: AutoPresets_Coordinator,
+                     shouldActivatePreset preset: TemporaryScheduleOverridePreset) {
+        logger.default("AutoPresets activating preset: %{public}@", preset.name)
+
+        mutateSettings { settings in
+            settings.scheduleOverride = preset.createOverride(enactTrigger: .local)
+        }
+    }
+
+    func autoPresets(_ coordinator: AutoPresets_Coordinator,
+                     shouldDeactivatePreset preset: TemporaryScheduleOverridePreset) {
+        guard let currentOverride = settings.scheduleOverride,
+              case let .preset(currentPreset) = currentOverride.context,
+              currentPreset.id == preset.id
+        else {
+            return
+        }
+
+        logger.default("AutoPresets deactivating preset: %{public}@", preset.name)
+
+        mutateSettings { settings in
+            settings.scheduleOverride = nil
+        }
+    }
+
+    func autoPresets(_ coordinator: AutoPresets_Coordinator,
+                     shouldCreatePreset preset: TemporaryScheduleOverridePreset) {
+        logger.default("AutoPresets creating AI-recommended preset: %{public}@", preset.name)
+
+        mutateSettings { settings in
+            settings.overridePresets.append(preset)
+        }
+    }
+
+    func autoPresetsAvailablePresets(_ coordinator: AutoPresets_Coordinator) -> [TemporaryScheduleOverridePreset] {
+        settings.overridePresets
+    }
+
+    func autoPresetsCurrentOverride(_ coordinator: AutoPresets_Coordinator) -> TemporaryScheduleOverride? {
+        settings.scheduleOverride
+    }
 }

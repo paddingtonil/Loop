@@ -113,6 +113,25 @@ final class BolusEntryViewModel: ObservableObject {
     let potentialCarbEntry: NewCarbEntry?
     let selectedCarbAbsorptionTimeEmoji: String?
 
+    /// BolusPro — optional secondary FPU carb entry, set by
+    /// `CarbEntryViewModel.setBolusViewModel()` when the user has the
+    /// per-entry toggle on and macros that yield a non-trivial bonus.
+    /// Saved alongside the primary in `saveAndDeliver()`.
+    var bolusProSecondaryEntry: NewCarbEntry?
+
+    /// BolusPro — analytics snapshot fired to DataLayer + LoopInsights
+    /// after the primary entry persists, regardless of whether the
+    /// per-entry toggle was on. Populated by CarbEntryViewModel.
+    var bolusProAnalyticsSnapshot: BolusProAnalyticsSnapshot?
+
+    /// Fires immediately after the *primary* carb entry has been persisted
+    /// to CarbStore (i.e., the user committed the carbs — not when they
+    /// merely tapped Continue and then cancelled the bolus screen).
+    /// `CarbEntryViewModel.setBolusViewModel()` uses this to archive the
+    /// FoodFinder analysis to MealArchive only on actual commit. Receives
+    /// the persisted entry so the caller can use its real syncIdentifier.
+    var onCarbEntrySaved: ((StoredCarbEntry) -> Void)?
+
     @Published var recommendedBolus: HKQuantity?
     var recommendedBolusAmount: Double? {
         recommendedBolus?.doubleValue(for: .internationalUnit())
@@ -408,6 +427,29 @@ final class BolusEntryViewModel: ObservableObject {
             if let storedCarbEntry = await saveCarbEntry(carbEntry, replacingEntry: originalCarbEntry) {
                 self.dosingDecision.carbEntry = storedCarbEntry
                 self.analyticsServicesManager?.didAddCarbs(source: "Phone", amount: storedCarbEntry.quantity.doubleValue(for: .gram()))
+
+                // FoodFinder/MealInsights archive only fires on actual carb
+                // persistence — tapping Continue and then cancelling the
+                // bolus screen no longer leaves a phantom Meal Insights row.
+                self.onCarbEntrySaved?(storedCarbEntry)
+
+                // BolusPro — save the optional secondary FPU entry alongside
+                // the primary. Failure here doesn't roll back the primary
+                // (the user already committed to that bolus); we just log.
+                if let secondary = bolusProSecondaryEntry {
+                    if let storedSecondary = await saveCarbEntry(secondary, replacingEntry: nil) {
+                        self.analyticsServicesManager?.didAddCarbs(source: "BolusPro", amount: storedSecondary.quantity.doubleValue(for: .gram()))
+                    } else {
+                        log.error("BolusPro secondary entry save failed — primary already saved.")
+                    }
+                }
+
+                // BolusPro — fire analytics + BehaviorInsights notification
+                // even when per-entry toggle was off, so we capture
+                // adoption vs. non-adoption population data.
+                if let snapshot = bolusProAnalyticsSnapshot {
+                    BolusPro_DataLayerHook.recordSavedEntry(snapshot)
+                }
             } else {
                 self.presentAlert(.carbEntryPersistenceFailure)
                 return false

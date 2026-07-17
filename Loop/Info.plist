@@ -61,6 +61,10 @@
 	<string>The app needs to use Bluetooth to send and receive data from your diabetes devices.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>The app needs to use Bluetooth to send and receive data from your diabetes devices.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>AutoPresets reads your calendar to activate presets around scheduled events like workouts or meals.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>AutoPresets reads your calendar to activate presets around scheduled events like workouts or meals.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera is used to scan barcodes of devices.</string>
 	<key>NSFaceIDUsageDescription</key>
@@ -69,8 +73,20 @@
 	<string>Meal data from the Health database is used to determine glucose effects. Glucose data from the Health database is used for graphing and momentum calculation. Sleep data from the Health database is used to optimize delivery of Apple Watch complication updates during the time you are awake.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Carbohydrate meal data entered in the app and on the watch is stored in the Health database. Glucose data retrieved from the CGM is stored securely in HealthKit.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>AutoPresets uses background location to monitor geofences and automatically activate presets when you arrive at or leave saved locations. This is battery-efficient and does not continuously track your position.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>FoodFinder uses your location to tag meals with where you ate. AutoPresets uses location to activate presets when you arrive at or leave saved places like the gym.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>FoodFinder uses the microphone for voice-powered food logging.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>AutoPresets uses motion and fitness activity to detect when you start exercising so it can automatically suggest the right preset.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FoodFinder previews your most recent photo on the camera screen so you can pick a photo for analysis without leaving the capture view.</string>
 	<key>NSSiriUsageDescription</key>
 	<string>Loop uses Siri to allow you to enact presets with your voice.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>FoodFinder uses speech recognition to log meals by voice.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSSupportsLiveActivitiesFrequentUpdates</key>

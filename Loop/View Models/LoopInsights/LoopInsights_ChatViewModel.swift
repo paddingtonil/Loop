@@ -1,0 +1,588 @@
+//
+//  LoopInsights_ChatViewModel.swift
+//  Loop (AID) PowerPack — based on LoopKit/Loop.
+//
+//  Concept & design by Taylor Patterson. Coded & tested by Claude Code in February 2026.
+//  Copyright © 2026 LoopKit Authors and Taylor Patterson.
+//
+
+import Foundation
+import Combine
+
+/// View model for the LoopInsights chat interface.
+/// Manages the conversation session, builds chat prompts, sends messages
+/// through AIServiceAdapter, and provides quick-ask suggestion chips.
+final class LoopInsights_ChatViewModel: ObservableObject {
+
+    // MARK: - Published State
+
+    @Published var messages: [LoopInsightsChatMessage] = []
+    @Published var isLoading = false
+    @Published var inputText = ""
+    @Published var errorMessage: String?
+    @Published var isSpeaking = false
+
+    // MARK: - Dependencies
+
+    private let session: LoopInsightsChatSession
+    private let coordinator: LoopInsights_Coordinator
+    private let serviceAdapter: LoopInsights_AIServiceAdapter
+    let voiceService = LoopInsights_VoiceService()
+    private var pendingVoiceMessage = false
+    private var autoSendTimer: DispatchWorkItem?
+    private var cancellables = Set<AnyCancellable>()
+
+    /// Cached therapy context built during pre-fetch — reused across messages
+    private var cachedTherapyContext: String?
+    private var cachedStats: LoopInsightsAggregatedStats?
+    private var cacheTimestamp: Date?
+
+    /// Pre-built quick-ask suggestions shown when the conversation is empty
+    let quickAskSuggestions: [String] = [
+        NSLocalizedString("Why am I high overnight?", comment: "LoopInsights quick ask: overnight highs"),
+        NSLocalizedString("How's my basal rate?", comment: "LoopInsights quick ask: basal rate review"),
+        NSLocalizedString("Analyze my last 3 days", comment: "LoopInsights quick ask: recent analysis"),
+        NSLocalizedString("What should I change first?", comment: "LoopInsights quick ask: priority"),
+        NSLocalizedString("Am I bolusing enough for meals?", comment: "LoopInsights quick ask: meal bolus"),
+        NSLocalizedString("Why do I go low after exercise?", comment: "LoopInsights quick ask: exercise lows"),
+    ]
+
+    // MARK: - Initialization
+
+    init(coordinator: LoopInsights_Coordinator, serviceAdapter: LoopInsights_AIServiceAdapter = .shared) {
+        self.coordinator = coordinator
+        self.serviceAdapter = serviceAdapter
+        self.session = LoopInsightsChatSession()
+
+        session.$messages
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$messages)
+
+        voiceService.$isSpeaking
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isSpeaking)
+
+        // Pre-fetch therapy data so the first message sends instantly
+        prefetchTherapyContext()
+    }
+
+    /// Pre-fetch and cache therapy context in the background on chat open
+    private func prefetchTherapyContext() {
+        Task { @MainActor in
+            var snapshot: LoopInsightsTherapySnapshot?
+            do { snapshot = try coordinator.captureCurrentSnapshot() }
+            catch { LoopInsights_FeatureFlags.log.error("Chat prefetch: snapshot failed: \(error)") }
+
+            var stats: LoopInsightsAggregatedStats?
+            do { stats = try await coordinator.dataAggregator.aggregateData(period: LoopInsights_FeatureFlags.analysisPeriod) }
+            catch { LoopInsights_FeatureFlags.log.error("Chat prefetch: aggregate failed: \(error)") }
+
+            var context = Self.buildTherapyContext(snapshot: snapshot, stats: stats)
+            let weekly = await fetchWeeklyHistoryContext()
+            if !weekly.isEmpty {
+                context += "\n\n" + weekly
+            }
+            cachedTherapyContext = context
+            cachedStats = stats
+            cacheTimestamp = Date()
+        }
+    }
+
+    // MARK: - Actions
+
+    /// Send the current input text as a message
+    func sendMessage() {
+        let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, !isLoading else { return }
+
+        let isVoice = pendingVoiceMessage
+        pendingVoiceMessage = false
+        autoSendTimer?.cancel()
+        autoSendTimer = nil
+
+        inputText = ""
+        errorMessage = nil
+        voiceService.stopSpeaking()
+
+        Task { @MainActor in
+            // User-initiated paid AI action — pass through the spend gate.
+            guard await PowerPack_APIUsage.shared.gate(actionLabel: "Asking Loopy", estCostUSD: 0.01) else {
+                inputText = text   // restore the typed message so it isn't lost on cancel
+                return
+            }
+
+            let userMessage = LoopInsightsChatMessage(role: .user, content: text, voiceInitiated: isVoice)
+            session.appendMessage(userMessage)
+            isLoading = true
+
+            do {
+                // Use cached context if fresh (< 5 min), otherwise re-fetch
+                var context: String
+                if let cached = cachedTherapyContext,
+                   let ts = cacheTimestamp,
+                   Date().timeIntervalSince(ts) < 300 {
+                    context = cached
+                } else {
+                    var snapshot: LoopInsightsTherapySnapshot?
+                    do { snapshot = try coordinator.captureCurrentSnapshot() }
+                    catch { LoopInsights_FeatureFlags.log.error("Chat: failed to capture snapshot: \(error)") }
+
+                    var stats: LoopInsightsAggregatedStats?
+                    do { stats = try await coordinator.dataAggregator.aggregateData(period: LoopInsights_FeatureFlags.analysisPeriod) }
+                    catch { LoopInsights_FeatureFlags.log.error("Chat: failed to aggregate data: \(error)") }
+                    context = Self.buildTherapyContext(snapshot: snapshot, stats: stats)
+                    let weekly = await fetchWeeklyHistoryContext()
+                    if !weekly.isEmpty {
+                        context += "\n\n" + weekly
+                    }
+                    cachedTherapyContext = context
+                    cachedStats = stats
+                    cacheTimestamp = Date()
+                }
+
+                // Supplemental context: caffeine, alcohol, circadian, food response, stress
+                // Fetched fresh every message since caffeine/alcohol levels change in real-time
+                if let stats = cachedStats,
+                   let supplemental = await coordinator.buildSupplementalContext(stats: stats) {
+                    context += "\n\n" + supplemental
+                }
+
+                // Live loop status: IOB, COB, overrides, predicted glucose, loop freshness
+                if let liveStatus = await coordinator.buildLiveStatusContext() {
+                    context += "\n\n" + liveStatus
+                }
+
+                // Always fetch fresh real-time glucose (not cached)
+                let realtimeCtx = await fetchRealtimeGlucoseContext()
+                if !realtimeCtx.isEmpty {
+                    context = realtimeCtx + "\n" + context
+                }
+
+                let history = session.conversationHistory().dropLast().map { ($0.role, $0.content) }
+
+                let systemPrompt = buildChatSystemPrompt(therapyContext: context)
+                let userPrompt = buildUserPrompt(message: text, conversationHistory: Array(history))
+
+                let requestStart = Date()
+                let response = try await serviceAdapter.sendPrompt(systemPrompt, userPrompt: userPrompt)
+                let responseTime = Date().timeIntervalSince(requestStart)
+
+                let aiMessage = LoopInsightsChatMessage(role: .assistant, content: response, voiceInitiated: isVoice)
+                session.appendMessage(aiMessage)
+
+                isLoading = false
+
+                if isVoice {
+                    voiceService.speak(response)
+                }
+
+                // DataLayer: chat message sent
+                NotificationCenter.default.post(
+                    name: Notification.Name("com.loopkit.Loop.loopInsightsChatMessage"),
+                    object: nil,
+                    userInfo: [
+                        "isVoiceInitiated": isVoice,
+                        "responseTimeSeconds": responseTime,
+                        "topicCategory": "general"
+                    ]
+                )
+
+            } catch {
+                errorMessage = error.localizedDescription
+                isLoading = false
+            }
+        }
+    }
+
+    /// Send a quick-ask suggestion
+    func sendQuickAsk(_ question: String) {
+        inputText = question
+        sendMessage()
+    }
+
+    /// Called from the view's `.onChange(of: inputText)` to detect dictation vs typing.
+    /// Dictation inserts multi-character bursts. Once detected, stays in voice mode
+    /// until the message is sent or the field is cleared. Auto-sends after 1.5s of
+    /// no further text changes.
+    func handleTextChange(oldValue: String, newValue: String) {
+        let changeSize = newValue.count - oldValue.count
+
+        // Detect dictation: 3+ characters appended at once (dictation burst)
+        if changeSize >= 3 {
+            pendingVoiceMessage = true
+        }
+
+        // Only cancel voice mode on explicit clear (backspace to empty or full clear)
+        if newValue.isEmpty {
+            pendingVoiceMessage = false
+        }
+
+        // Reset the auto-send timer on every change
+        autoSendTimer?.cancel()
+        if pendingVoiceMessage && !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let timer = DispatchWorkItem { [weak self] in
+                self?.sendMessage()
+            }
+            autoSendTimer = timer
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: timer)
+        }
+    }
+
+    /// Stop any active TTS playback
+    func stopSpeaking() {
+        voiceService.stopSpeaking()
+    }
+
+    /// Clear the conversation and start fresh.
+    /// Saves the current session before wiping it so the user can review it later.
+    func clearConversation() {
+        saveSessionIfNeeded()
+        voiceService.stopSpeaking()
+        session.clear()
+        errorMessage = nil
+    }
+
+    /// Persist the current session to history if it contains at least one AI reply.
+    /// Called on clear and on chat sheet dismiss.
+    func saveSessionIfNeeded() {
+        guard !messages.isEmpty else { return }
+        let transcript = LoopInsightsChatTranscript(
+            id: UUID(),
+            startedAt: messages.first?.timestamp ?? Date(),
+            messages: messages
+        )
+        LoopInsights_ChatHistoryStore.append(transcript)
+    }
+
+    // MARK: - Chat Prompt Building
+
+    private func buildChatSystemPrompt(therapyContext: String) -> String {
+        let personality = LoopInsights_FeatureFlags.aiPersonality
+        let unitContext = coordinator.unitContext.aiPromptUnitContext()
+
+        return """
+        You're a diabetes-savvy friend who can see this person's actual Loop data. \
+        They know how diabetes works — skip the textbook stuff.
+
+        \(personality.promptInstruction)
+
+        RULES:
+        - Be brief. 2-3 sentences max for simple questions. Bullets for complex ones.
+        - Just the facts — cite their specific numbers, skip explanations they already know.
+        - Talk like a knowledgeable friend, not a doctor or a manual.
+        - Never explain what a carb ratio, ISF, or basal rate IS. They know.
+        - If they ask "why am I high overnight?" — give their overnight avg and what's \
+          likely causing it. Don't explain what overnight highs are.
+        - If data says something clearly, say it directly. No hedging.
+        - For settings changes: current value → suggested value → why, in one line.
+        - Never fabricate numbers. Only reference what's in the data below.
+        - If no data is available, just say so briefly.
+        - NEVER give unsolicited praise, encouragement, or reassurance. No "Great job!", \
+          "You're doing well!", "Keep it up!" or similar. Just answer the question. \
+          If they ask how they're doing, then evaluate honestly. Otherwise, skip it entirely.
+        \(unitContext)
+
+        DATA:
+        \(therapyContext)
+        """
+    }
+
+    private func buildUserPrompt(
+        message: String,
+        conversationHistory: [(role: String, content: String)]
+    ) -> String {
+        if conversationHistory.isEmpty {
+            return message
+        }
+
+        var prompt = "CONVERSATION HISTORY:\n"
+        let recentHistory = conversationHistory.suffix(10)
+        for entry in recentHistory {
+            let roleLabel = entry.role == "user" ? "User" : "Assistant"
+            prompt += "\(roleLabel): \(entry.content)\n\n"
+        }
+        prompt += "User: \(message)"
+        return prompt
+    }
+
+    // MARK: - Real-Time Glucose
+
+    /// Fetch the most recent glucose readings (last 3 hours) fresh on every message.
+    /// This gives Loopy access to the user's current blood sugar and recent trend.
+    private func fetchRealtimeGlucoseContext() async -> String {
+        let now = Date()
+        let threeHoursAgo = now.addingTimeInterval(-3 * 3600)
+
+        var samples: [(date: Date, value: Double)] = []
+        do {
+            let rawSamples = try await coordinator.fetchGlucoseSamples(start: threeHoursAgo, end: now)
+            samples = rawSamples.map { (date: $0.startDate, value: $0.quantity.doubleValue(for: .milligramsPerDeciliter)) }
+        } catch {
+            LoopInsights_FeatureFlags.log.error("Chat: failed to fetch real-time glucose: \(error)")
+        }
+
+        guard !samples.isEmpty else { return "" }
+
+        let sorted = samples.sorted { $0.date < $1.date }
+        let latest = sorted.last!
+        let minutesAgo = Int(now.timeIntervalSince(latest.date) / 60)
+
+        var ctx = "CURRENT GLUCOSE (REAL-TIME):\n"
+        ctx += "  Latest Reading: \(String(format: "%.0f", latest.value)) mg/dL (\(minutesAgo) min ago)\n"
+
+        // Trend from last 30 min
+        let thirtyMinAgo = now.addingTimeInterval(-30 * 60)
+        let recentSamples = sorted.filter { $0.date >= thirtyMinAgo }
+        if recentSamples.count >= 2, let first = recentSamples.first, let last = recentSamples.last {
+            let delta = last.value - first.value
+            let direction = delta > 5 ? "rising" : (delta < -5 ? "falling" : "stable")
+            ctx += "  30-min Trend: \(direction) (\(delta >= 0 ? "+" : "")\(String(format: "%.0f", delta)) mg/dL)\n"
+        }
+
+        // Last 3 hours of readings (sampled every ~30 min for brevity)
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        ctx += "  Recent Readings:\n"
+        var lastShown: Date?
+        for sample in sorted {
+            if let prev = lastShown, sample.date.timeIntervalSince(prev) < 25 * 60 { continue }
+            ctx += "    \(formatter.string(from: sample.date)): \(String(format: "%.0f", sample.value)) mg/dL\n"
+            lastShown = sample.date
+        }
+
+        return ctx
+    }
+
+    // MARK: - Weekly History
+
+    /// Fetch the last 7 days of glucose, bolus, and carb history for the chat context.
+    /// Lives in the 5-minute cached therapy context — a week of history doesn't
+    /// change per-message, so this adds no per-message fetch cost.
+    private func fetchWeeklyHistoryContext() async -> String {
+        let now = Date()
+        let weekAgo = now.addingTimeInterval(-7 * 24 * 3600)
+
+        var glucose: [(date: Date, value: Double)] = []
+        do {
+            glucose = try await coordinator.fetchGlucoseSamples(start: weekAgo, end: now)
+                .map { (date: $0.startDate, value: $0.quantity.doubleValue(for: .milligramsPerDeciliter)) }
+        } catch {
+            LoopInsights_FeatureFlags.log.error("Chat: failed to fetch weekly glucose: \(error)")
+        }
+
+        var boluses: [(date: Date, units: Double)] = []
+        do {
+            boluses = try await coordinator.fetchDoseEntries(start: weekAgo, end: now)
+                .filter { $0.type == .bolus }
+                .map { (date: $0.startDate, units: $0.deliveredUnits ?? $0.programmedUnits) }
+        } catch {
+            LoopInsights_FeatureFlags.log.error("Chat: failed to fetch weekly doses: \(error)")
+        }
+
+        var carbs: [(date: Date, grams: Double)] = []
+        do {
+            carbs = try await coordinator.fetchCarbEntries(start: weekAgo, end: now)
+                .map { (date: $0.startDate, grams: $0.quantity.doubleValue(for: .gram())) }
+        } catch {
+            LoopInsights_FeatureFlags.log.error("Chat: failed to fetch weekly carbs: \(error)")
+        }
+
+        return Self.buildWeeklyHistoryContext(glucose: glucose, boluses: boluses, carbs: carbs, now: now)
+    }
+
+    /// Format 7 days of history into a compact prompt block: hourly glucose
+    /// averages per day (so individual nights stay distinguishable, unlike the
+    /// whole-period hourly averages in the aggregated stats), plus each bolus
+    /// and carb entry with its timestamp.
+    static func buildWeeklyHistoryContext(
+        glucose: [(date: Date, value: Double)],
+        boluses: [(date: Date, units: Double)],
+        carbs: [(date: Date, grams: Double)],
+        now: Date = Date()
+    ) -> String {
+        guard !glucose.isEmpty || !boluses.isEmpty || !carbs.isEmpty else { return "" }
+
+        let calendar = Calendar.current
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "EEE MM/dd"
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+
+        var ctx = "LAST 7 DAYS (today is \(dayFormatter.string(from: now))):\n"
+
+        if !glucose.isEmpty {
+            var buckets: [Date: [Int: [Double]]] = [:]
+            for sample in glucose {
+                let day = calendar.startOfDay(for: sample.date)
+                let hour = calendar.component(.hour, from: sample.date)
+                buckets[day, default: [:]][hour, default: []].append(sample.value)
+            }
+            ctx += "Hourly Glucose Averages by Day (mg/dL, hours 00-23, \"-\" = no data):\n"
+            for day in buckets.keys.sorted() {
+                let hours = buckets[day]!
+                let values = (0..<24).map { hour -> String in
+                    guard let vals = hours[hour], !vals.isEmpty else { return "-" }
+                    return String(format: "%.0f", vals.reduce(0, +) / Double(vals.count))
+                }
+                ctx += "  \(dayFormatter.string(from: day)): \(values.joined(separator: " "))\n"
+            }
+        }
+
+        if !boluses.isEmpty {
+            ctx += "Boluses:\n"
+            for bolus in boluses.sorted(by: { $0.date < $1.date }) {
+                ctx += "  \(dayFormatter.string(from: bolus.date)) \(timeFormatter.string(from: bolus.date)): \(String(format: "%.2f", bolus.units)) U\n"
+            }
+        }
+
+        if !carbs.isEmpty {
+            ctx += "Carb Entries:\n"
+            for entry in carbs.sorted(by: { $0.date < $1.date }) {
+                ctx += "  \(dayFormatter.string(from: entry.date)) \(timeFormatter.string(from: entry.date)): \(String(format: "%.0f", entry.grams)) g\n"
+            }
+        }
+
+        return ctx
+    }
+
+    // MARK: - Therapy Context
+
+    /// Build a therapy context string from a snapshot and stats.
+    static func buildTherapyContext(
+        snapshot: LoopInsightsTherapySnapshot?,
+        stats: LoopInsightsAggregatedStats?
+    ) -> String {
+        var context = ""
+
+        if let snapshot = snapshot {
+            context += "CURRENT THERAPY SETTINGS:\n"
+
+            context += "Basal Rates:\n"
+            for item in snapshot.basalRateItems {
+                context += "  \(formatTime(item.startTime)): \(String(format: "%.2f", item.value)) U/hr\n"
+            }
+
+            context += "Carb Ratios:\n"
+            for item in snapshot.carbRatioItems {
+                context += "  \(formatTime(item.startTime)): \(String(format: "%.1f", item.value)) g/U\n"
+            }
+
+            context += "Insulin Sensitivity Factors:\n"
+            for item in snapshot.insulinSensitivityItems {
+                context += "  \(formatTime(item.startTime)): \(String(format: "%.0f", item.value)) mg/dL per U\n"
+            }
+
+            if let insulinType = snapshot.insulinTypeName {
+                context += "Insulin Type: \(insulinType)\n"
+                if let diaHours = snapshot.insulinDiaHours {
+                    context += "Duration of Insulin Action (DIA): \(String(format: "%.1f", diaHours)) hours\n"
+                }
+            }
+        }
+
+        if let stats = stats {
+            context += "\nRECENT GLUCOSE STATISTICS (\(stats.period.displayName)):\n"
+            context += "  Average Glucose: \(String(format: "%.0f", stats.glucoseStats.averageGlucose)) mg/dL\n"
+            context += "  Time in Range (70-180): \(String(format: "%.1f", stats.glucoseStats.timeInRange))%\n"
+            context += "  Time in Tight Range (70-\(stats.glucoseStats.tightRangeUpperBound)): \(String(format: "%.1f", stats.glucoseStats.timeInTightRange))%\n"
+            context += "  Time Below Range (<70): \(String(format: "%.1f", stats.glucoseStats.timeBelowRange))%\n"
+            context += "  Time Above Range (>180): \(String(format: "%.1f", stats.glucoseStats.timeAboveRange))%\n"
+            context += "  GMI (est. A1C): \(String(format: "%.1f", stats.glucoseStats.gmi))%\n"
+            context += "  Coefficient of Variation: \(String(format: "%.1f", stats.glucoseStats.coefficientOfVariation))%\n"
+            context += "  Standard Deviation: \(String(format: "%.1f", stats.glucoseStats.standardDeviation)) mg/dL\n"
+
+            let tdi = stats.insulinStats.totalDailyDose
+            context += "\nINSULIN STATISTICS:\n"
+            context += "  Total Daily Insulin (TDI): \(String(format: "%.1f", tdi)) U/day\n"
+            context += "  TDI Range: \(String(format: "%.1f", stats.insulinStats.tddMin))–\(String(format: "%.1f", stats.insulinStats.tddMax)) U/day\n"
+            context += "  TDI Variability (CV): \(String(format: "%.0f", stats.insulinStats.tddVariabilityCV))%\n"
+            if let weekChange = stats.insulinStats.tddWeekOverWeekChange {
+                context += "  TDI Week-over-Week: \(weekChange >= 0 ? "+" : "")\(String(format: "%.0f", weekChange))%\n"
+            }
+            context += "  Basal %: \(String(format: "%.0f", stats.insulinStats.basalPercentage))%\n"
+            context += "  Bolus %: \(String(format: "%.0f", stats.insulinStats.bolusPercentage))%\n"
+            context += "  Correction Boluses: \(stats.insulinStats.correctionBolusCount)\n"
+            if tdi > 0 {
+                context += "  TDI-Derived ISF (Rule of 1800): \(String(format: "%.0f", 1800.0 / tdi)) mg/dL per U\n"
+                context += "  TDI-Derived CR (Rule of 500): \(String(format: "%.0f", 500.0 / tdi)) g/U\n"
+            }
+
+            context += "\nCARB STATISTICS:\n"
+            context += "  Average Daily Carbs: \(String(format: "%.0f", stats.carbStats.averageDailyCarbs)) g/day\n"
+            context += "  Average Carbs Per Meal: \(String(format: "%.0f", stats.carbStats.averageCarbsPerMeal)) g\n"
+            context += "  Total Meals Logged: \(stats.carbStats.mealCount)\n"
+
+            if !stats.glucoseStats.hourlyAverages.isEmpty {
+                context += "\nHOURLY GLUCOSE AVERAGES:\n"
+                for hour in 0..<24 {
+                    if let avg = stats.glucoseStats.hourlyAverages[hour] {
+                        context += "  \(String(format: "%02d", hour)):00 — \(String(format: "%.0f", avg)) mg/dL\n"
+                    }
+                }
+            }
+
+            if let bio = stats.biometricStats {
+                context += "\nBIOMETRIC DATA:\n"
+
+                if let hr = bio.heartRate {
+                    context += "  Resting HR: \(String(format: "%.0f", hr.averageRestingHR)) bpm\n"
+                    context += "  Active HR: \(String(format: "%.0f", hr.averageActiveHR)) bpm\n"
+                }
+
+                if let hrv = bio.hrv {
+                    context += "  HRV (SDNN): \(String(format: "%.1f", hrv.averageSDNN)) ms (trend: \(hrv.trend >= 0 ? "+" : "")\(String(format: "%.1f", hrv.trend)))\n"
+                }
+
+                if let steps = bio.steps {
+                    context += "  Avg Daily Steps: \(String(format: "%.0f", steps.averageDailySteps))\n"
+                }
+
+                if let sleep = bio.sleep {
+                    context += "  Avg Sleep: \(String(format: "%.1f", sleep.averageDurationHours)) hrs/night\n"
+                    context += "  Avg Bedtime: \(Self.formatTimeFromSeconds(sleep.averageBedtime))\n"
+                    context += "  Avg Wake: \(Self.formatTimeFromSeconds(sleep.averageWakeTime))\n"
+                }
+
+                if let energy = bio.activeEnergy {
+                    context += "  Avg Active Calories: \(String(format: "%.0f", energy.averageDailyCalories)) kcal/day\n"
+                }
+
+                if let weight = bio.weight {
+                    context += "  Weight: \(String(format: "%.1f", weight.latestWeight)) kg (trend: \(weight.weightTrend >= 0 ? "+" : "")\(String(format: "%.1f", weight.weightTrend)) kg)\n"
+                }
+
+                if let menstrual = bio.menstrualCycle, menstrual.dataAvailable {
+                    context += "  Menstrual Phase: \(menstrual.currentPhase.rawValue)"
+                    if let day = menstrual.currentCycleDay {
+                        context += " (cycle day \(day))"
+                    }
+                    context += "\n"
+                }
+            }
+        }
+
+        if context.isEmpty {
+            context = "No therapy data currently available."
+        }
+
+        return context
+    }
+
+    private static func formatTime(_ seconds: TimeInterval) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone.current
+        let date = calendar.startOfDay(for: Date()).addingTimeInterval(seconds)
+        return formatter.string(from: date)
+    }
+
+    private static func formatTimeFromSeconds(_ seconds: Double) -> String {
+        let totalSeconds = Int(seconds)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let period = hours >= 12 ? "PM" : "AM"
+        let displayHour = hours == 0 ? 12 : (hours > 12 ? hours - 12 : hours)
+        return String(format: "%d:%02d %@", displayHour, minutes, period)
+    }
+}
