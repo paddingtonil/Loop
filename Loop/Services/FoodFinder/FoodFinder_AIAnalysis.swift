@@ -469,6 +469,14 @@ struct FoodItemAnalysis: Codable, Equatable {
     /// sources (photo analysis, a barcode scan, a text search). `nil` on legacy
     /// records and on single-source AI plates, where provenance is uniform.
     var sourceLabel: String?
+
+    /// Gram weight of the portion the stored macros describe, when it is known.
+    ///
+    /// Items built from a database product know this exactly (serving weight ×
+    /// servings). Photo-analysed items generally don't — the AI reports a prose
+    /// portion like "1 cup", not a weight — so this stays `nil` there and weight
+    /// entry is not offered rather than guessed at. Optional so legacy records decode.
+    var baseGrams: Double? = nil
 }
 
 // MARK: - Per-Item Effective Values
@@ -505,6 +513,30 @@ extension FoodItemAnalysis {
     /// by this converts them to the user's portion.
     var servingScale: Double {
         effectiveMultiplier / aiMultiplier
+    }
+
+    /// Whether this item can be quantified by weight — only when we know the
+    /// gram basis its stored macros correspond to.
+    var supportsWeightEntry: Bool {
+        (baseGrams ?? 0) > 0
+    }
+
+    /// Weight the user is currently eating, in grams. Nil when unknown.
+    var effectiveGrams: Double? {
+        guard let baseGrams, baseGrams > 0 else { return nil }
+        return baseGrams * servingScale
+    }
+
+    /// Set the portion by weight instead of by servings.
+    ///
+    /// This moves the same `userServingMultiplier` the stepper drives, so every
+    /// downstream consumer (`effectiveCarbs`, the plate totals, the nutrition
+    /// circles) keeps reading through one code path. Macros are untouched — this
+    /// changes how much of the item is eaten, not what it contains, so it
+    /// deliberately does not capture `aiOriginal`.
+    mutating func setEffectiveGrams(_ grams: Double) {
+        guard let baseGrams, baseGrams > 0 else { return }
+        userServingMultiplier = aiMultiplier * max(0, grams) / baseGrams
     }
 
     var effectiveCarbs: Double { carbohydrates * servingScale }
@@ -710,11 +742,18 @@ extension FoodItemAnalysis {
     /// USDA-serving notion — so the per-item stepper then scales from that
     /// baked-in amount. `carbsOverride` lets an edited carb value (e.g. from the
     /// AI carb-range slider) win over the computed per-serving figure.
+    /// - Parameters:
+    ///   - servings: Quantity as multiples of one serving. A weight-based
+    ///     quantity must be converted to serving equivalents first, since every
+    ///     per-serving value here is scaled by this number.
+    ///   - portionOverride: Replaces the product's serving text when the user
+    ///     quantified the food some other way (e.g. an explicit gram weight).
     static func fromProduct(
         _ product: OpenFoodFactsProduct,
         servings: Double,
         carbsOverride: Double?,
-        sourceLabel: String?
+        sourceLabel: String?,
+        portionOverride: String? = nil
     ) -> FoodItemAnalysis {
         let perServingCarbs = product.carbsPerServing ?? product.nutriments.carbohydrates
         let carbs = carbsOverride ?? (perServingCarbs * servings)
@@ -724,7 +763,7 @@ extension FoodItemAnalysis {
         }
         return FoodItemAnalysis(
             name: product.displayName,
-            portionEstimate: product.servingSizeDisplay,
+            portionEstimate: portionOverride ?? product.servingSizeDisplay,
             usdaServingSize: product.servingSize,
             servingMultiplier: 1.0,
             preparationMethod: nil,
@@ -740,7 +779,11 @@ extension FoodItemAnalysis {
             userServingMultiplier: nil,
             isExcluded: nil,
             aiOriginal: nil,
-            sourceLabel: sourceLabel
+            sourceLabel: sourceLabel,
+            // The stored macros describe `servings` servings, so that is the
+            // weight they correspond to. Sources without a stated serving weight
+            // (Israeli and USDA rows) are per-100 g by convention.
+            baseGrams: (product.servingQuantity ?? 100) * servings
         )
     }
 }
@@ -1000,6 +1043,23 @@ enum SearchProvider: String, CaseIterable {
             return true
         }
     }
+
+    /// Stable identifier for persistence, decoupled from `rawValue` — which is a
+    /// user-facing display string and may be reworded without breaking a saved choice.
+    var persistenceKey: String {
+        switch self {
+        case .aiProvider: return "aiProvider"
+        case .openFoodFacts: return "openFoodFacts"
+        case .usdaFoodData: return "usdaFoodData"
+        }
+    }
+
+    init?(persistenceKey: String) {
+        guard let match = SearchProvider.allCases.first(where: { $0.persistenceKey == persistenceKey }) else {
+            return nil
+        }
+        self = match
+    }
 }
 
 // MARK: - Intelligent Caching System
@@ -1168,6 +1228,14 @@ class ConfigurableAIService: ObservableObject {
     private init() {
         // Text and barcode search use database providers.
         // AI image analysis uses the configured BYO provider.
+
+        // Restore the persisted text-search choice. Without this the property
+        // silently reset to OpenFoodFacts on every launch.
+        if let stored = UserDefaults.standard.foodFinder_textSearchProviderChoice,
+           let restored = SearchProvider(persistenceKey: stored),
+           restored.supportsSearchType.contains(.textSearch) {
+            textSearchProvider = restored
+        }
     }
 
     // MARK: - Configuration
@@ -1192,6 +1260,7 @@ class ConfigurableAIService: ObservableObject {
         switch searchType {
         case .textSearch:
             textSearchProvider = provider
+            UserDefaults.standard.foodFinder_textSearchProviderChoice = provider.persistenceKey
         case .barcodeSearch:
             barcodeSearchProvider = provider
         case .aiImageSearch:

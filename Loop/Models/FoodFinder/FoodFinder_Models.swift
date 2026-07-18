@@ -55,6 +55,22 @@ enum FoodDataSource: String, CaseIterable, Codable {
     case unknown = "unknown"
 }
 
+/// How a search-result food is quantified when applying its nutrition.
+/// The user picks one or the other — they are alternatives, not multipliers.
+enum FoodQuantityMode: String, CaseIterable, Codable {
+    /// Multiples of the product's stated serving.
+    case servings
+    /// An explicit weight in grams, scaled from the per-100 g values.
+    case grams
+
+    var displayName: String {
+        switch self {
+        case .servings: return NSLocalizedString("Servings", comment: "Quantity mode: multiples of a serving")
+        case .grams: return NSLocalizedString("Grams", comment: "Quantity mode: weight in grams")
+        }
+    }
+}
+
 /// Represents a food product from OpenFoodFacts database
 struct OpenFoodFactsProduct: Codable, Identifiable, Hashable {
     let id: String

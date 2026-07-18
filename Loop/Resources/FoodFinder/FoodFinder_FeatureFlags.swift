@@ -79,6 +79,11 @@ extension FoodFinder_FeatureFlags {
         // Carb tracking
         static let carbTrackingEnabled               = "com.loopkit.Loop.carbTrackingEnabled"
 
+        // Text/voice search provider selection.
+        // NOTE: deliberately NOT named "textSearchProvider" — migrateToByoIfNeeded()
+        // deletes that legacy key, which would wipe the user's choice on launch.
+        static let textSearchProviderChoice          = "com.loopkit.Loop.foodFinder_textSearchProviderChoice"
+
         // Migration tracking
         static let byoMigrationComplete             = "com.loopkit.Loop.byoMigrationComplete"
     }
@@ -166,6 +171,15 @@ extension UserDefaults {
                 try? FoodFinder_SecureStorage.saveUSDAKey(newValue)
             }
         }
+    }
+
+    // MARK: Text Search Provider
+
+    /// Persisted text/voice search provider choice, stored as a stable token
+    /// (`SearchProvider.persistenceKey`) rather than the display name.
+    var foodFinder_textSearchProviderChoice: String? {
+        get { string(forKey: FoodFinder_FeatureFlags.Keys.textSearchProviderChoice) }
+        set { set(newValue, forKey: FoodFinder_FeatureFlags.Keys.textSearchProviderChoice) }
     }
 
     // MARK: Location Tagging

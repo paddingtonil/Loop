@@ -192,6 +192,71 @@ struct FoodFinder_EntryPoint: View {
         self._lastAppliedAbsorption = State(initialValue: absorptionTime.wrappedValue)
     }
 
+    // MARK: - Top-Level Quantity Bindings
+
+    /// The quantity control edits the food the user just entered. Before a plate
+    /// exists that's the selected product; afterwards it's the active plate item,
+    /// so entering a second food keeps the same control doing the same job.
+    /// Photo plates have no single entered item and keep plate-level servings.
+
+    private var quantityTargetsPlateItem: Bool {
+        searchVM.activeItemIndex != nil
+    }
+
+    /// Whether the current target can be measured by weight at all.
+    private var quantityAllowsGrams: Bool {
+        if let item = searchVM.activeItem {
+            return item.supportsWeightEntry
+        }
+        return searchVM.selectedFoodProduct != nil
+    }
+
+    private var quantityModeBinding: Binding<FoodQuantityMode> {
+        guard let item = searchVM.activeItem else { return $searchVM.quantityMode }
+        return Binding(
+            get: { searchVM.itemQuantityMode(for: item) },
+            set: { searchVM.setItemQuantityMode($0, for: item) }
+        )
+    }
+
+    private var servingsBinding: Binding<Double> {
+        guard let index = searchVM.activeItemIndex else { return $searchVM.numberOfServings }
+        return Binding(
+            get: { searchVM.activeItem?.effectiveMultiplier ?? 1.0 },
+            set: { searchVM.setItemServings(index: index, servings: $0) }
+        )
+    }
+
+    private var weightBinding: Binding<Double> {
+        guard let index = searchVM.activeItemIndex else { return $searchVM.itemWeightGrams }
+        return Binding(
+            get: { searchVM.activeItem?.effectiveGrams ?? 0 },
+            set: { searchVM.setItemWeight(index: index, grams: $0) }
+        )
+    }
+
+    /// Name of the food the control is editing, shown so it's unambiguous which
+    /// item a servings or weight change applies to on a multi-item plate.
+    private var quantityTargetName: String? {
+        guard quantityTargetsPlateItem else { return nil }
+        return searchVM.activeItem?.name
+    }
+
+    // MARK: - Quantity Sync
+
+    /// Push the carbs implied by the current servings/weight into the host's
+    /// carb field.
+    ///
+    /// AI plates recompute per-item in the ViewModel's observer — writing the
+    /// product-based total here too would make a second, conflicting writer.
+    private func syncCarbsFromCurrentQuantity() {
+        guard searchVM.lastAIAnalysisResult == nil else { return }
+        guard let expectedCarbs = searchVM.currentCarbsQuantity else { return }
+        if abs((carbsQuantity ?? 0) - expectedCarbs) > 0.01 {
+            carbsQuantity = expectedCarbs
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -204,22 +269,36 @@ struct FoodFinder_EntryPoint: View {
 
                 CardSectionDivider()
 
-                ServingsDisplayRow(
-                    servings: $searchVM.numberOfServings,
-                    servingSize: searchVM.selectedFoodServingSize,
-                    selectedFoodProduct: searchVM.selectedFoodProduct
+                // Measure by servings or by weight. Stays in place for every
+                // food entered: before a plate exists it edits the selected
+                // product, afterwards the item just added.
+                QuantityModeRow(
+                    mode: quantityModeBinding,
+                    itemName: quantityTargetName,
+                    isEnabled: quantityAllowsGrams
                 )
-                .id("servings-\(searchVM.selectedFoodServingSize ?? "none")")
-                .onChange(of: searchVM.numberOfServings) { newServings in
-                    // AI plates recompute per-item in the ViewModel's servings
-                    // observer — writing the product-based total here too made
-                    // a third, conflicting writer per stepper tap.
-                    guard searchVM.lastAIAnalysisResult == nil else { return }
-                    if let selectedFood = searchVM.selectedFoodProduct {
-                        let expectedCarbs = (selectedFood.carbsPerServing ?? selectedFood.nutriments.carbohydrates) * newServings
-                        if abs((carbsQuantity ?? 0) - expectedCarbs) > 0.01 {
-                            carbsQuantity = expectedCarbs
-                        }
+                .onChange(of: quantityModeBinding.wrappedValue) { _ in
+                    syncCarbsFromCurrentQuantity()
+                }
+
+                if quantityModeBinding.wrappedValue == .grams {
+                    WeightDisplayRow(
+                        grams: weightBinding,
+                        itemName: quantityTargetName,
+                        isEnabled: quantityTargetsPlateItem || searchVM.selectedFoodProduct != nil
+                    )
+                    .onChange(of: weightBinding.wrappedValue) { _ in
+                        syncCarbsFromCurrentQuantity()
+                    }
+                } else {
+                    ServingsDisplayRow(
+                        servings: servingsBinding,
+                        servingSize: searchVM.selectedFoodServingSize,
+                        selectedFoodProduct: searchVM.selectedFoodProduct
+                    )
+                    .id("servings-\(searchVM.selectedFoodServingSize ?? "none")")
+                    .onChange(of: servingsBinding.wrappedValue) { _ in
+                        syncCarbsFromCurrentQuantity()
                     }
                 }
 
@@ -974,19 +1053,31 @@ extension FoodFinder_EntryPoint {
     @MainActor
     private func beginAddingItem() {
         if searchVM.lastAIAnalysisResult == nil, let product = searchVM.selectedFoodProduct {
+            // A gram-based quantity is converted to serving equivalents here:
+            // plate items scale their macros by servings, so passing the raw
+            // `numberOfServings` would keep the carbs but shrink the macros
+            // back to a single serving.
             let seed = FoodItemAnalysis.fromProduct(
                 product,
-                servings: searchVM.numberOfServings,
+                servings: searchVM.servingsEquivalentForCurrentQuantity,
                 carbsOverride: carbsQuantity,
-                sourceLabel: searchVM.sourceLabelForCurrentProduct(product)
+                sourceLabel: searchVM.sourceLabelForCurrentProduct(product),
+                portionOverride: searchVM.portionDescriptionForCurrentQuantity
             )
             searchVM.lastAIAnalysisResult = AIFoodAnalysisResult.plate(
                 items: [seed],
                 description: product.displayName
             )
-            // The chosen servings are baked into the seed item, so the
+            // The chosen quantity is baked into the seed item, so the
             // plate-level multiplier resets to 1×.
             searchVM.numberOfServings = 1.0
+            // Keep the quantity control pointed at this food and preserve the
+            // mode the user was already in, so promoting a single food to a
+            // plate doesn't change what the control in front of them means.
+            searchVM.activeItemID = seed.itemID
+            if let id = seed.itemID {
+                searchVM.itemQuantityModes[id] = searchVM.quantityMode
+            }
             searchVM.refreshSyntheticPlateProduct()
         }
         searchVM.isBuildingMeal = true
@@ -999,34 +1090,63 @@ extension FoodFinder_EntryPoint {
         let baseMultiplier = item.servingMultiplier
         let effectiveCarbs = item.effectiveCarbs
         VStack(alignment: .leading, spacing: 10) {
-            // Carbs + servings stepper + exclude button — above the name
+            // Carbs + portion control + exclude button — above the name
             HStack(spacing: 6) {
-                // Per-item USDA servings stepper
-                HStack(spacing: 2) {
-                    Button(action: { searchVM.adjustItemServings(index: index, delta: -0.25) }) {
-                        Image(systemName: "minus.circle.fill")
-                            .foregroundColor(effectiveServings <= 0.25 ? .gray : .orange)
-                            .font(.system(size: 18))
+                // Per-item portion: servings stepper or weight field.
+                if searchVM.itemQuantityMode(for: item) == .grams, item.supportsWeightEntry {
+                    PlateItemWeightField(
+                        grams: item.effectiveGrams ?? 0,
+                        isExcluded: isExcluded,
+                        onCommit: { grams in
+                            searchVM.setItemWeight(index: index, grams: grams)
+                        }
+                    )
+                    .fixedSize(horizontal: true, vertical: false)
+                } else {
+                    HStack(spacing: 2) {
+                        Button(action: { searchVM.adjustItemServings(index: index, delta: -0.25) }) {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundColor(effectiveServings <= 0.25 ? .gray : .orange)
+                                .font(.system(size: 18))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(isExcluded || effectiveServings <= 0.25)
+
+                        Text("\(String(format: "%.2g", effectiveServings))x USDA")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(isExcluded ? .secondary : .orange)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+
+                        Button(action: { searchVM.adjustItemServings(index: index, delta: 0.25) }) {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.orange)
+                                .font(.system(size: 18))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(isExcluded)
                     }
-                    .buttonStyle(.plain)
-                    .disabled(isExcluded || effectiveServings <= 0.25)
+                    .fixedSize(horizontal: true, vertical: false)
+                }
 
-                    Text("\(String(format: "%.2g", effectiveServings))x USDA")
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                        .foregroundColor(isExcluded ? .secondary : .orange)
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-
-                    Button(action: { searchVM.adjustItemServings(index: index, delta: 0.25) }) {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundColor(.orange)
-                            .font(.system(size: 18))
+                // Switch this item between servings and weight. Only offered
+                // when the item's gram basis is known.
+                if item.supportsWeightEntry {
+                    let inGrams = searchVM.itemQuantityMode(for: item) == .grams
+                    Button(action: {
+                        searchVM.setItemQuantityMode(inGrams ? .servings : .grams, for: item)
+                    }) {
+                        Image(systemName: inGrams ? "circle.grid.2x1.fill" : "scalemass")
+                            .foregroundColor(isExcluded ? .secondary : .orange)
+                            .font(.system(size: 14, weight: .medium))
                     }
                     .buttonStyle(.plain)
                     .disabled(isExcluded)
+                    .accessibilityLabel(inGrams
+                        ? "Measure \(item.name) by servings"
+                        : "Measure \(item.name) by weight")
                 }
-                .fixedSize(horizontal: true, vertical: false)
 
                 Spacer()
 
@@ -2021,6 +2141,180 @@ private struct FoodFinder_LinePair: View {
                 .foregroundColor(.primary)
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.leading)
+        }
+    }
+}
+
+// MARK: - PlateItemWeight Component
+
+/// Weight entry for a single plate item, shown in place of its servings stepper.
+///
+/// Holds the in-progress text locally so the recompute that each keystroke
+/// triggers can't reformat the field mid-edit; the external value is only
+/// re-read when the portion changed somewhere else (e.g. the edit sheet).
+struct PlateItemWeightField: View {
+    let grams: Double
+    let isExcluded: Bool
+    let onCommit: (Double) -> Void
+
+    @State private var text: String
+    @FocusState private var isFocused: Bool
+
+    init(grams: Double, isExcluded: Bool, onCommit: @escaping (Double) -> Void) {
+        self.grams = grams
+        self.isExcluded = isExcluded
+        self.onCommit = onCommit
+        _text = State(initialValue: Self.format(grams))
+    }
+
+    private static func format(_ value: Double) -> String {
+        String(format: "%.0f", value)
+    }
+
+    var body: some View {
+        HStack(spacing: 2) {
+            TextField("0", text: $text)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .font(.caption2.weight(.bold))
+                .foregroundColor(isExcluded ? .secondary : .orange)
+                .frame(width: 44)
+                .focused($isFocused)
+                .onChange(of: text) { newValue in
+                    // Accept a comma decimal separator — the Hebrew/EU keyboard
+                    // offers it and Double(_:) would otherwise reject the input.
+                    let normalized = newValue.replacingOccurrences(of: ",", with: ".")
+                    if let parsed = Double(normalized), parsed >= 0 {
+                        onCommit(parsed)
+                    }
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        if isFocused {
+                            Spacer()
+                            Button("Done") { isFocused = false }
+                        }
+                    }
+                }
+
+            Text("g")
+                .font(.caption2.weight(.bold))
+                .foregroundColor(isExcluded ? .secondary : .orange)
+        }
+        .onChange(of: grams) { newValue in
+            // Re-sync only when the change came from elsewhere; overwriting
+            // while the user types would fight their input.
+            guard !isFocused else { return }
+            let formatted = Self.format(newValue)
+            if formatted != text {
+                text = formatted
+            }
+        }
+        .disabled(isExcluded)
+    }
+}
+
+// MARK: - QuantityMode Component
+
+/// Lets the user quantify a food by servings or by weight in grams.
+/// The modes are alternatives — whichever is active is the sole basis for the
+/// carb and macro math.
+struct QuantityModeRow: View {
+    @Binding var mode: FoodQuantityMode
+    /// Names the food being measured when several are on the plate.
+    let itemName: String?
+    let isEnabled: Bool
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Measure by")
+                    .foregroundColor(.primary)
+                if let itemName, !itemName.isEmpty {
+                    Text(itemName)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            Picker("Measure by", selection: $mode) {
+                ForEach(FoodQuantityMode.allCases, id: \.self) { mode in
+                    Text(mode.displayName).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 180)
+            .disabled(!isEnabled)
+        }
+    }
+}
+
+// MARK: - WeightRow Component
+
+/// A row for entering the food's weight in grams. Nutrient values from every
+/// source are per 100 g, so the entered weight scales them directly.
+struct WeightDisplayRow: View {
+    @Binding var grams: Double
+    /// Names the food being weighed when several are on the plate.
+    let itemName: String?
+    let isEnabled: Bool
+
+    @FocusState private var isFocused: Bool
+
+    private static let formatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 1
+        formatter.minimumFractionDigits = 0
+        return formatter
+    }()
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Weight")
+                    .foregroundColor(.primary)
+                if let itemName, !itemName.isEmpty {
+                    Text(itemName)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                } else {
+                    Text("Values are per 100 g")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            if isEnabled {
+                HStack(spacing: 4) {
+                    TextField("100", value: $grams, formatter: Self.formatter)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(minWidth: 60, maxWidth: 90)
+                        .focused($isFocused)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                if isFocused {
+                                    Spacer()
+                                    Button("Done") { isFocused = false }
+                                }
+                            }
+                        }
+
+                    Text("g")
+                        .foregroundColor(.secondary)
+                }
+            } else {
+                Text("\u{2014}")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
         }
     }
 }

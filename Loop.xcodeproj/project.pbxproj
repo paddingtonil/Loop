@@ -732,6 +732,7 @@
 		FADE0001000000000000DE02 /* DevelopmentBranchAlerter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADE0001000000000000DE01 /* DevelopmentBranchAlerter.swift */; };
 		FB788D1EE6ADB3446110A1E4 /* FoodFinder_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73404923E06307CDCF420FE4 /* FoodFinder_FeatureFlags.swift */; };
 		FDC7A8B99BD65BE3599AC8BD /* LoopInsights_VoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 253674AABEF3343CE2B3B0C2 /* LoopInsights_VoiceService.swift */; };
+		347365915F825A1D728B4BA4 /* FoodFinder_IsraeliFoodDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F421081C927A235FD149A33C /* FoodFinder_IsraeliFoodDataService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1699,6 +1700,7 @@
 		FDFA7D6D1EB9AE92410C6040 /* AutoPresets_AIAdvisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_AIAdvisor.swift; sourceTree = "<group>"; };
 		FE09CA56245E040321AF4790 /* LoopInsights_ChatHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_ChatHistoryView.swift; sourceTree = "<group>"; };
 		FE15E9C010223EAC3F3FA6B8 /* LoopInsights_FoodResponseAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_FoodResponseAnalyzer.swift; sourceTree = "<group>"; };
+		F421081C927A235FD149A33C /* FoodFinder_IsraeliFoodDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_IsraeliFoodDataService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1908,6 +1910,7 @@
 				A2C73FC463D2D989C3FD9922 /* FoodFinder_EmojiProvider.swift */,
 				7E5D19327F64963E3C5BBA52 /* FoodFinder_ImageDownloader.swift */,
 				0EE1A34A28C4C2B264A50C0E /* FoodFinder_ImageStore.swift */,
+				F421081C927A235FD149A33C /* FoodFinder_IsraeliFoodDataService.swift */,
 				3B86683D6FC84C98C1021AC9 /* FoodFinder_LocationService.swift */,
 				301CAEF6EB83C57116815C63 /* FoodFinder_OpenFoodFactsService.swift */,
 				BB316C0F6448184A5AD9AE5B /* FoodFinder_ScannerService.swift */,
@@ -4402,6 +4405,7 @@
 				ECBCE1757156B9D960F1B4AC /* SiteAtlas_BodyMapView.swift in Sources */,
 				57E3308FDEA7A8AF64F06581 /* SiteAtlas_SettingsView.swift in Sources */,
 				34B3412B2F90F59CDD867AFD /* SiteAtlas_SiteSelectionSheet.swift in Sources */,
+				347365915F825A1D728B4BA4 /* FoodFinder_IsraeliFoodDataService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

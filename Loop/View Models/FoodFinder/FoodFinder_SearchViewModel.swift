@@ -136,6 +136,34 @@ final class FoodFinder_SearchViewModel: ObservableObject {
     /// Number of servings for the selected food product
     @Published var numberOfServings: Double = 1.0
 
+    /// How the user is quantifying a search-result food: by servings or by
+    /// weight. The two are alternatives, not multipliers — whichever mode is
+    /// active is the sole basis for the nutrition math.
+    ///
+    /// Applies to search-result products only. AI plates keep their own
+    /// per-item serving multipliers.
+    @Published var quantityMode: FoodQuantityMode = .servings
+
+    /// Weight in grams of the selected food, used when `quantityMode == .grams`.
+    /// Prefilled on selection from the product's stated serving weight, falling
+    /// back to 100 g — the basis every source's nutriment values are expressed in.
+    @Published var itemWeightGrams: Double = 100.0
+
+    /// The plate item the top-level quantity control edits — the one the user
+    /// just entered.
+    ///
+    /// Entering foods one at a time means "Servings"/"Grams" should keep
+    /// describing the food just added, rather than silently switching to mean
+    /// "how many of this whole plate". Nil for plates that arrive all at once
+    /// from a photo, where no single item is "the one being entered" and the
+    /// control keeps its plate-level meaning.
+    @Published var activeItemID: UUID?
+
+    /// Per-item choice of servings vs weight entry on a plate, keyed by item ID.
+    /// Presentation state only — the resulting portion is stored on the item as
+    /// `userServingMultiplier`, so nothing here affects the dose math.
+    @Published var itemQuantityModes: [UUID: FoodQuantityMode] = [:]
+
     /// True while the user is picking an additional item to add to the current
     /// meal (after tapping "Add another item"). The next product selection or AI
     /// analysis appends to the plate instead of replacing it, then clears this.
@@ -264,6 +292,7 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         guard !servingsObserversSetUp else { return }
         servingsObserversSetUp = true
         observeNumberOfServingsChange()
+        observeQuantityModeAndWeightChange()
         observeAIExclusionsChange()
     }
 
@@ -328,8 +357,23 @@ final class FoodFinder_SearchViewModel: ObservableObject {
                     // stepper tap, racing the recompute at the host.
                     self.recomputeAIAdjustments()
                 } else {
-                    self.recalculateCarbsForServings(servings)
+                    self.recalculateNutritionForCurrentQuantity()
                 }
+            }
+            .store(in: &cancellables)
+    }
+
+    /// Weight edits and mode switches recalculate the same way servings do.
+    /// AI plates are deliberately untouched — the weight control is only offered
+    /// for search-result products.
+    private func observeQuantityModeAndWeightChange() {
+        Publishers.CombineLatest($quantityMode, $itemWeightGrams)
+            .receive(on: RunLoop.main)
+            .dropFirst()
+            .sink { [weak self] _, _ in
+                guard let self = self else { return }
+                guard self.lastAIAnalysisResult == nil else { return }
+                self.recalculateNutritionForCurrentQuantity()
             }
             .store(in: &cancellables)
     }
@@ -474,6 +518,49 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         }
     }
 
+    /// Set a plate item's portion by weight.
+    func setItemWeight(index: Int, grams: Double) {
+        mutateItem(at: index) { item in
+            item.setEffectiveGrams(grams)
+        }
+    }
+
+    /// Set a plate item's portion in servings, absolutely rather than by a delta.
+    func setItemServings(index: Int, servings: Double) {
+        mutateItem(at: index) { item in
+            item.userServingMultiplier = max(0, servings)
+        }
+    }
+
+    /// Index of the item the top-level quantity control edits.
+    var activeItemIndex: Int? {
+        guard let plate = lastAIAnalysisResult, let id = activeItemID else { return nil }
+        return plate.foodItemsDetailed.firstIndex { $0.itemID == id }
+    }
+
+    /// The item the top-level quantity control edits, if any.
+    var activeItem: FoodItemAnalysis? {
+        guard let index = activeItemIndex,
+              let plate = lastAIAnalysisResult,
+              plate.foodItemsDetailed.indices.contains(index) else { return nil }
+        return plate.foodItemsDetailed[index]
+    }
+
+    /// Which control a plate item shows — servings stepper or weight field.
+    ///
+    /// Keyed by `itemID` rather than array index so the choice follows the food
+    /// when items are removed or reordered, the same reason
+    /// `userServingMultiplier` lives on the item itself.
+    func itemQuantityMode(for item: FoodItemAnalysis) -> FoodQuantityMode {
+        guard let id = item.itemID else { return .servings }
+        return itemQuantityModes[id] ?? .servings
+    }
+
+    func setItemQuantityMode(_ mode: FoodQuantityMode, for item: FoodItemAnalysis) {
+        guard let id = item.itemID else { return }
+        itemQuantityModes[id] = mode
+    }
+
     /// Toggle an item in or out of the plate totals.
     func toggleItemExclusion(at index: Int) {
         mutateItem(at: index) { item in
@@ -560,6 +647,13 @@ final class FoodFinder_SearchViewModel: ObservableObject {
             sourceLabel: sourceLabelForCurrentProduct(product)
         )
         appendItemsToPlate([item], description: product.displayName)
+
+        // The top-level quantity control now describes this food, so the user
+        // can set its servings or weight the same way they did for the first.
+        activeItemID = item.itemID
+        if let id = item.itemID {
+            itemQuantityModes[id] = quantityMode
+        }
     }
 
     /// Human-readable provenance for an item built from a product.
@@ -1201,6 +1295,12 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         // Start with 1 serving (user can adjust)
         numberOfServings = 1.0
 
+        // Reset the quantity control to servings and prefill the weight with
+        // this product's serving weight — 100 g for per-100 g sources such as
+        // the Israeli and USDA databases.
+        quantityMode = .servings
+        itemWeightGrams = product.servingQuantity ?? 100.0
+
         // Calculate carbs - but only for real products with valid data
         let carbsQuantity: Double?
         if product.id.hasPrefix("fallback_") {
@@ -1290,35 +1390,78 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Recalculate Carbs for Servings
+    // MARK: - Recalculate Nutrition for Servings / Weight
 
-    /// Recalculate carbohydrates based on number of servings
-    /// - Parameter servings: Number of servings
-    private func recalculateCarbsForServings(_ servings: Double) {
+    /// How many multiples of the per-100 g nutriment basis the current quantity
+    /// represents.
+    ///
+    /// `Nutriments` values are always per 100 g and `servingQuantity` is the
+    /// gram weight of one serving, so both modes reduce to the same scale
+    /// factor — servings just derives its grams from the product.
+    private var currentNutritionScale: Double {
+        guard let selectedFood = selectedFoodProduct else { return 0 }
+
+        switch quantityMode {
+        case .servings:
+            // Products without a stated serving weight are already per-100 g rows.
+            let gramsPerServing = selectedFood.servingQuantity ?? 100.0
+            return (gramsPerServing / 100.0) * numberOfServings
+        case .grams:
+            return itemWeightGrams / 100.0
+        }
+    }
+
+    /// The current quantity expressed as multiples of one serving.
+    ///
+    /// Plate items are built in serving multiples — `FoodItemAnalysis.fromProduct`
+    /// scales per-serving values by this number — so a gram-based quantity must be
+    /// converted before it can seed or join a plate. Without it the item's macros
+    /// silently fall back to a single serving while its carbs reflect the weight.
+    var servingsEquivalentForCurrentQuantity: Double {
+        guard let selectedFood = selectedFoodProduct else { return numberOfServings }
+
+        switch quantityMode {
+        case .servings:
+            return numberOfServings
+        case .grams:
+            let gramsPerServing = selectedFood.servingQuantity ?? 100.0
+            guard gramsPerServing > 0 else { return numberOfServings }
+            return itemWeightGrams / gramsPerServing
+        }
+    }
+
+    /// Human-readable portion for the current quantity, or nil in servings mode
+    /// where the product's own serving text already describes it.
+    var portionDescriptionForCurrentQuantity: String? {
+        guard quantityMode == .grams else { return nil }
+        return String(format: "%.0f g", itemWeightGrams)
+    }
+
+    /// Carbohydrates implied by the current selection and quantity — the value
+    /// the host carb field should display. Nil when no product is selected.
+    var currentCarbsQuantity: Double? {
+        guard let selectedFood = selectedFoodProduct else { return nil }
+        return selectedFood.nutriments.carbohydrates * currentNutritionScale
+    }
+
+    /// Recalculate carbohydrates and macros for the current quantity, in
+    /// whichever mode the user selected.
+    private func recalculateNutritionForCurrentQuantity() {
         guard let selectedFood = selectedFoodProduct else {
             #if DEBUG
-            print("🥄 recalculateCarbsForServings: No selected food product")
+            print("🥄 recalculateNutritionForCurrentQuantity: No selected food product")
             #endif
             return
         }
 
+        let scale = currentNutritionScale
+        let servings = numberOfServings
+
         #if DEBUG
-        print("🥄 recalculateCarbsForServings: servings=\(servings), selectedFood=\(selectedFood.displayName)")
+        print("🥄 recalculate: mode=\(quantityMode.rawValue), servings=\(servings), grams=\(itemWeightGrams), scale=\(scale), food=\(selectedFood.displayName)")
         #endif
 
-        // Calculate carbs based on servings - prefer per serving, fallback to per 100g
-        let newCarbsQuantity: Double
-        if let carbsPerServing = selectedFood.carbsPerServing {
-            newCarbsQuantity = carbsPerServing * servings
-            #if DEBUG
-            print("🥄 Using carbsPerServing: \(carbsPerServing) * \(servings) = \(newCarbsQuantity)")
-            #endif
-        } else {
-            newCarbsQuantity = selectedFood.nutriments.carbohydrates * servings
-            #if DEBUG
-            print("🥄 Using nutriments.carbohydrates: \(selectedFood.nutriments.carbohydrates) * \(servings) = \(newCarbsQuantity)")
-            #endif
-        }
+        let newCarbsQuantity = selectedFood.nutriments.carbohydrates * scale
 
         #if DEBUG
         print("🥄 Final carbsQuantity set to: \(newCarbsQuantity)")
@@ -1334,8 +1477,9 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         }
 
         // Notify host of the updated carbs (with optional macros from selected food).
-        let foodFat: Double = (selectedFood.fatPerServing ?? selectedFood.nutriments.fat ?? 0) * servings
-        let foodProtein: Double = (selectedFood.proteinPerServing ?? selectedFood.nutriments.proteins ?? 0) * servings
+        // Macros scale from the same per-100 g basis as the carbs above.
+        let foodFat: Double = (selectedFood.nutriments.fat ?? 0) * scale
+        let foodProtein: Double = (selectedFood.nutriments.proteins ?? 0) * scale
         onNutritionApplied?(FoodFinder_NutritionResult(
             carbs: newCarbsQuantity,
             foodType: foodType,
@@ -1347,10 +1491,11 @@ final class FoodFinder_SearchViewModel: ObservableObject {
             absorptionReasoning: nil
         ))
 
-        os_log("Recalculated carbs for %{public}.1f servings: %{public}g",
+        os_log("Recalculated carbs (%{public}@: %{public}.1f): %{public}g",
                log: OSLog(category: "FoodSearch"),
                type: .info,
-               servings,
+               quantityMode.rawValue,
+               quantityMode == .grams ? itemWeightGrams : servings,
                newCarbsQuantity)
     }
 
@@ -1387,6 +1532,10 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         selectedFoodProduct = nil
         productThumbnailImage = nil
         selectedFoodServingSize = nil
+        quantityMode = .servings
+        itemWeightGrams = 100.0
+        itemQuantityModes = [:]
+        activeItemID = nil
         foodSearchError = nil
         showingFoodSearch = false
         foodSearchTask?.cancel()

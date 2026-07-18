@@ -29,14 +29,26 @@ class FoodSearchRouter {
     
     // MARK: - Text/Voice Search Routing
 
-    /// Perform text-based food search using the configured provider
+    /// Perform text-based food search using the configured provider.
+    ///
+    /// Hebrew queries are intercepted first — see `searchIsraeliDatabase`.
     func searchFoodsByText(_ query: String) async throws -> [OpenFoodFactsProduct] {
         let provider = aiService.getProviderForSearchType(.textSearch)
 
-        log.info("🔍 Routing text search '%{public}@' to provider: %{public}@", query, provider.rawValue)
-
         // Fetch extra candidates so client-side relevance sorting has more to work with
         let fetchSize = 50
+
+        // Hebrew goes to the Israeli national food database first, whatever the
+        // configured provider is: OpenFoodFacts and USDA index English/Latin
+        // names preferentially and match Hebrew terms poorly. On error or no
+        // match we fall through to the configured provider below.
+        if Self.containsHebrew(query) {
+            if let products = await searchIsraeliDatabase(query, pageSize: fetchSize) {
+                return products
+            }
+        }
+
+        log.info("🔍 Routing text search '%{public}@' to provider: %{public}@", query, provider.rawValue)
 
         switch provider {
         case .openFoodFacts:
@@ -58,6 +70,34 @@ class FoodSearchRouter {
             } catch {
                 return try await openFoodFactsService.searchProducts(query: query, pageSize: fetchSize)
             }
+        }
+    }
+
+    // MARK: - Hebrew Query Routing
+
+    /// True if the text contains any character in the Hebrew Unicode block
+    /// (U+0590–U+05FF: letters, niqqud and Hebrew punctuation).
+    static func containsHebrew(_ text: String) -> Bool {
+        text.unicodeScalars.contains { (0x0590...0x05FF).contains($0.value) }
+    }
+
+    /// Try the Israeli database for a Hebrew query.
+    /// - Returns: The products on a successful, non-empty match; `nil` when the
+    ///   caller should fall back to the configured provider (error or no match).
+    private func searchIsraeliDatabase(_ query: String, pageSize: Int) async -> [OpenFoodFactsProduct]? {
+        log.info("🇮🇱 Hebrew query '%{public}@' — routing to Israeli food database", query)
+
+        do {
+            let products = try await IsraeliFoodDataService.shared.searchProducts(query: query, pageSize: pageSize)
+            if products.isEmpty {
+                log.info("ℹ️ Israeli database had no match for '%{public}@' — falling back", query)
+                return nil
+            }
+            return products
+        } catch {
+            log.error("❌ Israeli database search failed: %{public}@ — falling back",
+                      error.localizedDescription)
+            return nil
         }
     }
 

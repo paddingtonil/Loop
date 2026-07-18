@@ -15,6 +15,10 @@ import SwiftUI
 struct AISettingsView: View {
     @Environment(\.openURL) var openURL
 
+    /// Drives the text-search provider picker; the choice is persisted by
+    /// `setProviderForSearchType`.
+    @ObservedObject private var aiService = ConfigurableAIService.shared
+
     // Feature toggles
     @AppStorage("com.loopkit.Loop.foodSearchEnabled") private var foodSearchEnabled: Bool = false
     @AppStorage("com.loopkit.Loop.advancedDosingRecommendationsEnabled") private var advancedDosingRecommendationsEnabled: Bool = false
@@ -60,6 +64,7 @@ struct AISettingsView: View {
         Form {
             featureToggleSection
             if foodSearchEnabled {
+                textSearchProviderSection
                 usdaSection
                 spoonacularSection
                 aiConfigSection
@@ -105,6 +110,51 @@ struct AISettingsView: View {
 // MARK: - Sections
 
 extension AISettingsView {
+
+    // MARK: Text Search Provider
+
+    /// Database providers usable for text/voice search. The AI provider is
+    /// excluded — it has no food index of its own and the router just falls
+    /// through to these two anyway.
+    private var textSearchProviders: [SearchProvider] {
+        aiService.getAvailableProvidersForSearchType(.textSearch)
+            .filter { !$0.requiresAPIKey }
+    }
+
+    private var textSearchProviderSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass.circle.fill")
+                        .foregroundColor(Color(red: 107/255, green: 47/255, blue: 160/255))
+                    Text("TEXT SEARCH SOURCE")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
+                        .lineLimit(1)
+                        .layoutPriority(1)
+                }
+
+                Picker("Search database", selection: Binding(
+                    get: { aiService.textSearchProvider },
+                    set: { aiService.setProviderForSearchType($0, searchType: .textSearch) }
+                )) {
+                    ForEach(textSearchProviders, id: \.self) { provider in
+                        Text(provider.rawValue).tag(provider)
+                    }
+                }
+
+                Text("Which database text and voice searches use. Your choice is saved between launches.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text("Hebrew searches always use the Israeli Ministry of Health national food database first, regardless of this setting, and fall back here if it has no match.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
 
     // MARK: Feature Toggle
 
