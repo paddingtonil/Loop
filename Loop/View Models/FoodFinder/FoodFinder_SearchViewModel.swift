@@ -57,6 +57,27 @@ func foodFinder_withTimeout<T>(seconds: TimeInterval, operation: @escaping () as
 
 /// The payload delivered to the host (CarbEntryView / CarbEntryViewModel)
 /// when the user confirms a food selection or AI analysis.
+/// The values the per-item edit sheet hands back. All are *effective* numbers —
+/// the ones shown on the item row for the portion the user selected — not the
+/// item's internal per-portion basis.
+struct FoodFinder_ItemEdit: Equatable {
+    var name: String
+    var carbs: Double
+    var calories: Double
+    var fat: Double
+    var fiber: Double
+    var protein: Double
+}
+
+extension Double {
+    /// Tolerant compare for user-entered nutrition values. The edit sheet
+    /// round-trips through a one-decimal text field, so exact `==` against a
+    /// recomputed Double would report a change the user never made.
+    func isApproximately(_ other: Double, tolerance: Double = 0.05) -> Bool {
+        abs(self - other) < tolerance
+    }
+}
+
 struct FoodFinder_NutritionResult {
     let carbs: Double
     let foodType: String
@@ -115,6 +136,13 @@ final class FoodFinder_SearchViewModel: ObservableObject {
     /// Number of servings for the selected food product
     @Published var numberOfServings: Double = 1.0
 
+    /// True while the user is picking an additional item to add to the current
+    /// meal (after tapping "Add another item"). The next product selection or AI
+    /// analysis appends to the plate instead of replacing it, then clears this.
+    /// Making accumulation an explicit mode keeps a mistapped search result from
+    /// silently becoming an extra item in a dose.
+    @Published var isBuildingMeal: Bool = false
+
     /// Whether a food search is currently in progress
     @Published var isFoodSearching: Bool = false
 
@@ -134,12 +162,14 @@ final class FoodFinder_SearchViewModel: ObservableObject {
     /// Store the last AI analysis result for detailed UI display
     @Published var lastAIAnalysisResult: AIFoodAnalysisResult? = nil
 
-    /// Indices of AI-detected items excluded by the user (soft delete)
-    @Published var excludedAIItemIndices: Set<Int> = []
-
-    /// Per-item serving multiplier overrides (index → multiplier).
-    /// Defaults to the AI's servingMultiplier; user can adjust per-item.
-    @Published var itemServingOverrides: [Int: Double] = [:]
+    // Per-item exclusion and serving overrides used to live here as
+    // `excludedAIItemIndices: Set<Int>` and `itemServingOverrides: [Int: Double]`.
+    // Both were keyed by array index, so they aliased onto the wrong food
+    // whenever the array changed underneath them — a re-analysis kept the
+    // previous plate's exclusions, and deleting an item shifted every later
+    // override onto its neighbour. That state now lives on `FoodItemAnalysis`
+    // itself (`isExcluded` / `userServingMultiplier`), so it moves with the food
+    // it describes and persists with the stored analysis.
 
     /// Store the captured AI image for display
     @Published var capturedAIImage: UIImage? = nil
@@ -304,11 +334,15 @@ final class FoodFinder_SearchViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
+    /// Per-item exclusions, serving overrides and value edits all now mutate
+    /// `lastAIAnalysisResult`, so observing it alone covers what the old
+    /// three-way `combineLatest` did. `recomputeAIAdjustments` doesn't write
+    /// back to this result, so there's no feedback loop.
     private func observeAIExclusionsChange() {
-        $excludedAIItemIndices
-            .combineLatest($lastAIAnalysisResult, $itemServingOverrides)
+        $lastAIAnalysisResult
             .receive(on: RunLoop.main)
-            .sink { [weak self] _, _, _ in
+            .dropFirst()
+            .sink { [weak self] _ in
                 self?.recomputeAIAdjustments()
             }
             .store(in: &cancellables)
@@ -319,58 +353,20 @@ final class FoodFinder_SearchViewModel: ObservableObject {
     /// Recompute carbs and absorption time based on included AI items
     func recomputeAIAdjustments() {
         guard let ai = lastAIAnalysisResult else { return }
-        let includedItems = ai.foodItemsDetailed.enumerated()
-            .filter { !excludedAIItemIndices.contains($0.offset) }
 
-        // Per-item carbs: scale each item by its own serving override vs AI original
-        let baseCarbs = includedItems.reduce(0.0) { total, entry in
-            let (index, item) = entry
-            let aiMultiplier = item.servingMultiplier > 0 ? item.servingMultiplier : 1.0
-            let userMultiplier = itemServingOverrides[index] ?? aiMultiplier
-            // item.carbohydrates is already scaled by aiMultiplier, so rescale to user's value
-            let perUsdaServing = item.carbohydrates / aiMultiplier
-            return total + (perUsdaServing * userMultiplier)
-        }
-        // Per-item fat / protein: same scaling logic. Drives BolusPro auto-populate.
-        let baseFat = includedItems.reduce(0.0) { total, entry in
-            let (index, item) = entry
-            let aiMultiplier = item.servingMultiplier > 0 ? item.servingMultiplier : 1.0
-            let userMultiplier = itemServingOverrides[index] ?? aiMultiplier
-            let perUsdaServing = (item.fat ?? 0) / aiMultiplier
-            return total + (perUsdaServing * userMultiplier)
-        }
-        let baseProtein = includedItems.reduce(0.0) { total, entry in
-            let (index, item) = entry
-            let aiMultiplier = item.servingMultiplier > 0 ? item.servingMultiplier : 1.0
-            let userMultiplier = itemServingOverrides[index] ?? aiMultiplier
-            let perUsdaServing = (item.protein ?? 0) / aiMultiplier
-            return total + (perUsdaServing * userMultiplier)
-        }
-        // Per-item fiber / calories: same scaling. Used to re-derive absorption
-        // time from the remaining plate (FPU + fiber + meal-size all shift it).
-        let baseFiber = includedItems.reduce(0.0) { total, entry in
-            let (index, item) = entry
-            let aiMultiplier = item.servingMultiplier > 0 ? item.servingMultiplier : 1.0
-            let userMultiplier = itemServingOverrides[index] ?? aiMultiplier
-            let perUsdaServing = (item.fiber ?? 0) / aiMultiplier
-            return total + (perUsdaServing * userMultiplier)
-        }
-        let baseCalories = includedItems.reduce(0.0) { total, entry in
-            let (index, item) = entry
-            let aiMultiplier = item.servingMultiplier > 0 ? item.servingMultiplier : 1.0
-            let userMultiplier = itemServingOverrides[index] ?? aiMultiplier
-            let perUsdaServing = (item.calories ?? 0) / aiMultiplier
-            return total + (perUsdaServing * userMultiplier)
-        }
-        // Plate-level multiplier (the "Servings" slider — for "I ate 2 plates")
-        let plateScale = numberOfServings
-        let newCarbs = baseCarbs * plateScale
-        let newFat = baseFat * plateScale
-        let newProtein = baseProtein * plateScale
-        let newFiber = baseFiber * plateScale
-        let newCalories = baseCalories * plateScale
+        // All per-item scaling (serving overrides, exclusions, user edits) lives
+        // on the items themselves and is applied by `totals(plateScale:)` — the
+        // same call the nutrition circles use, so the displayed macros and the
+        // carbs we hand the host can no longer drift apart.
+        // `numberOfServings` is the plate-level "I ate 2 of these" multiplier.
+        let totals = ai.totals(plateScale: numberOfServings)
+        let newCarbs = totals.carbs
+        let newFat = totals.fat
+        let newProtein = totals.protein
+        let newFiber = totals.fiber
+        let newCalories = totals.calories
 
-        let included = includedItems.map { $0.element }
+        let included = ai.includedItems
 
         // Absorption time.
         // The AI returns ONE whole-plate absorption_time_hours (the per-item
@@ -380,9 +376,7 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         // full-plate value. So: trust the AI's number on an unedited plate, but
         // re-derive it from the REMAINING macros once anything is excluded,
         // rescaled, or multiplied by the servings slider.
-        let plateWasEdited = !excludedAIItemIndices.isEmpty
-            || !itemServingOverrides.isEmpty
-            || numberOfServings != 1.0
+        let plateWasEdited = ai.plateWasEdited || numberOfServings != 1.0
 
         var newAbsorptionTime = absorptionTime
         var aiGenerated = absorptionTimeWasAIGenerated
@@ -456,21 +450,169 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         ))
     }
 
+    /// Identity for the nutrition circles' `.id(...)`, derived from the values
+    /// they actually display. Keyed on the totals rather than on which knobs
+    /// were touched, so a direct edit to an item's carbs or macros invalidates
+    /// them the same way a servings tap does.
+    var nutritionCirclesIdentity: String {
+        guard let ai = lastAIAnalysisResult else { return "product-\(numberOfServings)" }
+        let totals = ai.totals(plateScale: numberOfServings)
+        return "\(totals.carbs)-\(totals.fat)-\(totals.protein)-\(totals.fiber)-\(totals.calories)"
+    }
+
     /// Get the effective serving multiplier for an item (user override or AI default)
     func effectiveServings(for index: Int) -> Double {
-        if let override = itemServingOverrides[index] {
-            return override
-        }
         guard let items = lastAIAnalysisResult?.foodItemsDetailed,
-              index >= 0, index < items.count else { return 1.0 }
-        return items[index].servingMultiplier > 0 ? items[index].servingMultiplier : 1.0
+              items.indices.contains(index) else { return 1.0 }
+        return items[index].effectiveMultiplier
     }
 
     /// Adjust per-item serving multiplier by a delta (clamped to 0.25 minimum)
     func adjustItemServings(index: Int, delta: Double) {
-        let current = effectiveServings(for: index)
-        let newValue = max(0.25, current + delta)
-        itemServingOverrides[index] = newValue
+        mutateItem(at: index) { item in
+            item.userServingMultiplier = max(0.25, item.effectiveMultiplier + delta)
+        }
+    }
+
+    /// Toggle an item in or out of the plate totals.
+    func toggleItemExclusion(at index: Int) {
+        mutateItem(at: index) { item in
+            item.isExcluded = !item.excluded
+        }
+    }
+
+    /// Apply an edit to one item and republish. Writing through
+    /// `lastAIAnalysisResult` is what makes an edit sticky: the item row, the
+    /// nutrition circles and the carb total all read from this result, and it is
+    /// what gets persisted to the analysis record.
+    func mutateItem(at index: Int, _ transform: (inout FoodItemAnalysis) -> Void) {
+        guard var result = lastAIAnalysisResult,
+              result.foodItemsDetailed.indices.contains(index) else { return }
+        transform(&result.foodItemsDetailed[index])
+        lastAIAnalysisResult = result
+    }
+
+    /// Apply the edit sheet's values to an item.
+    ///
+    /// Values arrive as *effective* numbers — what the user sees on the row and
+    /// typed into the field — and the setters convert them back to the item's
+    /// stored basis, so a later servings step scales from the edited value
+    /// instead of discarding it.
+    ///
+    /// Each field is only written when it actually changed: the setters snapshot
+    /// the AI's originals on first write, so touching them unconditionally would
+    /// mark an untouched item as edited just for opening the sheet.
+    func applyItemEdit(at index: Int, _ edit: FoodFinder_ItemEdit) {
+        mutateItem(at: index) { item in
+            let trimmedName = edit.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedName.isEmpty, trimmedName != item.name {
+                item.setName(trimmedName)
+            }
+            if !edit.carbs.isApproximately(item.effectiveCarbs) {
+                item.setEffectiveCarbs(edit.carbs)
+            }
+            if !edit.calories.isApproximately(item.effectiveCalories) {
+                item.setEffectiveCalories(edit.calories)
+            }
+            if !edit.fat.isApproximately(item.effectiveFat) {
+                item.setEffectiveFat(edit.fat)
+            }
+            if !edit.fiber.isApproximately(item.effectiveFiber) {
+                item.setEffectiveFiber(edit.fiber)
+            }
+            if !edit.protein.isApproximately(item.effectiveProtein) {
+                item.setEffectiveProtein(edit.protein)
+            }
+        }
+    }
+
+    /// Restore one item's AI values, leaving its portion choices intact.
+    func resetItemToAI(at index: Int) {
+        mutateItem(at: index) { $0.resetToAI() }
+    }
+
+    // MARK: - Meal Building (multi-item plate)
+
+    /// Append items to the current plate, creating it if none exists.
+    ///
+    /// Setting `lastAIAnalysisResult` re-triggers the recompute observer, so the
+    /// carb total, nutrition circles and food-type name all follow the enlarged
+    /// plate. The synthetic product header is refreshed too so it names the whole
+    /// meal, not just the food that seeded it. Clears `isBuildingMeal`.
+    func appendItemsToPlate(_ newItems: [FoodItemAnalysis], description: String) {
+        guard !newItems.isEmpty else { isBuildingMeal = false; return }
+        var result = lastAIAnalysisResult ?? AIFoodAnalysisResult.plate(items: [], description: description)
+        result.foodItemsDetailed.append(contentsOf: newItems)
+        result = result.withBackfilledIDs()
+        lastAIAnalysisResult = result
+        refreshSyntheticPlateProduct()
+        isBuildingMeal = false
+    }
+
+    /// Append a selected product to the plate as one item. Servings default to
+    /// 1.0 for the new item — the plate-level `numberOfServings` multiplier
+    /// belongs to the existing plate and must not scale the freshly added food.
+    func appendProductToPlate(_ product: OpenFoodFactsProduct) {
+        let item = FoodItemAnalysis.fromProduct(
+            product,
+            servings: 1.0,
+            carbsOverride: nil,
+            sourceLabel: sourceLabelForCurrentProduct(product)
+        )
+        appendItemsToPlate([item], description: product.displayName)
+    }
+
+    /// Human-readable provenance for an item built from a product.
+    func sourceLabelForCurrentProduct(_ product: OpenFoodFactsProduct) -> String {
+        switch product.dataSource {
+        case .barcodeScan: return NSLocalizedString("Scanned", comment: "Item source label for a barcode-scanned food")
+        case .textSearch: return NSLocalizedString("Searched", comment: "Item source label for a text-searched food")
+        case .aiAnalysis: return NSLocalizedString("Photo", comment: "Item source label for a photo-analyzed food")
+        case .manualEntry: return NSLocalizedString("Manual", comment: "Item source label for a manually entered food")
+        case .unknown: return NSLocalizedString("Added", comment: "Item source label for a food of unspecified origin")
+        }
+    }
+
+    /// Rebuild the synthetic `ai_` product that gates the plate card so its name
+    /// and macros track the current plate. The prefix is kept so
+    /// `selectFoodProduct`'s AI-state guard still recognises it as a plate.
+    func refreshSyntheticPlateProduct() {
+        guard let plate = lastAIAnalysisResult else { return }
+        let existingID = selectedFoodProduct?.id
+        let id = (existingID?.hasPrefix("ai_") == true) ? existingID! : "ai_\(UUID().uuidString.prefix(8))"
+        let totals = plate.totals(plateScale: 1.0)
+        let nutriments = Nutriments(
+            carbohydrates: totals.carbs,
+            proteins: totals.protein > 0 ? totals.protein : nil,
+            fat: totals.fat > 0 ? totals.fat : nil,
+            calories: totals.calories > 0 ? totals.calories : nil,
+            sugars: nil,
+            fiber: totals.fiber > 0 ? totals.fiber : nil
+        )
+        let names = plate.includedItems.map { $0.name }
+        let title = names.count <= 1 ? (names.first ?? "Meal") : String(format: NSLocalizedString("Meal (%d items)", comment: "Plate header for a multi-item meal"), names.count)
+        selectedFoodProduct = OpenFoodFactsProduct(
+            id: id,
+            productName: title,
+            brands: "AI Analysis",
+            categories: plate.analysisNotes ?? "Meal",
+            nutriments: nutriments,
+            servingSize: nil,
+            servingQuantity: 100.0,
+            imageURL: nil,
+            imageFrontURL: nil,
+            code: nil,
+            dataSource: .aiAnalysis
+        )
+    }
+
+    /// Restore every edited item on the plate.
+    func resetAllItemsToAI() {
+        guard var result = lastAIAnalysisResult else { return }
+        for index in result.foodItemsDetailed.indices {
+            result.foodItemsDetailed[index].resetToAI()
+        }
+        lastAIAnalysisResult = result
     }
 
     // MARK: - Voice / Generative Search
@@ -1011,6 +1153,19 @@ final class FoodFinder_SearchViewModel: ObservableObject {
     /// Select a food product and populate carb entry fields
     /// - Parameter product: The selected food product
     func selectFoodProduct(_ product: OpenFoodFactsProduct) {
+        // Meal-building mode: append this product to the plate instead of
+        // replacing the current food. Synthetic `ai_` plate products are the
+        // plate re-selecting itself and must fall through to the normal path.
+        if isBuildingMeal, !product.id.hasPrefix("ai_") {
+            appendProductToPlate(product)
+            foodSearchText = ""
+            foodSearchResults = []
+            foodSearchError = nil
+            showingFoodSearch = false
+            foodSearchTask?.cancel()
+            return
+        }
+
         #if DEBUG
         print("🔄 ========== SELECTING FOOD PRODUCT ==========")
         #endif
@@ -1083,8 +1238,6 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         if !product.id.hasPrefix("ai_") {
             lastAIAnalysisResult = nil
             capturedAIImage = nil
-            excludedAIItemIndices = []
-            itemServingOverrides = [:]
             absorptionTimeWasAIGenerated = false  // Clear AI absorption time flag for non-AI products
             os_log("🔄 Cleared AI analysis state when selecting non-AI product: %{public}@",
                    log: OSLog(category: "FoodSearch"),
@@ -1282,8 +1435,6 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         numberOfServings = 1.0
         lastAIAnalysisResult = nil
         capturedAIImage = nil
-        excludedAIItemIndices = []
-        itemServingOverrides = [:]
         absorptionTimeWasAIGenerated = false  // Clear AI absorption time flag
         lastBarcodeSearched = nil  // Allow re-scanning the same barcode
 
@@ -1484,97 +1635,33 @@ final class FoodFinder_SearchViewModel: ObservableObject {
 
     // MARK: - Food Item Management
 
+    /// Hard-remove an item from the plate (distinct from soft exclusion, which
+    /// keeps the row visible with its carbs struck through). Used to undo a
+    /// mistakenly added item on a mixed plate.
+    ///
+    /// Setting `lastAIAnalysisResult` fires the recompute observer, which
+    /// re-derives the carb total, macros, absorption time and food-type name
+    /// from the survivors through the one shared code path — so this no longer
+    /// hand-rolls those totals (the old version summed raw carbs and ignored
+    /// per-item exclusions and edits). Because state lives on the items, removal
+    /// can't misalign a neighbour's override the way index keys did.
     func deleteFoodItem(at index: Int) {
         guard var currentResult = lastAIAnalysisResult,
-              index >= 0 && index < currentResult.foodItemsDetailed.count else {
-            #if DEBUG
-            print("⚠️ Cannot delete food item: invalid index \(index) or no AI analysis result")
-            #endif
+              currentResult.foodItemsDetailed.indices.contains(index) else {
+            return
+        }
+        currentResult.foodItemsDetailed.remove(at: index)
+
+        // Removing the last item leaves no meal — clear the whole selection so
+        // the screen returns to the empty state rather than showing an empty
+        // plate with a stale carb total.
+        if currentResult.foodItemsDetailed.isEmpty {
+            clearSelectedFood()
             return
         }
 
-        #if DEBUG
-        print("🗑️ Deleting food item at index \(index): \(currentResult.foodItemsDetailed[index].name)")
-        #endif
-
-        // Remove the item from the array (now possible since foodItemsDetailed is var)
-        currentResult.foodItemsDetailed.remove(at: index)
-
-        // Recalculate totals from remaining items
-        let newTotalCarbs = currentResult.foodItemsDetailed.reduce(0) { $0 + $1.carbohydrates }
-        let newTotalProtein = currentResult.foodItemsDetailed.compactMap { $0.protein }.reduce(0, +)
-        let newTotalFat = currentResult.foodItemsDetailed.compactMap { $0.fat }.reduce(0, +)
-        let newTotalFiber = currentResult.foodItemsDetailed.compactMap { $0.fiber }.reduce(0, +)
-        let newTotalCalories = currentResult.foodItemsDetailed.compactMap { $0.calories }.reduce(0, +)
-
-        // Update the totals in the current result
-        currentResult.totalCarbohydrates = newTotalCarbs
-        currentResult.totalProtein = newTotalProtein > 0 ? newTotalProtein : nil
-        currentResult.totalFat = newTotalFat > 0 ? newTotalFat : nil
-        currentResult.totalFiber = newTotalFiber > 0 ? newTotalFiber : nil
-        currentResult.totalCalories = newTotalCalories > 0 ? newTotalCalories : nil
-
-        // Recalculate absorption time based on remaining meal composition
-        let (newAbsorptionHours, newReasoning) = recalculateAbsorptionTime(
-            carbs: newTotalCarbs,
-            protein: newTotalProtein,
-            fat: newTotalFat,
-            fiber: newTotalFiber,
-            calories: newTotalCalories,
-            remainingItems: currentResult.foodItemsDetailed,
-            context: "Adjusted after removing an item"
-        )
-
-        currentResult.absorptionTimeHours = newAbsorptionHours
-        currentResult.absorptionTimeReasoning = newReasoning
-
-        // Update the UI absorption time if it was previously AI-generated
-        if absorptionTimeWasAIGenerated {
-            let newAbsorptionTimeInterval = TimeInterval(newAbsorptionHours * 3600)
-            absorptionEditIsProgrammatic = true
-            absorptionTime = newAbsorptionTimeInterval
-
-            #if DEBUG
-            print("🤖 Updated AI absorption time after deletion: \(newAbsorptionHours) hours")
-            #endif
-        }
-
-        // Update the stored result
-        lastAIAnalysisResult = currentResult
-
-        // Determine food type (truncate to fit RowEmojiTextField maxLength)
-        let maxFoodTypeLength = 25
-        let foodNames = currentResult.foodItemsDetailed.map { $0.name }
-        let foodType: String
-        let rawFoodType: String
-        if foodNames.count == 1 {
-            rawFoodType = foodNames[0]
-        } else if !foodNames.isEmpty {
-            rawFoodType = foodNames.joined(separator: ", ")
-        } else {
-            rawFoodType = currentResult.overallDescription ?? "AI Analysis"
-        }
-        if rawFoodType.count > maxFoodTypeLength {
-            foodType = String(rawFoodType.prefix(maxFoodTypeLength - 1)) + "…"
-        } else {
-            foodType = rawFoodType
-        }
-
-        // Notify host (post-deletion totals; macros forwarded for BolusPro)
-        onNutritionApplied?(FoodFinder_NutritionResult(
-            carbs: newTotalCarbs,
-            foodType: foodType,
-            absorptionTime: absorptionTime,
-            absorptionTimeWasAIGenerated: absorptionTimeWasAIGenerated,
-            fat: newTotalFat > 0 ? newTotalFat : nil,
-            protein: newTotalProtein > 0 ? newTotalProtein : nil,
-            macrosSource: (newTotalFat > 0 || newTotalProtein > 0) ? "ai" : nil,
-            absorptionReasoning: newReasoning
-        ))
-
-        #if DEBUG
-        print("✅ Food item deleted. New total carbs: \(newTotalCarbs)g")
-        #endif
+        lastAIAnalysisResult = currentResult.withRefreshedTotals()
+        refreshSyntheticPlateProduct()
     }
 
     /// Ensures we have an absorption time even if the AI response omitted it.

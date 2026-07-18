@@ -415,6 +415,7 @@
 		9C56E5C58F8504E0506D1B9F /* LoopInsights_MealInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA04C6FC8871A04AFFD27F7 /* LoopInsights_MealInsightsView.swift */; };
 		A07F0CC0E0A98BAEEE6EBB03 /* FoodFinder_SearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5ECE2E8754449F20840DD /* FoodFinder_SearchBar.swift */; };
 		A09C5F1497BF15D84FA10CB9 /* AutoPresets_CalendarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C369B8BD708323701C6E161 /* AutoPresets_CalendarManager.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* FoodFinder_ItemScalingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* FoodFinder_ItemScalingTests.swift */; };
 		A1DAC248FAB1D0C3ED7FD490 /* FoodFinder_OpenFoodFactsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301CAEF6EB83C57116815C63 /* FoodFinder_OpenFoodFactsService.swift */; };
 		A395749AFFBA35E871EEBFD6 /* LoopInsights_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1859D44BC7E28548B1EF85 /* LoopInsights_FeatureFlags.swift */; };
 		A3BF84DA6D4C2FB3E4BF684D /* LoopInsights_CaregiverDigestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D255B89E3F58237EA2781A60 /* LoopInsights_CaregiverDigestView.swift */; };
@@ -1362,6 +1363,7 @@
 		9D676C326CA848F36F10BE3A /* DataLayer_DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_DashboardView.swift; sourceTree = "<group>"; };
 		9E3DAC536253098EBD013343 /* FoodFinder_RestaurantItemEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_RestaurantItemEntryView.swift; sourceTree = "<group>"; };
 		A1A266A15E411B4AB60ABC4B /* LoopInsights_SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SettingsView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5D /* FoodFinder_ItemScalingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_ItemScalingTests.swift; sourceTree = "<group>"; };
 		A2C73FC463D2D989C3FD9922 /* FoodFinder_EmojiProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_EmojiProvider.swift; sourceTree = "<group>"; };
 		A590E20E1E9607F379E770F1 /* FoodFinder_SearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_SearchResultsView.swift; sourceTree = "<group>"; };
 		A6B2881360260A9CC9A72532 /* LoopInsights_SuggestionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopInsights_SuggestionHistoryView.swift; sourceTree = "<group>"; };
@@ -3157,6 +3159,7 @@
 				7257AB964A1C8B6769E90882 /* FoodFinder_BarcodeScannerTests.swift */,
 				1705C20E7AC9F6FF2322C1D7 /* FoodFinder_OpenFoodFactsTests.swift */,
 				09FA666A9CB87C31C053C5E7 /* FoodFinder_VoiceSearchTests.swift */,
+				A1B2C3D4E5F60718293A4B5D /* FoodFinder_ItemScalingTests.swift */,
 			);
 			path = FoodFinder;
 			sourceTree = "<group>";
@@ -4584,6 +4587,7 @@
 				594445C0AFBCCFCC6CC3137D /* FoodFinder_BarcodeScannerTests.swift in Sources */,
 				83A73F5796F6A35551234E7D /* FoodFinder_OpenFoodFactsTests.swift in Sources */,
 				CFB644A4359EF71FA126A5C7 /* FoodFinder_VoiceSearchTests.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* FoodFinder_ItemScalingTests.swift in Sources */,
 				EBF56903B5932834DF35599E /* LoopInsights_DataAggregatorTests.swift in Sources */,
 				6F8D19EECE4E792342E07948 /* LoopInsights_ModelsTests.swift in Sources */,
 				F06F348BBB58A7D7CDE9517F /* LoopInsights_SuggestionStoreTests.swift in Sources */,
@@ -5404,7 +5408,9 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = LoopCore/Info.plist;
@@ -5430,7 +5436,9 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = LoopCore/Info.plist;
@@ -5456,7 +5464,9 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = LoopCore/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -5483,7 +5493,9 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = LoopCore/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -5509,7 +5521,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				INFOPLIST_FILE = LoopTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -5528,7 +5540,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				INFOPLIST_FILE = LoopTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -5600,7 +5612,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = LoopUI/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -5625,7 +5639,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = USBNKD94CD;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = LoopUI/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";

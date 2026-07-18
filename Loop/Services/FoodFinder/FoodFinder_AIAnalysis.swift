@@ -404,22 +404,345 @@ If menu shows "Teriyaki Chicken Bowl with White Rice", respond:
 }
 """
 
-/// Individual food item analysis with detailed portion assessment
+/// The AI's untouched values for an item, captured the first time the user
+/// edits it. Kept so the edit sheet can show what the AI actually said and so
+/// "Reset to AI" has something to restore. `nil` on an unedited item.
+///
+/// Every field is optional-with-default for the same reason as the new fields
+/// on `FoodItemAnalysis` — see the note there.
+struct FoodItemAIOriginal: Codable, Equatable {
+    var name: String = ""
+    var carbohydrates: Double = 0
+    var calories: Double?
+    var fat: Double?
+    var fiber: Double?
+    var protein: Double?
+}
+
+/// Individual food item analysis with detailed portion assessment.
+///
+/// Fields are `var` because the user can now edit an item's name and macros in
+/// place, and because per-item serving/exclusion state lives here rather than in
+/// index-keyed dictionaries on the view model.
+///
+/// IMPORTANT — every field added here must be `Optional` with a `= nil` default.
+/// Persisted records decode through the synthesized `Codable`, which does *not*
+/// apply default values to non-optional properties: a missing key throws. Both
+/// `FoodFinder_AnalysisHistoryStore` and `MealArchive` read with
+/// `(try? decode(...)) ?? []` and then re-save, so a single non-optional
+/// addition would silently erase the user's entire analysis history and
+/// permanent meal archive rather than fail loudly. Optionals decode via
+/// `decodeIfPresent` and land as `nil` on legacy records.
 struct FoodItemAnalysis: Codable, Equatable {
-    let name: String
-    let portionEstimate: String
-    let usdaServingSize: String?
-    let servingMultiplier: Double
-    let preparationMethod: String?
-    let visualCues: String?
-    let carbohydrates: Double
-    let calories: Double?
-    let fat: Double?
-    let fiber: Double?
-    let protein: Double?
-    let assessmentNotes: String?
+    var name: String
+    var portionEstimate: String
+    var usdaServingSize: String?
+    var servingMultiplier: Double
+    var preparationMethod: String?
+    var visualCues: String?
+    var carbohydrates: Double
+    var calories: Double?
+    var fat: Double?
+    var fiber: Double?
+    var protein: Double?
+    var assessmentNotes: String?
     // Optional per-item absorption time (hours) if provided by the AI
-    let absorptionTimeHours: Double?
+    var absorptionTimeHours: Double?
+
+    /// Stable identity for `ForEach` and for targeting the edit sheet.
+    /// Optional so legacy records decode; backfilled by `withBackfilledIDs()`.
+    var itemID: UUID?
+
+    /// The user's own serving multiplier. `nil` means "follow the AI".
+    /// Previously `FoodFinder_SearchViewModel.itemServingOverrides[index]`;
+    /// moved onto the item so it travels with the food it describes instead of
+    /// aliasing onto whatever later occupies that array index.
+    var userServingMultiplier: Double?
+
+    /// Soft-excluded from the plate totals. Previously `excludedAIItemIndices`.
+    var isExcluded: Bool?
+
+    /// AI's values before the user's first edit. Non-nil ⇒ this item is edited.
+    var aiOriginal: FoodItemAIOriginal?
+
+    /// Where this item came from, for a mixed plate assembled from several
+    /// sources (photo analysis, a barcode scan, a text search). `nil` on legacy
+    /// records and on single-source AI plates, where provenance is uniform.
+    var sourceLabel: String?
+}
+
+// MARK: - Per-Item Effective Values
+
+/// The single source of truth for turning an item's stored values into what the
+/// user is actually eating. Both the carb total that gets saved
+/// (`FoodFinder_SearchViewModel.recomputeAIAdjustments`) and the nutrition
+/// circles (`FoodFinder_EntryPoint.computeDisplayedMacros`) read through this.
+/// They used to carry separate copies of the same arithmetic, which meant an
+/// edit could leave the circles disagreeing with the carbs actually dosed for.
+extension FoodItemAnalysis {
+
+    /// The AI's multiplier, guarded against the 0 / missing case.
+    var aiMultiplier: Double {
+        servingMultiplier > 0 ? servingMultiplier : 1.0
+    }
+
+    /// What the user says they ate, falling back to the AI's estimate.
+    var effectiveMultiplier: Double {
+        userServingMultiplier ?? aiMultiplier
+    }
+
+    var excluded: Bool {
+        isExcluded ?? false
+    }
+
+    /// True once the user has overridden any of this item's AI values.
+    var isUserEdited: Bool {
+        aiOriginal != nil
+    }
+
+    /// Ratio between the portion the user ate and the portion the AI costed.
+    /// The stored macros already describe the AI's pictured portion, so scaling
+    /// by this converts them to the user's portion.
+    var servingScale: Double {
+        effectiveMultiplier / aiMultiplier
+    }
+
+    var effectiveCarbs: Double { carbohydrates * servingScale }
+    var effectiveFat: Double { (fat ?? 0) * servingScale }
+    var effectiveProtein: Double { (protein ?? 0) * servingScale }
+    var effectiveFiber: Double { (fiber ?? 0) * servingScale }
+    var effectiveCalories: Double { (calories ?? 0) * servingScale }
+
+    // What the AI said for this item, scaled to the portion the user currently
+    // has selected. Shown as reference in the edit sheet: scaling it the same
+    // way as the edited value keeps the two directly comparable, rather than
+    // contrasting an edit at 2× against an AI estimate at 1×.
+    var aiReferenceCarbs: Double { (aiOriginal?.carbohydrates ?? carbohydrates) * servingScale }
+    var aiReferenceFat: Double { (aiOriginal.map { $0.fat ?? 0 } ?? (fat ?? 0)) * servingScale }
+    var aiReferenceProtein: Double { (aiOriginal.map { $0.protein ?? 0 } ?? (protein ?? 0)) * servingScale }
+    var aiReferenceFiber: Double { (aiOriginal.map { $0.fiber ?? 0 } ?? (fiber ?? 0)) * servingScale }
+    var aiReferenceCalories: Double { (aiOriginal.map { $0.calories ?? 0 } ?? (calories ?? 0)) * servingScale }
+    var aiReferenceName: String { aiOriginal?.name ?? name }
+
+    /// Rewrite this item's macros so that its *effective* carbs become
+    /// `newCarbs`, leaving the serving multiplier alone. Editing at 2× servings
+    /// and typing 60 g means "60 g as I'm eating it", so a later step to 3×
+    /// scales from 60 rather than discarding the edit.
+    mutating func setEffectiveCarbs(_ newCarbs: Double) {
+        captureAIOriginalIfNeeded()
+        carbohydrates = max(0, newCarbs) / max(servingScale, .ulpOfOne)
+    }
+
+    mutating func setEffectiveFat(_ value: Double) {
+        captureAIOriginalIfNeeded()
+        fat = max(0, value) / max(servingScale, .ulpOfOne)
+    }
+
+    mutating func setEffectiveProtein(_ value: Double) {
+        captureAIOriginalIfNeeded()
+        protein = max(0, value) / max(servingScale, .ulpOfOne)
+    }
+
+    mutating func setEffectiveFiber(_ value: Double) {
+        captureAIOriginalIfNeeded()
+        fiber = max(0, value) / max(servingScale, .ulpOfOne)
+    }
+
+    mutating func setEffectiveCalories(_ value: Double) {
+        captureAIOriginalIfNeeded()
+        calories = max(0, value) / max(servingScale, .ulpOfOne)
+    }
+
+    mutating func setName(_ newName: String) {
+        captureAIOriginalIfNeeded()
+        name = newName
+    }
+
+    /// Snapshot the AI's values on the first edit only — a second edit must not
+    /// overwrite the baseline with already-edited values, or "Reset to AI" would
+    /// restore the user's earlier edit instead of the AI's estimate.
+    mutating func captureAIOriginalIfNeeded() {
+        guard aiOriginal == nil else { return }
+        aiOriginal = FoodItemAIOriginal(
+            name: name,
+            carbohydrates: carbohydrates,
+            calories: calories,
+            fat: fat,
+            fiber: fiber,
+            protein: protein
+        )
+    }
+
+    /// Restore the AI's values. Leaves serving multiplier and exclusion alone —
+    /// those are portion decisions, not AI-value edits.
+    mutating func resetToAI() {
+        guard let original = aiOriginal else { return }
+        name = original.name
+        carbohydrates = original.carbohydrates
+        calories = original.calories
+        fat = original.fat
+        fiber = original.fiber
+        protein = original.protein
+        aiOriginal = nil
+    }
+}
+
+/// Plate-level totals for the items the user is actually eating.
+struct FoodFinder_PlateTotals: Equatable {
+    var carbs: Double = 0
+    var fat: Double = 0
+    var protein: Double = 0
+    var fiber: Double = 0
+    var calories: Double = 0
+}
+
+extension AIFoodAnalysisResult {
+
+    /// Items not excluded by the user.
+    var includedItems: [FoodItemAnalysis] {
+        foodItemsDetailed.filter { !$0.excluded }
+    }
+
+    /// True when the user has touched the plate in any way that makes the AI's
+    /// whole-plate absorption estimate stale.
+    var plateWasEdited: Bool {
+        foodItemsDetailed.contains { $0.excluded || $0.userServingMultiplier != nil || $0.isUserEdited }
+    }
+
+    /// Totals for the included items, scaled by the plate-level servings stepper.
+    func totals(plateScale: Double) -> FoodFinder_PlateTotals {
+        includedItems.reduce(into: FoodFinder_PlateTotals()) { totals, item in
+            totals.carbs += item.effectiveCarbs * plateScale
+            totals.fat += item.effectiveFat * plateScale
+            totals.protein += item.effectiveProtein * plateScale
+            totals.fiber += item.effectiveFiber * plateScale
+            totals.calories += item.effectiveCalories * plateScale
+        }
+    }
+
+    /// Assign identities to any item that lacks one (legacy records, and fresh
+    /// AI responses, which are parsed without IDs). Call before the result
+    /// reaches the UI so `ForEach` and the edit sheet have stable keys.
+    func withBackfilledIDs() -> AIFoodAnalysisResult {
+        var copy = self
+        for index in copy.foodItemsDetailed.indices where copy.foodItemsDetailed[index].itemID == nil {
+            copy.foodItemsDetailed[index].itemID = UUID()
+        }
+        return copy
+    }
+
+    /// Whether any item carries a user edit — drives the bulk "Reset all to AI".
+    var hasUserEdits: Bool {
+        foodItemsDetailed.contains { $0.isUserEdited }
+    }
+
+    /// Recompute the plate-level `total*` fields from the current items.
+    ///
+    /// Those fields are a denormalised copy of the item values, so after an edit
+    /// or an exclusion they otherwise keep reporting the AI's original plate —
+    /// and they're what the archived record hands LoopInsights for its macro
+    /// analysis. Call before persisting an edited result.
+    ///
+    /// Deliberately unscaled by the servings stepper: these describe one plate,
+    /// not how many plates were eaten. The record's own `carbsGrams` carries the
+    /// scaled number the user actually doses on.
+    func withRefreshedTotals() -> AIFoodAnalysisResult {
+        var copy = self
+        let totals = totals(plateScale: 1.0)
+        copy.totalCarbohydrates = totals.carbs
+        copy.totalFat = totals.fat > 0 ? totals.fat : nil
+        copy.totalProtein = totals.protein > 0 ? totals.protein : nil
+        copy.totalFiber = totals.fiber > 0 ? totals.fiber : nil
+        copy.totalCalories = totals.calories > 0 ? totals.calories : nil
+        return copy
+    }
+}
+
+// MARK: - Building a plate from mixed sources
+
+extension AIFoodAnalysisResult {
+
+    /// Build a plate from an explicit item list. Used to seed a mixed meal from a
+    /// single product and by the barcode/text-search record path, so the giant
+    /// memberwise initializer lives in one place. Totals are derived from the
+    /// items; per-item scaling is applied later by `totals(plateScale:)`.
+    static func plate(items: [FoodItemAnalysis], description: String) -> AIFoodAnalysisResult {
+        var result = AIFoodAnalysisResult(
+            imageType: nil,
+            foodItemsDetailed: items,
+            overallDescription: description,
+            confidence: .medium,
+            numericConfidence: nil,
+            totalFoodPortions: items.count,
+            totalUsdaServings: Double(items.count),
+            totalCarbohydrates: 0,
+            totalProtein: nil,
+            totalFat: nil,
+            totalFiber: nil,
+            totalCalories: nil,
+            portionAssessmentMethod: nil,
+            diabetesConsiderations: nil,
+            visualAssessmentDetails: nil,
+            notes: nil,
+            originalServings: 1.0,
+            fatProteinUnits: nil,
+            netCarbsAdjustment: nil,
+            insulinTimingRecommendations: nil,
+            fpuDosingGuidance: nil,
+            exerciseConsiderations: nil,
+            absorptionTimeHours: nil,
+            absorptionTimeReasoning: nil,
+            mealSizeImpact: nil,
+            individualizationFactors: nil,
+            safetyAlerts: nil
+        )
+        return result.withRefreshedTotals().withBackfilledIDs()
+    }
+}
+
+extension FoodItemAnalysis {
+
+    /// Turn a selected OpenFoodFacts product into a plate item.
+    ///
+    /// `servings` is the amount the user had chosen for the product; it is baked
+    /// into the stored macros so the item carries the amount actually picked. The
+    /// item's own `servingMultiplier` is 1.0 — a database product has no
+    /// USDA-serving notion — so the per-item stepper then scales from that
+    /// baked-in amount. `carbsOverride` lets an edited carb value (e.g. from the
+    /// AI carb-range slider) win over the computed per-serving figure.
+    static func fromProduct(
+        _ product: OpenFoodFactsProduct,
+        servings: Double,
+        carbsOverride: Double?,
+        sourceLabel: String?
+    ) -> FoodItemAnalysis {
+        let perServingCarbs = product.carbsPerServing ?? product.nutriments.carbohydrates
+        let carbs = carbsOverride ?? (perServingCarbs * servings)
+        func scaled(_ value: Double?) -> Double? {
+            guard let value else { return nil }
+            return value * servings
+        }
+        return FoodItemAnalysis(
+            name: product.displayName,
+            portionEstimate: product.servingSizeDisplay,
+            usdaServingSize: product.servingSize,
+            servingMultiplier: 1.0,
+            preparationMethod: nil,
+            visualCues: nil,
+            carbohydrates: max(0, carbs),
+            calories: scaled(product.caloriesPerServing),
+            fat: scaled(product.fatPerServing),
+            fiber: scaled(product.fiberPerServing),
+            protein: scaled(product.proteinPerServing),
+            assessmentNotes: nil,
+            absorptionTimeHours: nil,
+            itemID: UUID(),
+            userServingMultiplier: nil,
+            isExcluded: nil,
+            aiOriginal: nil,
+            sourceLabel: sourceLabel
+        )
+    }
 }
 
 /// Type of image being analyzed

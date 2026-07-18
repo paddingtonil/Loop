@@ -172,6 +172,8 @@ final class LoopInsights_ModelsTests: XCTestCase {
             carbRatioItems: [
                 .init(startTime: 0, value: 10)
             ],
+            insulinTypeName: "Novolog",
+            insulinDiaHours: 6,
             capturedAt: Date()
         )
         let data = try JSONEncoder().encode(snapshot)

@@ -28,6 +28,13 @@ struct FoodFinder_EntryPoint: View {
     /// Food type string in the host
     @Binding var foodType: String
 
+    /// Whether the host should treat `foodType` as a user-visible meal name
+    /// rather than falling back to the absorption-time emoji. FoodFinder writes
+    /// a real name into `foodType`, so it must flip this too — otherwise
+    /// `CarbEntryViewModel.updatedCarbEntry` discards the name at save time and
+    /// the carb log shows the emoji instead of the meal.
+    @Binding var usesCustomFoodType: Bool
+
     /// Absorption time in the host
     @Binding var absorptionTime: TimeInterval
 
@@ -113,6 +120,21 @@ struct FoodFinder_EntryPoint: View {
         case detailedFoodBreakdown, advancedAnalysis
     }
 
+    /// The item the edit sheet is open on. Carries the item's stable `itemID`
+    /// as its identity so the sheet re-presents correctly, plus the array index
+    /// the view model mutates through.
+    struct EditingItem: Identifiable {
+        let id: UUID
+        let index: Int
+    }
+
+    @State private var editingItem: EditingItem?
+
+    /// The analysis record this entry point wrote for the current plate.
+    /// Held so later edits can update that same record in place rather than
+    /// leaving history and the archive showing the AI's first estimate.
+    @State private var recordedAnalysis: FoodFinder_AnalysisRecord?
+
     // MARK: - Preferred Carb Unit (for favorite food save)
 
     private let preferredCarbUnit: HKUnit
@@ -122,6 +144,7 @@ struct FoodFinder_EntryPoint: View {
     init(
         carbsQuantity: Binding<Double?>,
         foodType: Binding<String>,
+        usesCustomFoodType: Binding<Bool> = .constant(false),
         absorptionTime: Binding<TimeInterval>,
         absorptionTimeWasEdited: Bool,
         defaultAbsorptionTimes: CarbStore.DefaultAbsorptionTimes,
@@ -141,6 +164,7 @@ struct FoodFinder_EntryPoint: View {
     ) {
         self._carbsQuantity = carbsQuantity
         self._foodType = foodType
+        self._usesCustomFoodType = usesCustomFoodType
         self._absorptionTime = absorptionTime
         self.absorptionTimeWasEdited = absorptionTimeWasEdited
         self.defaultAbsorptionTimes = defaultAbsorptionTimes
@@ -208,6 +232,8 @@ struct FoodFinder_EntryPoint: View {
                     if let aiResult = searchVM.lastAIAnalysisResult {
                         aiAnalysisNotesSection(aiResult: aiResult)
                     }
+
+                    addAnotherItemSection
 
                     // Pre-Meal Advisor card (LoopInsights integration)
                     if let advice = preMealAdvice, !preMealAdviceDismissed {
@@ -317,6 +343,20 @@ struct FoodFinder_EntryPoint: View {
         .sheet(isPresented: $showingAISettings) {
             AISettingsView()
         }
+        .sheet(item: $editingItem) { editing in
+            if let items = searchVM.lastAIAnalysisResult?.foodItemsDetailed,
+               items.indices.contains(editing.index) {
+                FoodFinder_ItemEditView(
+                    item: items[editing.index],
+                    onSave: { edit in
+                        searchVM.applyItemEdit(at: editing.index, edit)
+                    },
+                    onResetToAI: {
+                        searchVM.resetItemToAI(at: editing.index)
+                    }
+                )
+            }
+        }
         .sheet(isPresented: $showingFavoriteSheet) {
             AddEditFavoriteFoodView(
                 carbsQuantity: carbsQuantity,
@@ -348,6 +388,11 @@ struct FoodFinder_EntryPoint: View {
         searchVM.onNutritionApplied = { result in
             carbsQuantity = result.carbs
             foodType = result.foodType
+            // A blank name would save as an empty foodType rather than falling
+            // back to the emoji, so only claim the name when there is one.
+            if !result.foodType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                usesCustomFoodType = true
+            }
             // Record our own write first so the absorptionTime onChange below can
             // tell this programmatic update apart from a user's manual picker edit.
             lastAppliedAbsorption = result.absorptionTime
@@ -384,14 +429,28 @@ struct FoodFinder_EntryPoint: View {
                 recordedProductID = product.id
                 recordBarcodeProduct(product)
             }
+
+            // Every plate change lands here — item edits, exclusions, per-item
+            // and plate servings — so this is the one place that keeps the
+            // stored analysis in step with what the user is about to dose for.
+            // No-ops until `recordAnalysis` has written the initial record.
+            refreshRecordedAnalysis()
         }
         searchVM.onFoodCleared = {
             selectedFoodProduct?.wrappedValue = nil
+            // Hand the name back to the emoji fallback — FoodFinder no longer
+            // has a meal to name, and a stale `true` would save an empty string.
+            usesCustomFoodType = false
             absorptionTimeIsAIGenerated = false
             aiAbsorptionReasoning = nil
             aiCarbRangeMin = nil
             aiCarbRangeMax = nil
             recordedProductID = nil
+            // Stop tracking the old plate's record — a later edit must not
+            // reach back and rewrite the analysis the user just cleared.
+            recordedAnalysis = nil
+            editingItem = nil
+            searchVM.isBuildingMeal = false
             searchVM.userDidOverrideAbsorption = false
         }
         // When the search field detects natural language (e.g. iOS keyboard dictation),
@@ -408,6 +467,52 @@ struct FoodFinder_EntryPoint: View {
         if let data = UserDefaults.standard.data(forKey: "com.loopkit.Loop.favoriteFoods"),
            let foods = try? JSONDecoder().decode([StoredFavoriteFood].self, from: data) {
             favoriteFoods = foods
+        }
+    }
+}
+
+// MARK: - Add Another Item (mixed plate)
+
+extension FoodFinder_EntryPoint {
+
+    /// "Add another item" control plus the active-building banner. Lets the user
+    /// assemble one carb entry from several foods — a photo, a barcode, a text
+    /// search — in any combination.
+    @ViewBuilder
+    private var addAnotherItemSection: some View {
+        if searchVM.isBuildingMeal {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .scaleEffect(0.8)
+                Text("Adding to meal — search or snap the next item")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Button("Cancel") { searchVM.isBuildingMeal = false }
+                    .font(.caption.weight(.semibold))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color(.systemBlue).opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .padding(.horizontal, 4)
+        } else {
+            Button(action: { beginAddingItem() }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Add another item")
+                        .fontWeight(.semibold)
+                }
+                .font(.subheadline)
+                .foregroundColor(.blue)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color(.systemBlue).opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 4)
+            .accessibilityHint("Build one carb entry from several foods")
         }
     }
 }
@@ -563,8 +668,7 @@ extension FoodFinder_EntryPoint {
                     let valuesTuple = computeDisplayedMacros(
                         selectedFood: selectedFood,
                         aiResult: aiResult,
-                        numberOfServings: searchVM.numberOfServings,
-                        excluded: searchVM.excludedAIItemIndices
+                        numberOfServings: searchVM.numberOfServings
                     )
                     // When the user has fine-tuned carbs via the AI carb
                     // confidence range slider, the bound `carbsQuantity`
@@ -690,13 +794,13 @@ extension FoodFinder_EntryPoint {
                 Spacer()
             }
             .frame(height: 90)
-            .id("nutrition-circles-\(searchVM.numberOfServings)-\(searchVM.itemServingOverrides.values.map { $0 }.description)-\(searchVM.excludedAIItemIndices.count)-\(carbsQuantity ?? -1)")
+            .id("nutrition-circles-\(searchVM.nutritionCirclesIdentity)-\(carbsQuantity ?? -1)")
 
             // Confidence line with ± range (AI only)
             Group {
                 if let ai = searchVM.lastAIAnalysisResult {
                     let pct = computeConfidencePercent(from: ai, servings: searchVM.numberOfServings)
-                    let displayedCarbs = computeDisplayedMacros(selectedFood: selectedFood, aiResult: ai, numberOfServings: searchVM.numberOfServings, excluded: searchVM.excludedAIItemIndices).carbs
+                    let displayedCarbs = computeDisplayedMacros(selectedFood: selectedFood, aiResult: ai, numberOfServings: searchVM.numberOfServings).carbs
                     let range = computeCarbRange(carbs: displayedCarbs, confidencePercent: pct)
                     HStack(spacing: 6) {
                         Text("Confidence:")
@@ -796,9 +900,7 @@ extension FoodFinder_EntryPoint {
 
                 Spacer()
 
-                let excludedCount = searchVM.excludedAIItemIndices.count
-                let includedCount = max(0, aiResult.foodItemsDetailed.count - excludedCount)
-                Text("(\(includedCount) of \(aiResult.foodItemsDetailed.count) items)")
+                Text("(\(aiResult.includedItems.count) of \(aiResult.foodItemsDetailed.count) items)")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
@@ -819,7 +921,7 @@ extension FoodFinder_EntryPoint {
             // Expandable content
             if expandedRow == .detailedFoodBreakdown {
                 VStack(spacing: 12) {
-                    ForEach(Array(aiResult.foodItemsDetailed.enumerated()), id: \.offset) { index, foodItem in
+                    ForEach(Array(aiResult.foodItemsDetailed.enumerated()), id: \.element.itemID) { index, foodItem in
                         VStack { renderAIItemRow(index: index, item: foodItem) }
                             .padding(12)
                             .background(Color(.systemGray6))
@@ -828,6 +930,21 @@ extension FoodFinder_EntryPoint {
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
                             )
+                    }
+
+                    // Bulk escape hatch back to the AI's estimate for the whole
+                    // plate. Only offered once something is actually edited.
+                    if aiResult.hasUserEdits {
+                        Button(action: { searchVM.resetAllItemsToAI() }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.uturn.backward")
+                                Text("Reset all to AI values")
+                            }
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.blue)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
                     }
                 }
                 .padding(.horizontal, 8)
@@ -843,13 +960,44 @@ extension FoodFinder_EntryPoint {
         }
     }
 
+    /// Open the edit sheet on an item. Items reaching the UI are backfilled with
+    /// an `itemID` in `handleAIFoodAnalysis`; the fallback keeps a missing one
+    /// from silently swallowing the tap.
+    private func beginEditing(index: Int, item: FoodItemAnalysis) {
+        editingItem = EditingItem(id: item.itemID ?? UUID(), index: index)
+    }
+
+    /// Enter meal-building mode: the next food picked from any source appends to
+    /// the plate. If only a single product is selected so far, promote it to a
+    /// one-item plate first so there is something to append to; an AI plate is
+    /// already in the right shape.
+    @MainActor
+    private func beginAddingItem() {
+        if searchVM.lastAIAnalysisResult == nil, let product = searchVM.selectedFoodProduct {
+            let seed = FoodItemAnalysis.fromProduct(
+                product,
+                servings: searchVM.numberOfServings,
+                carbsOverride: carbsQuantity,
+                sourceLabel: searchVM.sourceLabelForCurrentProduct(product)
+            )
+            searchVM.lastAIAnalysisResult = AIFoodAnalysisResult.plate(
+                items: [seed],
+                description: product.displayName
+            )
+            // The chosen servings are baked into the seed item, so the
+            // plate-level multiplier resets to 1×.
+            searchVM.numberOfServings = 1.0
+            searchVM.refreshSyntheticPlateProduct()
+        }
+        searchVM.isBuildingMeal = true
+    }
+
     @ViewBuilder
     private func renderAIItemRow(index: Int, item: FoodItemAnalysis) -> some View {
-        let isExcluded = searchVM.excludedAIItemIndices.contains(index)
-        let effectiveServings = searchVM.effectiveServings(for: index)
-        let aiMultiplier = item.servingMultiplier > 0 ? item.servingMultiplier : 1.0
-        let perUsdaCarbs = item.carbohydrates / aiMultiplier
-        let effectiveCarbs = perUsdaCarbs * effectiveServings
+        let isExcluded = item.excluded
+        let effectiveServings = item.effectiveMultiplier
+        let baseMultiplier = item.servingMultiplier
+        let effectiveCarbs = item.effectiveCarbs
         VStack(alignment: .leading, spacing: 10) {
             // Carbs + servings stepper + exclude button — above the name
             HStack(spacing: 6) {
@@ -893,18 +1041,38 @@ extension FoodFinder_EntryPoint {
                     .padding(.horizontal, 8)
                     .background(Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
+                Button(action: { beginEditing(index: index, item: item) }) {
+                    Image(systemName: "square.and.pencil")
+                        .foregroundColor(.blue)
+                        .font(.system(size: 17, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .disabled(isExcluded)
+                .accessibilityLabel("Edit \(item.name)")
+
                 Button(action: {
-                    if isExcluded { searchVM.excludedAIItemIndices.remove(index) }
-                    else { searchVM.excludedAIItemIndices.insert(index) }
-                    searchVM.recomputeAIAdjustments()
+                    searchVM.toggleItemExclusion(at: index)
                 }) {
                     Image(systemName: isExcluded ? "plus.circle.fill" : "xmark.circle.fill")
                         .foregroundColor(isExcluded ? .green : .red)
                         .font(.system(size: 18, weight: .medium))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(isExcluded ? "Include \(item.name)" : "Exclude \(item.name)")
+
+                // Hard-remove — for undoing a mistakenly added item on a mixed
+                // plate. Distinct from exclude, which keeps the row struck
+                // through. Removing the last item clears the whole selection.
+                Button(action: { searchVM.deleteFoodItem(at: index) }) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 15, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Remove \(item.name)")
             }
-            // Food name — full width
+            // Food name — full width. Tapping it opens the same edit sheet as
+            // the pencil, since the name is the obvious thing to reach for.
             HStack(alignment: .top, spacing: 8) {
                 Text("\(index + 1).")
                     .font(.subheadline)
@@ -915,10 +1083,39 @@ extension FoodFinder_EntryPoint {
                     .foregroundColor(isExcluded ? .secondary : .primary)
                     .strikethrough(isExcluded, color: .secondary)
                     .fixedSize(horizontal: false, vertical: true)
+
+                // Where this item came from, on a plate assembled from several
+                // sources. Hidden on single-source plates where it's uniform.
+                if let source = item.sourceLabel, !source.isEmpty {
+                    Text(source)
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color(.systemGray5))
+                        .foregroundColor(.secondary)
+                        .clipShape(Capsule())
+                }
+
+                // Marks values the user overrode, so an edited plate is never
+                // mistaken for the AI's own estimate.
+                if item.isUserEdited {
+                    Text("Edited")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color(.systemBlue).opacity(0.15))
+                        .foregroundColor(.blue)
+                        .clipShape(Capsule())
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard !isExcluded else { return }
+                beginEditing(index: index, item: item)
             }
             VStack(alignment: .leading, spacing: 4) {
                 let trimmedUSDA = item.usdaServingSize?.trimmingCharacters(in: .whitespacesAndNewlines)
-                let baseMultiplier = item.servingMultiplier
                 let usdaDisplay: String = {
                     if let text = trimmedUSDA, !text.isEmpty { return text }
                     if baseMultiplier > 0.01 {
@@ -975,11 +1172,14 @@ extension FoodFinder_EntryPoint {
             .foregroundColor(isExcluded ? .secondary : .primary)
             .opacity(isExcluded ? 0.7 : 1.0)
 
+            // Scaled by the item's servings the same way the carbs pill above is.
+            // These used to read the raw AI values, so a stepper tap moved carbs
+            // while calories/fat/fiber/protein sat still and contradicted it.
             HStack(spacing: 18) {
-                VStack(spacing: 0) { Text("\(Int(round(item.calories ?? 0)))").foregroundColor(.green); Text("cal").font(.caption).foregroundColor(.secondary) }
-                VStack(spacing: 0) { Text(String(format: "%.1f", item.fat ?? 0)).foregroundColor(Color.orange); Text("fat").font(.caption).foregroundColor(.secondary) }
-                VStack(spacing: 0) { Text(String(format: "%.1f", item.fiber ?? 0)).foregroundColor(Color.purple); Text("fiber").font(.caption).foregroundColor(.secondary) }
-                VStack(spacing: 0) { Text(String(format: "%.1f", item.protein ?? 0)).foregroundColor(.red); Text("protein").font(.caption).foregroundColor(.secondary) }
+                VStack(spacing: 0) { Text("\(Int(round(item.effectiveCalories)))").foregroundColor(.green); Text("cal").font(.caption).foregroundColor(.secondary) }
+                VStack(spacing: 0) { Text(String(format: "%.1f", item.effectiveFat)).foregroundColor(Color.orange); Text("fat").font(.caption).foregroundColor(.secondary) }
+                VStack(spacing: 0) { Text(String(format: "%.1f", item.effectiveFiber)).foregroundColor(Color.purple); Text("fiber").font(.caption).foregroundColor(.secondary) }
+                VStack(spacing: 0) { Text(String(format: "%.1f", item.effectiveProtein)).foregroundColor(.red); Text("protein").font(.caption).foregroundColor(.secondary) }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
             .opacity(isExcluded ? 0.25 : 1.0)
@@ -1204,9 +1404,29 @@ extension FoodFinder_EntryPoint {
     /// Handle AI food analysis results by converting to food product format
     @MainActor
     private func handleAIFoodAnalysis(_ result: AIFoodAnalysisResult) {
+        // Meal-building mode: fold this analysis's items into the existing plate
+        // rather than replacing it. Absorption re-derives from the combined plate
+        // via the recompute observer, so no per-plate absorption handling here.
+        if searchVM.isBuildingMeal, searchVM.lastAIAnalysisResult != nil {
+            let tagged = result.foodItemsDetailed.map { item -> FoodItemAnalysis in
+                var copy = item
+                copy.sourceLabel = NSLocalizedString("Photo", comment: "Item source label for a photo-analyzed food")
+                return copy
+            }
+            searchVM.appendItemsToPlate(tagged, description: extractFoodNameFromAIResult(result))
+            refreshRecordedAnalysis()
+            return
+        }
+
         var enrichedResult = result
         searchVM.ensureAbsorptionTimeForInitialResult(&enrichedResult)
         showAbsorptionReasoning = false
+
+        // Give every item a stable identity before it reaches the UI. Fresh AI
+        // responses are parsed without one and legacy stored records predate the
+        // field, so this is the single funnel where both get backfilled — the
+        // rows and the edit sheet key off it.
+        enrichedResult = enrichedResult.withBackfilledIDs()
 
         // Store the detailed AI result for UI display
         searchVM.lastAIAnalysisResult = enrichedResult
@@ -1291,7 +1511,41 @@ extension FoodFinder_EntryPoint {
             locationName: locService.locationName
         )
         FoodFinder_AnalysisHistoryStore.record(record)
+        recordedAnalysis = record
         onAnalysisRecorded?(record)
+    }
+
+    /// Push the user's current plate back into the record written by
+    /// `recordAnalysis`, so an edit is sticky beyond this screen: the history
+    /// dropdown, Re-use, and the archived meal all show what the user actually
+    /// ate instead of the AI's opening estimate.
+    ///
+    /// Only meaningful for AI plates — barcode/text-search products record
+    /// through `recordBarcodeProduct` and have no per-item breakdown to edit.
+    private func refreshRecordedAnalysis() {
+        guard let existing = recordedAnalysis,
+              let ai = searchVM.lastAIAnalysisResult else { return }
+
+        let updated = existing.withUpdatedPlate(
+            name: extractFoodNameFromAIResult(ai),
+            carbsGrams: carbsQuantity ?? existing.carbsGrams,
+            foodType: foodType,
+            absorptionTime: absorptionTime,
+            analysisResult: ai.withRefreshedTotals()
+        )
+        // Compare the fields explicitly: `FoodFinder_AnalysisRecord`'s `==` is
+        // id-only, so `updated != existing` would always be false here and a
+        // rename-only edit would never reach the store.
+        let unchanged = updated.carbsGrams == existing.carbsGrams
+            && updated.name == existing.name
+            && updated.foodType == existing.foodType
+            && updated.absorptionTime == existing.absorptionTime
+            && updated.analysisResult == existing.analysisResult
+        guard !unchanged else { return }
+
+        FoodFinder_AnalysisHistoryStore.update(updated)
+        recordedAnalysis = updated
+        onAnalysisRecorded?(updated)
     }
 
     /// Record a barcode or text-search product to the history store and MealArchive.
@@ -1382,6 +1636,10 @@ extension FoodFinder_EntryPoint {
                     locationName: locService.locationName
                 )
                 FoodFinder_AnalysisHistoryStore.record(record)
+                // Track this record so that if the user turns the product into a
+                // mixed meal (Add another item), `refreshRecordedAnalysis` updates
+                // this same record in place instead of leaving a stale one behind.
+                recordedAnalysis = record
                 onAnalysisRecorded?(record)
             }
         }
@@ -1667,39 +1925,21 @@ extension FoodFinder_EntryPoint {
         return summary
     }
 
-    // Compute displayed macro values for circles
-    private func computeDisplayedMacros(selectedFood: OpenFoodFactsProduct, aiResult: AIFoodAnalysisResult?, numberOfServings: Double, excluded: Set<Int>) -> (carbs: Double, calories: Double?, fat: Double?, fiber: Double?, protein: Double?) {
+    // Compute displayed macro values for circles.
+    // The AI branch delegates to `AIFoodAnalysisResult.totals(plateScale:)` —
+    // the same call `recomputeAIAdjustments` makes to produce the carbs actually
+    // saved. Keeping one implementation is what stops the circles from showing a
+    // different number than the entry the user doses on.
+    private func computeDisplayedMacros(selectedFood: OpenFoodFactsProduct, aiResult: AIFoodAnalysisResult?, numberOfServings: Double) -> (carbs: Double, calories: Double?, fat: Double?, fiber: Double?, protein: Double?) {
         if let ai = aiResult {
-            let overrides = searchVM.itemServingOverrides
-            let includedItems = ai.foodItemsDetailed.enumerated()
-                .filter { !excluded.contains($0.offset) }
-
-            // Scale each item by its per-item serving override
-            var carbs = 0.0, caloriesSum = 0.0, fatSum = 0.0, fiberSum = 0.0, proteinSum = 0.0
-            for (index, item) in includedItems {
-                let aiMult = item.servingMultiplier > 0 ? item.servingMultiplier : 1.0
-                let userMult = overrides[index] ?? aiMult
-                let scale = userMult / aiMult
-                carbs += item.carbohydrates * scale
-                if let cal = item.calories { caloriesSum += cal * scale }
-                if let f = item.fat { fatSum += f * scale }
-                if let fb = item.fiber { fiberSum += fb * scale }
-                if let p = item.protein { proteinSum += p * scale }
-            }
-
-            // Apply plate-level multiplier
-            let plateScale = numberOfServings
-            carbs *= plateScale
-            caloriesSum *= plateScale
-            fatSum *= plateScale
-            fiberSum *= plateScale
-            proteinSum *= plateScale
-
-            let cals: Double? = caloriesSum > 0 ? caloriesSum : nil
-            let fat: Double? = fatSum > 0 ? fatSum : nil
-            let fiber: Double? = fiberSum > 0 ? fiberSum : nil
-            let protein: Double? = proteinSum > 0 ? proteinSum : nil
-            return (carbs, cals, fat, fiber, protein)
+            let totals = ai.totals(plateScale: numberOfServings)
+            return (
+                totals.carbs,
+                totals.calories > 0 ? totals.calories : nil,
+                totals.fat > 0 ? totals.fat : nil,
+                totals.fiber > 0 ? totals.fiber : nil,
+                totals.protein > 0 ? totals.protein : nil
+            )
         } else {
             let carbs = (selectedFood.carbsPerServing ?? selectedFood.nutriments.carbohydrates) * numberOfServings
             let cals = selectedFood.caloriesPerServing.map { $0 * numberOfServings }
@@ -2434,5 +2674,211 @@ struct AIAbsorptionTimePickerRow: View {
 
     private func durationString() -> String {
         return durationFormatter.string(from: absorptionTime) ?? ""
+    }
+}
+
+// MARK: - Per-Item Edit Sheet
+
+/// Edits one detected item's name and macros directly, instead of only nudging
+/// the servings stepper.
+///
+/// The fields hold *effective* values — the same numbers shown on the item row
+/// for the portion the user selected. `FoodFinder_SearchViewModel.applyItemEdit`
+/// converts them back to the item's stored basis on save.
+///
+/// Carbohydrates drive the insulin dose, so that field is labelled in grams,
+/// separated from the other macros, and never silently coerced: unparseable text
+/// blocks Save rather than falling back to a default.
+struct FoodFinder_ItemEditView: View {
+
+    let item: FoodItemAnalysis
+    let onSave: (FoodFinder_ItemEdit) -> Void
+    let onResetToAI: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var name: String
+    @State private var carbsText: String
+    @State private var caloriesText: String
+    @State private var fatText: String
+    @State private var fiberText: String
+    @State private var proteinText: String
+
+    init(item: FoodItemAnalysis,
+         onSave: @escaping (FoodFinder_ItemEdit) -> Void,
+         onResetToAI: @escaping () -> Void) {
+        self.item = item
+        self.onSave = onSave
+        self.onResetToAI = onResetToAI
+        _name = State(initialValue: item.name)
+        _carbsText = State(initialValue: Self.format(item.effectiveCarbs))
+        _caloriesText = State(initialValue: Self.format(item.effectiveCalories))
+        _fatText = State(initialValue: Self.format(item.effectiveFat))
+        _fiberText = State(initialValue: Self.format(item.effectiveFiber))
+        _proteinText = State(initialValue: Self.format(item.effectiveProtein))
+    }
+
+    private var parsedCarbs: Double? { Self.parse(carbsText) }
+    private var parsedCalories: Double? { Self.parse(caloriesText) }
+    private var parsedFat: Double? { Self.parse(fatText) }
+    private var parsedFiber: Double? { Self.parse(fiberText) }
+    private var parsedProtein: Double? { Self.parse(proteinText) }
+
+    /// Save is blocked on anything that would put a wrong number into a dose:
+    /// an unparseable field, a negative value, or an empty name.
+    private var canSave: Bool {
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        let values = [parsedCarbs, parsedCalories, parsedFat, parsedFiber, parsedProtein]
+        return values.allSatisfy { value in
+            guard let value else { return false }
+            return value >= 0
+        }
+    }
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section {
+                    TextField("Item name", text: $name)
+                        .autocorrectionDisabled()
+                } header: {
+                    Text("Name")
+                } footer: {
+                    if item.isUserEdited, item.aiReferenceName != name {
+                        Text("AI: \(item.aiReferenceName)")
+                    }
+                }
+
+                Section {
+                    numericRow(title: "Carbohydrates",
+                               unit: "g",
+                               text: $carbsText,
+                               parsed: parsedCarbs,
+                               aiValue: item.aiReferenceCarbs)
+                } header: {
+                    Text("Carbs")
+                } footer: {
+                    Text("The carb total and the dose follow this value.")
+                }
+
+                Section {
+                    numericRow(title: "Calories",
+                               unit: "kcal",
+                               text: $caloriesText,
+                               parsed: parsedCalories,
+                               aiValue: item.aiReferenceCalories)
+                    numericRow(title: "Fat",
+                               unit: "g",
+                               text: $fatText,
+                               parsed: parsedFat,
+                               aiValue: item.aiReferenceFat)
+                    numericRow(title: "Fiber",
+                               unit: "g",
+                               text: $fiberText,
+                               parsed: parsedFiber,
+                               aiValue: item.aiReferenceFiber)
+                    numericRow(title: "Protein",
+                               unit: "g",
+                               text: $proteinText,
+                               parsed: parsedProtein,
+                               aiValue: item.aiReferenceProtein)
+                } header: {
+                    Text("Macros")
+                }
+
+                if item.effectiveMultiplier != item.aiMultiplier {
+                    Section {
+                        Text("These values are for the \(Self.formatServings(item.effectiveMultiplier))× USDA serving you selected. Changing servings later scales them from here.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                if item.isUserEdited {
+                    Section {
+                        Button(role: .destructive) {
+                            onResetToAI()
+                            dismiss()
+                        } label: {
+                            Text("Reset to AI values")
+                        }
+                    } footer: {
+                        Text("Restores what the AI estimated for this item. Your servings choice is kept.")
+                    }
+                }
+            }
+            .navigationTitle("Edit Item")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        guard let carbs = parsedCarbs,
+                              let calories = parsedCalories,
+                              let fat = parsedFat,
+                              let fiber = parsedFiber,
+                              let protein = parsedProtein else { return }
+                        onSave(FoodFinder_ItemEdit(
+                            name: name,
+                            carbs: carbs,
+                            calories: calories,
+                            fat: fat,
+                            fiber: fiber,
+                            protein: protein
+                        ))
+                        dismiss()
+                    }
+                    .disabled(!canSave)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func numericRow(title: String,
+                            unit: String,
+                            text: Binding<String>,
+                            parsed: Double?,
+                            aiValue: Double) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(title)
+                Spacer()
+                TextField("0", text: text)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 90)
+                    .foregroundColor(parsed == nil ? .red : .primary)
+                Text(unit)
+                    .foregroundColor(.secondary)
+            }
+            // Only worth showing once the field diverges from the AI — otherwise
+            // it just repeats the number already in the field.
+            if item.isUserEdited, !aiValue.isApproximately(parsed ?? aiValue) {
+                Text("AI: \(Self.format(aiValue)) \(unit)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+
+    private static func format(_ value: Double) -> String {
+        String(format: "%.1f", value)
+    }
+
+    private static func formatServings(_ value: Double) -> String {
+        String(format: "%.2g", value)
+    }
+
+    /// Accepts the user's locale decimal separator as well as ".", and treats an
+    /// empty field as 0 rather than as an error.
+    private static func parse(_ text: String) -> Double? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return 0 }
+        let separator = Locale.current.decimalSeparator ?? "."
+        let normalized = trimmed.replacingOccurrences(of: separator, with: ".")
+        return Double(normalized)
     }
 }

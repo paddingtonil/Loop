@@ -79,6 +79,28 @@ enum FoodFinder_AnalysisHistoryStore {
         NotificationCenter.default.post(name: .foodFinderMealAnalyzed, object: nil, userInfo: mealInfo)
     }
 
+    /// Replace an already-recorded analysis in place, matched by `id`.
+    ///
+    /// Used when the user edits the plate after the analysis was first recorded
+    /// — per-item value edits, exclusions, serving changes — so history, re-use
+    /// and the archive reflect what they actually ate rather than the AI's first
+    /// estimate.
+    ///
+    /// Matched on `id` rather than `name` (which is what `record(_:)` dedups on)
+    /// because renaming an item changes the meal name: a name-keyed update would
+    /// leave the pre-rename record behind as a duplicate. Appends if the id is
+    /// gone, e.g. pruned by retention mid-edit.
+    static func update(_ record: FoodFinder_AnalysisRecord) {
+        var records = allRecords()
+        if let index = records.firstIndex(where: { $0.id == record.id }) {
+            records[index] = record
+        } else {
+            records.append(record)
+        }
+        save(records)
+        pendingRecord = record
+    }
+
     // MARK: - Re-use from Settings
 
     /// Set when the user taps "Re-use" on a past analysis in FoodFinder Settings.

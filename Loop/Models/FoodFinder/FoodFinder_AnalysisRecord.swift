@@ -56,6 +56,39 @@ struct FoodFinder_AnalysisRecord: Codable, Identifiable, Equatable {
         case mfpImport
     }
 
+    /// Returns a copy carrying the user's current plate — edited item values,
+    /// exclusions and serving changes — while keeping this record's identity.
+    ///
+    /// `originalAICarbs`, `aiConfidencePercent` and the location fields are
+    /// deliberately carried over untouched: they capture what the AI said at
+    /// analysis time, and the delta against `carbsGrams` is exactly the signal
+    /// LoopInsights uses to spot systematic AI over/under-estimation. Folding an
+    /// edit into them would erase the evidence that the user disagreed.
+    func withUpdatedPlate(
+        name: String,
+        carbsGrams: Double,
+        foodType: String,
+        absorptionTime: TimeInterval,
+        analysisResult: AIFoodAnalysisResult?
+    ) -> FoodFinder_AnalysisRecord {
+        FoodFinder_AnalysisRecord(
+            id: id,
+            name: name,
+            carbsGrams: carbsGrams,
+            foodType: foodType,
+            absorptionTime: absorptionTime,
+            analysisType: analysisType,
+            date: date,
+            thumbnailID: thumbnailID,
+            analysisResult: analysisResult,
+            originalAICarbs: originalAICarbs,
+            aiConfidencePercent: aiConfidencePercent,
+            latitude: latitude,
+            longitude: longitude,
+            locationName: locationName
+        )
+    }
+
     /// Returns a copy with a new UUID (and optional updated date). Used when
     /// re-using a past analysis: dedup-by-ID would otherwise treat the new
     /// meal as already archived and silently drop it.

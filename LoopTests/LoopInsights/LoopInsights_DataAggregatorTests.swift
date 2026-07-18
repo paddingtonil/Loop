@@ -28,6 +28,17 @@ final class MockLoopInsightsDataProvider: LoopInsightsDataProviderProtocol {
         return mockCarbEntries.filter { $0.startDate >= start && $0.startDate <= end }
     }
 
+    /// Records the entries deletion was requested for, so tests can assert on it.
+    private(set) var deletedCarbEntries: [StoredCarbEntry] = []
+
+    func deleteCarbEntry(_ entry: StoredCarbEntry) async throws -> Bool {
+        guard let index = mockCarbEntries.firstIndex(where: { $0.syncIdentifier == entry.syncIdentifier }) else {
+            return false
+        }
+        deletedCarbEntries.append(mockCarbEntries.remove(at: index))
+        return true
+    }
+
     func getNormalizedDoseEntries(start: Date, end: Date) async throws -> [DoseEntry] {
         return mockDoseEntries.filter { $0.startDate >= start && $0.startDate <= end }
     }

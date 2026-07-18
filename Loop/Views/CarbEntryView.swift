@@ -144,6 +144,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 FoodFinder_EntryPoint(
                     carbsQuantity: $viewModel.carbsQuantity,
                     foodType: $viewModel.foodType,
+                    usesCustomFoodType: $viewModel.usesCustomFoodType,
                     absorptionTime: $viewModel.absorptionTime,
                     absorptionTimeWasEdited: viewModel.absorptionTimeWasEdited,
                     defaultAbsorptionTimes: viewModel.defaultAbsorptionTimes,
