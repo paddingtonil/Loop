@@ -35,7 +35,7 @@ enum PowerPack_BuildInfo {
     /// points. The committed default here is what Option A clone-and-build
     /// users see; the installer overwrites this with FEATURE_VERSION from
     /// install_features.sh at Phase 4c.
-    static let version = "0.3.11"
+    static let version = "0.3.14"
 
     /// Loop submodule short SHA at install time. `"dev"` for Option A
     /// developer builds (direct clone + Xcode); a real 7-char short SHA
