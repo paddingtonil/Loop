@@ -150,6 +150,12 @@
             "state" : "translated",
             "value" : "-Ü"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "-U"
+          }
         }
       }
     },
@@ -216,6 +222,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "??"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "??"
@@ -449,7 +461,19 @@
             "value" : "%1$@%2$@"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@%2$@"
+          }
+        },
         "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@%2$@"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@%2$@"
@@ -471,7 +495,19 @@
             "value" : "%@U"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@E"
+          }
+        },
         "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@U"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@U"
@@ -618,6 +654,12 @@
             "value" : "Couleur"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farge"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -628,6 +670,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Culoare"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "颜色"
           }
         }
       }
@@ -646,6 +694,12 @@
             "value" : "Date"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dato"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -656,6 +710,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dată"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日期"
           }
         }
       }
@@ -776,6 +836,12 @@
             "state" : "translated",
             "value" : "dB"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dB"
+          }
         }
       }
     },
@@ -793,6 +859,12 @@
             "value" : "Fin"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avslutt"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -803,6 +875,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sfârșit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结束"
           }
         }
       }
@@ -879,6 +957,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nihai"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最终"
           }
         }
       }
@@ -1022,6 +1106,12 @@
             "value" : "Niveau de glycémie"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukosenivå"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1048,6 +1138,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Plage de glycémie"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukoseområde"
           }
         },
         "ro" : {
@@ -1130,6 +1226,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Döngü Durumu Widget'ı"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loop 状态小组件"
           }
         }
       }
@@ -1399,6 +1501,12 @@
             "value" : "Ouvrez l'application pour mettre à jour le widget"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åpne appen for å oppdatere widgeten"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1427,10 +1535,22 @@
             "value" : "Annulation du préréglage"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forhåndsinnstilt overstyring"
+          }
+        },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suprascriere presetată"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预设覆盖"
           }
         }
       }
@@ -1651,6 +1771,12 @@
             "value" : "Démarrer"
           }
         },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1661,6 +1787,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始"
           }
         }
       }
@@ -1777,6 +1909,12 @@
           }
         },
         "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "U"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "U"
