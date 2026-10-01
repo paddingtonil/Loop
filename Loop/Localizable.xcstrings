@@ -14757,6 +14757,9 @@
         }
       }
     },
+    "Damper Strength: %1$@%%" : {
+      "comment" : "Format string describing damper strength. (1: damper strength percentage)"
+    },
     "Date" : {
       "comment" : "Date picker label",
       "localizations" : {
@@ -17340,6 +17343,9 @@
           }
         }
       }
+    },
+    "Enable Negative Insulin Damper" : {
+      "comment" : "Title for Negative Insulin Damper toggle"
     },
     "Enabled" : {
       "comment" : "Title for enable live activity toggle",
@@ -27698,6 +27704,12 @@
         }
       }
     },
+    "Negative Insulin Damper" : {
+      "comment" : "Title for negative insulin damper experiment description\nTitle of negative insulin damper experiment\nTitle of the prediction input effect for negative insulin damper"
+    },
+    "Negative Insulin Damper (NID) is used to mitigate the effects of temporarily increased insulin sensitivity. Such increases can result in spending significant times beneath target and eventually going low. Loop may erroneously predict glucose going too high, resulting in excess insulin being delivered. To counteract this, NID acts as a dynamic damper on increases to  predicted glucose. The strength of this damper is controlled by the total predicted rise in glucose due to negative insulin. The greater the amount of negative insulin, the stronger the damper and the bigger the reductions. The calculation is done with a 15 minute lag." : {
+      "comment" : "Description of Negative Insulin Damper toggle."
+    },
     "New Favorite Food" : {
       "comment" : "Title of new favorite food screen",
       "localizations" : {
@@ -33355,6 +33367,9 @@
           }
         }
       }
+    },
+    "Reduces increases in glucose. The damper is stronger when there is more negative insulin" : {
+      "comment" : "Description of the prediction input effect for negative insulin damper"
     },
     "Remote Bolus Entry: %@ U" : {
       "comment" : "The notification title for a remote bolus. (1: Bolus amount)\nThe notification title for a remote failure. (1: Bolus amount)",
