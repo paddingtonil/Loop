@@ -126,7 +126,13 @@ final class LoopDataManager {
         self.automaticDosingStatus = automaticDosingStatus
 
         self.trustedTimeOffset = trustedTimeOffset
-        
+
+        // Set up AutoPresets coordinator delegate
+        AutoPresets_Coordinator.shared.delegate = self
+
+        // Initialize SiteAtlas coordinator (starts notification listeners)
+        _ = SiteAtlas_Coordinator.shared
+
         if #available(iOS 16.2, *) {
             self.liveActivityManager = LiveActivityManager(
                 glucoseStore: self.glucoseStore,
@@ -2654,6 +2660,38 @@ extension LoopDataManager: ServicesManagerDelegate {
     
     func enactOverride(_ override: TemporaryScheduleOverride?) async {
         mutateSettings { settings in settings.scheduleOverride = override }
+
+        // DataLayer: override activated/deactivated
+        if let override = override {
+            let overrideType: String
+            let presetName: String
+            switch override.context {
+            case .preMeal: overrideType = "preMeal"; presetName = "Pre-Meal"
+            case .legacyWorkout: overrideType = "workout"; presetName = "Workout"
+            case .preset(let preset): overrideType = "preset"; presetName = preset.name
+            case .custom: overrideType = "custom"; presetName = "Custom"
+            }
+            NotificationCenter.default.post(
+                name: Notification.Name("com.loopkit.Loop.overrideActivated"),
+                object: nil,
+                userInfo: [
+                    "overrideType": overrideType,
+                    "presetName": presetName,
+                    "insulinNeedsScale": override.settings.insulinNeedsScaleFactor as Any,
+                    "targetRangeLow": override.settings.targetRange?.lowerBound.doubleValue(for: .milligramsPerDeciliter) as Any,
+                    "targetRangeHigh": override.settings.targetRange?.upperBound.doubleValue(for: .milligramsPerDeciliter) as Any
+                ]
+            )
+        } else {
+            NotificationCenter.default.post(
+                name: Notification.Name("com.loopkit.Loop.overrideDeactivated"),
+                object: nil,
+                userInfo: [
+                    "overrideType": "cleared",
+                    "presetName": ""
+                ]
+            )
+        }
     }
     
     enum EnactOverrideError: LocalizedError {
@@ -2747,5 +2785,52 @@ extension LoopDataManager: ServicesManagerDelegate {
             }
         }
     }
-    
+
+}
+
+// MARK: - AutoPresets_Delegate
+
+extension LoopDataManager: AutoPresets_Delegate {
+
+    func autoPresets(_ coordinator: AutoPresets_Coordinator,
+                     shouldActivatePreset preset: TemporaryScheduleOverridePreset) {
+        logger.default("AutoPresets activating preset: %{public}@", preset.name)
+
+        mutateSettings { settings in
+            settings.scheduleOverride = preset.createOverride(enactTrigger: .local)
+        }
+    }
+
+    func autoPresets(_ coordinator: AutoPresets_Coordinator,
+                     shouldDeactivatePreset preset: TemporaryScheduleOverridePreset) {
+        guard let currentOverride = settings.scheduleOverride,
+              case let .preset(currentPreset) = currentOverride.context,
+              currentPreset.id == preset.id
+        else {
+            return
+        }
+
+        logger.default("AutoPresets deactivating preset: %{public}@", preset.name)
+
+        mutateSettings { settings in
+            settings.scheduleOverride = nil
+        }
+    }
+
+    func autoPresetsAvailablePresets(_ coordinator: AutoPresets_Coordinator) -> [TemporaryScheduleOverridePreset] {
+        settings.overridePresets
+    }
+
+    func autoPresetsCurrentOverride(_ coordinator: AutoPresets_Coordinator) -> TemporaryScheduleOverride? {
+        settings.scheduleOverride
+    }
+
+    func autoPresets(_ coordinator: AutoPresets_Coordinator,
+                     shouldCreatePreset preset: TemporaryScheduleOverridePreset) {
+        logger.default("AutoPresets creating AI-recommended preset: %{public}@", preset.name)
+
+        mutateSettings { settings in
+            settings.overridePresets.append(preset)
+        }
+    }
 }

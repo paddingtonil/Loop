@@ -1,0 +1,130 @@
+name: Upstream Probe
+
+# Weekly automated probe that pulls LoopKit/Loop:dev into PowerPack's
+# feat/AllFeatures branch. Conflict-free merges are pushed automatically;
+# conflicts open an issue flagging that manual resolution is needed.
+#
+# Tracking dev (not main) per Marion Barker (LoopKit maintainer):
+# LoopKit/Loop:main is no longer maintained; :dev is the active mainline.
+#
+# See DIVERGENCE.md "Upstream-merge cadence" for the published policy.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  discussions: write
+
+jobs:
+  probe-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feat/AllFeatures
+        uses: actions/checkout@v4
+        with:
+          ref: feat/AllFeatures
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git author
+        run: |
+          git config user.name "powerpack-upstream-bot"
+          git config user.email "actions@github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/LoopKit/Loop.git
+          git fetch upstream dev
+
+      - name: Capture upstream HEAD info
+        id: upstream
+        run: |
+          UPSTREAM_SHA=$(git rev-parse upstream/dev)
+          UPSTREAM_SHORT=${UPSTREAM_SHA:0:7}
+          UPSTREAM_SUBJECT=$(git log -1 --pretty=%s upstream/dev)
+          echo "sha=$UPSTREAM_SHA"               >> $GITHUB_OUTPUT
+          echo "short=$UPSTREAM_SHORT"           >> $GITHUB_OUTPUT
+          echo "subject<<EOF"                    >> $GITHUB_OUTPUT
+          echo "$UPSTREAM_SUBJECT"               >> $GITHUB_OUTPUT
+          echo "EOF"                             >> $GITHUB_OUTPUT
+
+      - name: Skip if already merged
+        id: ahead_check
+        run: |
+          if git merge-base --is-ancestor upstream/dev HEAD; then
+            echo "already_merged=true" >> $GITHUB_OUTPUT
+            echo "Upstream dev is already an ancestor of feat/AllFeatures — nothing to do."
+          else
+            echo "already_merged=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Attempt merge
+        if: steps.ahead_check.outputs.already_merged == 'false'
+        id: merge
+        continue-on-error: true
+        run: |
+          set +e
+          git merge --no-edit --no-ff upstream/dev
+          MERGE_RC=$?
+          set -e
+          if [ $MERGE_RC -ne 0 ]; then
+            echo "conflicts=true" >> $GITHUB_OUTPUT
+            git merge --abort || true
+            exit 0
+          fi
+          echo "conflicts=false" >> $GITHUB_OUTPUT
+
+      - name: Push merge commit
+        if: steps.ahead_check.outputs.already_merged == 'false' && steps.merge.outputs.conflicts == 'false'
+        run: git push origin feat/AllFeatures
+
+      - name: Open conflict issue
+        if: steps.ahead_check.outputs.already_merged == 'false' && steps.merge.outputs.conflicts == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = "${{ steps.upstream.outputs.sha }}";
+            const short = "${{ steps.upstream.outputs.short }}";
+            const subject = `${{ steps.upstream.outputs.subject }}`;
+            const title = `Upstream merge conflict — LoopKit/Loop@${short}`;
+            const body = [
+              `Automated weekly upstream probe hit conflicts when merging \`LoopKit/Loop:dev\` into \`feat/AllFeatures\`.`,
+              ``,
+              `**Upstream commit:** [${sha}](https://github.com/LoopKit/Loop/commit/${sha})`,
+              `**Subject:** ${subject}`,
+              `**Triggered by:** \`upstream-probe.yml\` (Mondays 06:00 UTC)`,
+              ``,
+              `**Resolve manually:**`,
+              `\`\`\`bash`,
+              `git checkout feat/AllFeatures`,
+              `git fetch upstream dev`,
+              `git merge upstream/dev`,
+              `# resolve conflicts`,
+              `git push origin feat/AllFeatures`,
+              `\`\`\``,
+            ].join('\n');
+            try {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+                labels: ['upstream-merge-conflict']
+              });
+              core.notice(`Opened issue: ${title}`);
+            } catch (err) {
+              if (err.status === 410 || err.status === 404) {
+                core.warning(`Issues disabled on ${owner}/${repo} — falling back to workflow summary.`);
+                await core.summary
+                  .addHeading(title, 2)
+                  .addRaw(body)
+                  .write();
+              } else {
+                throw err;
+              }
+            }

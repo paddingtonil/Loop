@@ -21,6 +21,18 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     
     @State private var showHowAbsorptionTimeWorks = false
     @State private var showAddFavoriteFood = false
+
+    // FoodFinder AI absorption time (for inline "Why X hrs?" display)
+    @State private var absorptionTimeIsAIGenerated: Bool = false
+    @State private var aiAbsorptionReasoning: String? = nil
+
+    // FoodFinder AI carb confidence range (for slider display)
+    @State private var aiCarbRangeMin: Double? = nil
+    @State private var aiCarbRangeMax: Double? = nil
+
+    // FoodFinder data for favorite food pre-population
+    @State private var foodFinderFoodName: String = ""
+    @State private var foodFinderImage: UIImage? = nil
     
     private let isNewEntry: Bool
 
@@ -42,13 +54,14 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                         ToolbarItem(placement: .navigationBarLeading) {
                             dismissButton
                         }
-                        
+
                         ToolbarItem(placement: .navigationBarTrailing) {
                             continueButton
                         }
                     }
-                
+
             }
+            .navigationViewStyle(.stack)
         }
         else {
             content
@@ -65,30 +78,43 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             Color(.systemGroupedBackground)
                 .edgesIgnoringSafeArea(.all)
             
-            ScrollView {
-                warningsCard
+            GeometryReader { scrollGeo in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        warningsCard
 
-                mainCard
-                    .padding(.top, 8)
-                
-                continueActionButton
-                
-                if isNewEntry, FeatureFlags.allowExperimentalFeatures {
-                    favoriteFoodsCard
+                        if isNewEntry, FoodFinder_FeatureFlags.carbTrackingEnabled {
+                            FoodFinder_CarbTrackingCard(service: FoodFinder_CarbTrackingService.shared)
+                                .padding(.top, 8)
+                        }
+
+                        mainCard
+                            .padding(.top, 8)
+
+                        continueActionButton
+
+                        if isNewEntry, FeatureFlags.allowExperimentalFeatures {
+                            favoriteFoodsCard
+                        }
+
+                        let isBolusViewActive = Binding(get: { viewModel.bolusViewModel != nil }, set: { _, _ in viewModel.bolusViewModel = nil })
+                        NavigationLink(destination: bolusView, isActive: isBolusViewActive) {
+                            EmptyView()
+                        }
+                        .frame(width: 0, height: 0)
+                        .opacity(0)
+                        .accessibility(hidden: true)
+                    }
+                    .frame(width: scrollGeo.size.width)
                 }
-                
-                let isBolusViewActive = Binding(get: { viewModel.bolusViewModel != nil }, set: { _, _ in viewModel.bolusViewModel = nil })
-                NavigationLink(destination: bolusView, isActive: isBolusViewActive) {
-                    EmptyView()
-                }
-                .frame(width: 0, height: 0)
-                .opacity(0)
-                .accessibility(hidden: true)
             }
         }
         .alert(item: $viewModel.alert, content: alert(for:))
+        .onAppear {
+            viewModel.checkForPendingReUse()
+        }
         .sheet(isPresented: $showAddFavoriteFood, onDismiss: clearExpandedRow) {
-            AddEditFavoriteFoodView(carbsQuantity: $viewModel.carbsQuantity.wrappedValue, foodType: $viewModel.foodType.wrappedValue, absorptionTime: $viewModel.absorptionTime.wrappedValue, onSave: onFavoriteFoodSave(_:))
+            AddEditFavoriteFoodView(carbsQuantity: $viewModel.carbsQuantity.wrappedValue, foodType: $viewModel.foodType.wrappedValue, absorptionTime: $viewModel.absorptionTime.wrappedValue, name: foodFinderFoodName, thumbnailImage: foodFinderImage, onSave: onFavoriteFoodSave(_:))
         }
         .sheet(isPresented: $showHowAbsorptionTimeWorks) {
             HowAbsorptionTimeWorksView()
@@ -102,10 +128,44 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             let foodTypeFocused: Binding<Bool> = Binding(get: { expandedRow == .foodType }, set: { expandedRow = $0 ? .foodType : nil })
             let absorptionTimeFocused: Binding<Bool> = Binding(get: { expandedRow == .absorptionTime }, set: { expandedRow = $0 ? .absorptionTime : nil })
             
-            CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: amountConsumedFocused, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
+            // AI confidence range slider replaces the text field when active
+            if let rangeMin = aiCarbRangeMin, let rangeMax = aiCarbRangeMax, rangeMin < rangeMax {
+                AICarbRangeSlider(
+                    carbsQuantity: $viewModel.carbsQuantity,
+                    rangeMin: rangeMin,
+                    rangeMax: rangeMax
+                )
+            } else {
+                CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: amountConsumedFocused, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
+            }
+
+            // FoodFinder integration — inside the main card
+            if isNewEntry {
+                FoodFinder_EntryPoint(
+                    carbsQuantity: $viewModel.carbsQuantity,
+                    foodType: $viewModel.foodType,
+                    absorptionTime: $viewModel.absorptionTime,
+                    absorptionTimeWasEdited: viewModel.absorptionTimeWasEdited,
+                    defaultAbsorptionTimes: viewModel.defaultAbsorptionTimes,
+                    favoriteFoodName: $foodFinderFoodName,
+                    favoriteFoodImage: $foodFinderImage,
+                    restoredAnalysisResult: $viewModel.restoredAnalysisResult,
+                    restoredThumbnailID: $viewModel.restoredThumbnailID,
+                    absorptionTimeIsAIGenerated: $absorptionTimeIsAIGenerated,
+                    aiAbsorptionReasoning: $aiAbsorptionReasoning,
+                    aiCarbRangeMin: $aiCarbRangeMin,
+                    aiCarbRangeMax: $aiCarbRangeMax,
+                    onMacrosResolved: { fat, protein, source in
+                        viewModel.applyBolusProMacrosFromFoodFinder(fat: fat, protein: protein, source: source)
+                    },
+                    onAnalysisRecorded: { record in
+                        viewModel.pendingFoodFinderRecord = record
+                    }
+                )
+            }
 
             CardSectionDivider()
-            
+
             DatePickerRow(date: $viewModel.time, isFocused: timeFocused, minimumDate: viewModel.minimumDate, maximumDate: viewModel.maximumDate)
             
             CardSectionDivider()
@@ -114,8 +174,22 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             
             CardSectionDivider()
             
-            AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
-                .padding(.bottom, 2)
+            if absorptionTimeIsAIGenerated {
+                AIAbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, isAIGenerated: true, absorptionReasoning: aiAbsorptionReasoning, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
+                    .padding(.bottom, 2)
+            } else {
+                AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
+                    .padding(.bottom, 2)
+            }
+
+            if BolusPro_FeatureFlags.isEnabled {
+                CardSectionDivider()
+                BolusPro_CarbEntrySection(
+                    state: $viewModel.bolusProState,
+                    primaryCarbsGrams: viewModel.carbsQuantity,
+                    primaryAbsorptionTime: viewModel.absorptionTime
+                )
+            }
         }
         .padding(.vertical, 12)
         .padding(.horizontal)
@@ -215,23 +289,22 @@ extension CarbEntryView {
                 .font(.footnote)
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 26)
+                .padding(.top, 8)
             
             VStack(spacing: 10) {
                 if !viewModel.favoriteFoods.isEmpty {
                     VStack {
                         HStack {
                             Text("Choose Favorite:", comment: "The label for the row where you choose saved Favorite Food")
-                            
-                            let selectedFavorite = favoritedFoodTextFromIndex(viewModel.selectedFavoriteFoodIndex)
-                            Text(selectedFavorite)
-                                .minimumScaleFactor(0.8)
+
+                            favoriteFoodSelectedLabel(viewModel.selectedFavoriteFoodIndex)
                                 .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                         
                         if expandedRow == .favoriteFoodSelection {
                             Picker(String(""), selection: $viewModel.selectedFavoriteFoodIndex) {
                                 ForEach(-1..<viewModel.favoriteFoods.count, id: \.self) { index in
-                                    Text(favoritedFoodTextFromIndex(index))
+                                    favoriteFoodPickerRow(index)
                                         .tag(index)
                                 }
                             }
@@ -255,6 +328,7 @@ extension CarbEntryView {
                 Button(action: saveAsFavoriteFood) {
                     Text("Save as favorite food", comment: "Button label for saving current carb entry as a new Favorite Food")
                         .frame(maxWidth: .infinity)
+                        .foregroundColor(.accentColor)
                 }
                 .disabled(viewModel.saveFavoriteFoodButtonDisabled)
             }
@@ -265,13 +339,51 @@ extension CarbEntryView {
         }
     }
     
-    private func favoritedFoodTextFromIndex(_ index: Int) -> String {
-        if index == -1 {
-            return String(localized: "None", comment: "Indicates no favorite food is selected")
-        }
-        else {
+    @ViewBuilder
+    private func favoriteFoodSelectedLabel(_ index: Int) -> some View {
+        if index >= 0 {
             let food = viewModel.favoriteFoods[index]
-            return "\(food.name) \(food.foodType)"
+            if food.foodType.isEmpty,
+               let uiImage = FoodFinder_FavoritesHelper.thumbnail(for: food) {
+                HStack(spacing: 4) {
+                    Text(food.name)
+                        .minimumScaleFactor(0.8)
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 20, height: 20)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+            } else {
+                Text("\(food.name) \(food.foodType)")
+                    .minimumScaleFactor(0.8)
+            }
+        } else {
+            Text(String(localized: "None", comment: "Indicates no favorite food is selected"))
+                .foregroundColor(.accentColor)
+                .minimumScaleFactor(0.8)
+        }
+    }
+
+    @ViewBuilder
+    private func favoriteFoodPickerRow(_ index: Int) -> some View {
+        if index == -1 {
+            Text(String(localized: "None", comment: "Indicates no favorite food is selected"))
+        } else {
+            let food = viewModel.favoriteFoods[index]
+            if food.foodType.isEmpty,
+               let uiImage = FoodFinder_FavoritesHelper.thumbnail(for: food) {
+                HStack(spacing: 4) {
+                    Text(food.name)
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 24, height: 24)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+            } else {
+                Text("\(food.name) \(food.foodType)")
+            }
         }
     }
     
@@ -282,7 +394,21 @@ extension CarbEntryView {
     private func onFavoriteFoodSave(_ food: NewFavoriteFood) {
         clearExpandedRow()
         self.showAddFavoriteFood = false
+
         viewModel.onFavoriteFoodSave(food)
+
+        // Save thumbnail if we have a captured AI image.
+        // The StoredFavoriteFood (with its ID) was just appended to favoriteFoods.
+        if let image = foodFinderImage,
+           FoodFinder_FeatureFlags.isEnabled,
+           let storedFood = viewModel.favoriteFoods.last,
+           storedFood.name == food.name {
+            if let thumbId = FavoriteFoodImageStore.saveThumbnail(from: image) {
+                var imageMap = UserDefaults.standard.favoriteFoodImageIDs
+                imageMap[storedFood.id] = thumbId
+                UserDefaults.standard.favoriteFoodImageIDs = imageMap
+            }
+        }
     }
 }
 
@@ -315,5 +441,133 @@ extension CarbEntryView {
 extension CarbEntryView {
     enum Row {
         case amountConsumed, time, foodType, absorptionTime, favoriteFoodSelection
+    }
+}
+
+// MARK: - AI Carb Range Slider
+
+/// Slider that lets the user adjust AI-estimated carbs within the confidence range.
+/// Only shown when FoodFinder AI analysis has been performed.
+private struct AICarbRangeSlider: View {
+    static let brandPurple = Color(red: 107/255, green: 47/255, blue: 160/255)
+
+    @Binding var carbsQuantity: Double?
+    let rangeMin: Double
+    let rangeMax: Double
+
+    @State private var sliderValue: Double = 0
+    @State private var carbInput: String = ""
+    @State private var isEditing: Bool = false
+    @State private var manualOverride: Bool = false
+    /// True while sliderValue is being moved programmatically to mirror an
+    /// external carbsQuantity change (e.g. servings recompute). Prevents the
+    /// slider's own onChange from writing the — possibly clamped-to-a-stale-
+    /// range — value back into carbsQuantity and clobbering the new total.
+    @State private var syncingFromExternal: Bool = false
+
+    private static let formatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.maximumIntegerDigits = 3
+        f.maximumFractionDigits = 1
+        return f
+    }()
+
+    var body: some View {
+        HStack(spacing: 2) {
+            Text(NSLocalizedString("Amount\nConsumed", comment: "Label for carb quantity entry row on carb entry screen (with AI slider)"))
+                .foregroundColor(.primary)
+                .font(.caption)
+                .lineLimit(2)
+                .fixedSize(horizontal: true, vertical: false)
+
+            Slider(
+                value: $sliderValue,
+                in: rangeMin...rangeMax,
+                step: 1
+            )
+            .tint(manualOverride ? Color.gray : AICarbRangeSlider.brandPurple)
+            .scaleEffect(0.75)
+            .frame(height: 22)
+            .onChange(of: sliderValue) { newValue in
+                if syncingFromExternal {
+                    syncingFromExternal = false
+                    return
+                }
+                let rounded = newValue.rounded()
+                carbsQuantity = rounded
+                if !isEditing {
+                    carbInput = AICarbRangeSlider.formatter.string(from: NSNumber(value: rounded)) ?? ""
+                    // User dragged the slider — restore active state
+                    manualOverride = false
+                }
+            }
+
+            TextField("0", text: $carbInput, onEditingChanged: { editing in
+                isEditing = editing
+                if !editing && manualOverride {
+                    // User finished typing — center slider in range
+                    sliderValue = (rangeMin + rangeMax) / 2
+                }
+            })
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.trailing)
+            .frame(width: 44)
+            .font(.body)
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(isEditing ? AICarbRangeSlider.brandPurple : Color(.secondaryLabel).opacity(0.4)),
+                alignment: .bottom
+            )
+            .onChange(of: carbInput) { newValue in
+                if isEditing {
+                    // User is manually typing — mark as overridden
+                    manualOverride = true
+                }
+                if let number = AICarbRangeSlider.formatter.number(from: newValue) {
+                    let val = number.doubleValue
+                    carbsQuantity = val
+                    if !manualOverride {
+                        sliderValue = min(max(val, rangeMin), rangeMax)
+                    }
+                }
+            }
+
+            Text(QuantityFormatter(for: .gram()).localizedUnitStringWithPlurality())
+                .foregroundColor(Color(.secondaryLabel))
+        }
+        .onAppear {
+            sliderValue = carbsQuantity ?? ((rangeMin + rangeMax) / 2)
+            if let q = carbsQuantity {
+                carbInput = AICarbRangeSlider.formatter.string(from: NSNumber(value: q)) ?? ""
+            }
+        }
+        .onChange(of: carbsQuantity) { newValue in
+            // Sync from external changes (e.g. serving size update)
+            if let v = newValue {
+                syncSlider(to: v)
+                if !isEditing {
+                    carbInput = AICarbRangeSlider.formatter.string(from: NSNumber(value: v)) ?? ""
+                }
+            }
+        }
+        .onChange(of: rangeMax) { _ in
+            // The confidence range is recomputed after the carbs value on a
+            // servings change; re-clamp the thumb against the fresh range.
+            if let v = carbsQuantity { syncSlider(to: v) }
+        }
+    }
+
+    /// Move the thumb to mirror an externally-written carbs value without
+    /// writing back into carbsQuantity. Only sets the suppression flag when
+    /// sliderValue actually changes — otherwise onChange never fires to clear
+    /// it and the next real drag would be swallowed.
+    private func syncSlider(to value: Double) {
+        let clamped = min(max(value, rangeMin), rangeMax)
+        if abs(clamped - sliderValue) > 0.001 {
+            syncingFromExternal = true
+            sliderValue = clamped
+        }
     }
 }

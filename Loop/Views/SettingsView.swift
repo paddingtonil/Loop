@@ -79,8 +79,12 @@ public struct SettingsView: View {
                     alertManagementSection
                     if viewModel.pumpManagerSettingsViewModel.isSetUp() {
                         configurationSection
+                            .modifier(CompactSectionSpacing())
+                        powerPackSection
+                            .modifier(CompactSectionSpacing())
                     }
                     deviceSettingsSection
+                        .modifier(CompactSectionSpacing())
                     if FeatureFlags.allowExperimentalFeatures {
                         favoriteFoodsSection
                     }
@@ -123,6 +127,9 @@ public struct SettingsView: View {
             }
         }
         .navigationViewStyle(.stack)
+        .onAppear {
+            TherapyHelpRegistry.destination = AnyView(LoopInsights_SettingsView(dataStoresProvider: viewModel.loopInsightsDataStores))
+        }
     }
 
     private func menuItemsForSection(name: String) -> some View {
@@ -365,11 +372,117 @@ extension SettingsView {
             LargeButton(action: { sheet = .favoriteFoods },
                         includeArrow: true,
                         imageView: Image("Favorite Foods Icon").renderingMode(.template).foregroundColor(carbTintColor),
-                        label: "Favorite Foods",
-                        descriptiveText: "Simplify Carb Entry")
+                        label: NSLocalizedString("Favorite Foods", comment: "Label for Favorite Foods icon in Settings"),
+                        descriptiveText: NSLocalizedString("Simplify Carb Entry", comment: "Subheading for Favorite Foods in Settings"))
         }
     }
-    
+
+    // Branded header that sits above the purple box. "PowerPack" is tinted purple to match the box.
+    private var powerPackHeader: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "bolt.fill")
+                .symbolRenderingMode(.monochrome)
+                .foregroundStyle(Color(red: 107/255, green: 47/255, blue: 160/255)) // force purple; section headers tint symbols gray otherwise
+            (
+                Text(NSLocalizedString("You've powered up with Loop ", comment: "PowerPack settings group header prefix"))
+                    .foregroundColor(.primary)
+                    .fontWeight(.semibold)
+                + Text("PowerPack")
+                    .foregroundColor(Color(red: 107/255, green: 47/255, blue: 160/255))
+                    .fontWeight(.heavy)
+            )
+        }
+        // Rounded design reads friendlier/more energetic than the default.
+        .font(.system(size: 17, design: .rounded))
+        .lineLimit(1)                 // keep the whole line together
+        .minimumScaleFactor(0.7)      // shrink just enough to fit narrow widths instead of wrapping
+        .textCase(nil)                // keep natural case; section headers uppercase by default
+        .frame(maxWidth: .infinity, alignment: .leading) // left-justify the line
+        .padding(.top, 28) // breathing room above the block so it sits a bit lower
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 6, trailing: 16)) // flush header to the box's left edge
+    }
+
+    // PowerPack — all bundled apps, grouped together below Therapy Settings inside a thin purple border
+    private var powerPackSection: some View {
+        Section(header: powerPackHeader) {
+            autoPresetsSettingsRow
+                .listRowBackground(PowerPackGroupBorder(position: .top))
+            bolusProSettingsRow
+                .listRowBackground(PowerPackGroupBorder(position: .middle))
+            foodFinderSettingsRow
+                .listRowBackground(PowerPackGroupBorder(position: .middle))
+            loopInsightsSettingsRow
+                .listRowBackground(PowerPackGroupBorder(position: .middle))
+            siteAtlasSettingsRow
+                .listRowBackground(PowerPackGroupBorder(position: .bottom))
+        }
+    }
+
+    private var autoPresetsSettingsRow: some View {
+        NavigationLink(destination: AutoPresets_SettingsView(dataStoresProvider: viewModel.loopInsightsDataStores)) {
+            LargeButton(
+                action: {},
+                includeArrow: false,
+                imageView: AutoPresets_IconView(),
+                label: NSLocalizedString("AutoPresets", comment: "Title text for button to AutoPresets Settings"),
+                descriptiveText: NSLocalizedString("Automate your presets during motion", comment: "Descriptive text for Auto-Apply Presets")
+            )
+        }
+    }
+
+    private var loopInsightsSettingsRow: some View {
+        NavigationLink(destination: LoopInsights_SettingsView(dataStoresProvider: viewModel.loopInsightsDataStores)) {
+            LargeButton(action: {},
+                        includeArrow: false,
+                        imageView: Image(systemName: "brain.head.profile")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .foregroundColor(Color(red: 26/255, green: 138/255, blue: 158/255))
+                            .frame(width: 30),
+                        label: NSLocalizedString("LoopInsights", comment: "LoopInsights settings button"),
+                        descriptiveText: NSLocalizedString("AI-powered therapy settings analysis", comment: "LoopInsights settings descriptive text"))
+        }
+    }
+
+    // BolusPro — single settings insertion point
+    private var bolusProSettingsRow: some View {
+        NavigationLink(destination: BolusPro_SettingsView()) {
+            LargeButton(action: {},
+                        includeArrow: false,
+                        imageView: Image(systemName: "drop.halffull")
+                            .foregroundColor((Color(red: 230/255, green: 188/255, blue: 60/255)))
+                            .font(.system(size: 36)),
+                        label: NSLocalizedString("BolusPro", comment: "Title text for button to BolusPro Settings"),
+                        descriptiveText: NSLocalizedString("Protein & fat-aware bolusing for long absorption meals", comment: "Descriptive text for BolusPro Settings"))
+        }
+    }
+
+    // FoodFinder — single settings insertion point
+    private var foodFinderSettingsRow: some View {
+        NavigationLink(destination: AISettingsView()) {
+            LargeButton(action: {},
+                        includeArrow: false,
+                        imageView: Image(systemName: "fork.knife.circle.fill")
+                            .foregroundColor(Color(red: 107/255, green: 47/255, blue: 160/255))
+                            .font(.system(size: 36)),
+                        label: NSLocalizedString("FoodFinder", comment: "Title text for button to FoodFinder Settings"),
+                        descriptiveText: NSLocalizedString("AI-powered & barcode food analysis", comment: "Descriptive text for FoodFinder Settings"))
+        }
+    }
+
+    // SiteAtlas — single settings insertion point
+    private var siteAtlasSettingsRow: some View {
+        NavigationLink(destination: SiteAtlas_SettingsView()) {
+            LargeButton(action: {},
+                        includeArrow: false,
+                        imageView: Image(systemName: "mappin.and.ellipse")
+                            .foregroundColor(Color(red: 230/255, green: 126/255, blue: 34/255))
+                            .font(.system(size: 36)),
+                        label: NSLocalizedString("Site Atlas", comment: "Title text for button to Site Atlas Settings"),
+                        descriptiveText: NSLocalizedString("Track pump & sensor site rotation", comment: "Descriptive text for Site Atlas Settings"))
+        }
+    }
+
     private var cgmChoices: [PluginPopover.Action] {
         viewModel.cgmManagerSettingsViewModel.availableDevices
             .sorted(by: {$0.localizedTitle < $1.localizedTitle})
@@ -556,6 +669,86 @@ extension SettingsView {
     @ViewBuilder
     private func serviceImage(uiImage: UIImage?) -> some View {
         deviceImage(uiImage: uiImage)
+    }
+}
+
+// MARK: - PowerPack grouping border
+
+/// Tightens the gap around a section so the PowerPack card sits close to its
+/// neighbors (Algorithm Experiments above, devices below). The gap between two
+/// sections is the larger of their two values, so this is applied to BOTH sides.
+/// No-op below iOS 17 (the API doesn't exist there) — gaps stay default.
+fileprivate struct CompactSectionSpacing: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content.listSectionSpacing(8)
+        } else {
+            content
+        }
+    }
+}
+
+/// Which segment of the shared rounded box a PowerPack row draws.
+fileprivate enum PowerPackRowPosition {
+    case top, middle, bottom
+}
+
+/// Draws this row's portion of a single thin purple rounded box that visually
+/// wraps every PowerPack app as one bundle. Why a per-row background instead of
+/// one container: it lets each app stay a native `NavigationLink` row (system
+/// chevron, divider, full-row tap) while the union of segments reads as one box.
+fileprivate struct PowerPackGroupBorder: View {
+    let position: PowerPackRowPosition
+
+    private let purple = Color(red: 107/255, green: 47/255, blue: 160/255)
+    private let lineWidth: CGFloat = 1.5
+
+    /// Must match the system's inset-grouped section corners, because the list clips
+    /// row backgrounds to that shape: a smaller radius gets its corners cut off.
+    /// Liquid Glass (iOS 26+) uses ~26pt; the legacy design uses 10pt.
+    private var cornerRadius: CGFloat {
+        StatusTableViewController.usesLiquidGlassToolbarLayout ? 26 : 10
+    }
+
+    var body: some View {
+        Color(.secondarySystemGroupedBackground)
+            .overlay(
+                PowerPackBorderShape(position: position, cornerRadius: cornerRadius, lineWidth: lineWidth)
+                    .stroke(purple, lineWidth: lineWidth)
+                    .clipped() // hide the parts of the box that extend past this row's open edges
+            )
+    }
+}
+
+fileprivate struct PowerPackBorderShape: Shape {
+    let position: PowerPackRowPosition
+    let cornerRadius: CGFloat
+    let lineWidth: CGFloat
+
+    /// Draws one full continuous-corner rounded box that overhangs this row's open
+    /// edge(s) by more than a corner, so only this row's own corners fall inside the
+    /// row. The caller clips the overhang. Continuous corners match the system
+    /// section shape; hand-drawn quad curves did not.
+    func path(in rect: CGRect) -> Path {
+        let inset = lineWidth / 2
+        let overhang = cornerRadius * 2
+        let top: CGFloat
+        let bottom: CGFloat
+
+        switch position {
+        case .top:
+            top = rect.minY + inset
+            bottom = rect.maxY + overhang
+        case .middle:
+            top = rect.minY - overhang
+            bottom = rect.maxY + overhang
+        case .bottom:
+            top = rect.minY - overhang
+            bottom = rect.maxY - inset
+        }
+
+        let box = CGRect(x: rect.minX + inset, y: top, width: rect.width - lineWidth, height: bottom - top)
+        return RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).path(in: box)
     }
 }
 
