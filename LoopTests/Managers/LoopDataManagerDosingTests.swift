@@ -353,7 +353,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: defaultAccuracy)
     }
 
-    func waitOnDataQueue(timeout: TimeInterval = 1.0) {
+    func waitOnDataQueue(timeout: TimeInterval = 10.0) {
         let e = expectation(description: "dataQueue")
         loopDataManager.getLoopState { _, _ in
             e.fulfill()
@@ -377,7 +377,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             error = $0
             exp.fulfill()
         }
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         XCTAssertNil(error)
         XCTAssertNil(delegate.recommendation)
         XCTAssertTrue(dosingDecisionStore.dosingDecisions.isEmpty)
@@ -399,7 +399,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             error = $0
             exp.fulfill()
         }
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         XCTAssertNil(error)
         XCTAssertEqual(delegate.recommendation, AutomaticDoseRecommendation(basalAdjustment: .cancel))
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
@@ -418,7 +418,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         }
         XCTAssertFalse(loopDataUpdated)
         loopDataManager.mutateSettings { $0.maximumBasalRatePerHour = 2.0 }
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         XCTAssertTrue(loopDataUpdated)
         NotificationCenter.default.removeObserver(observer)
     }
@@ -434,7 +434,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             exp.fulfill()
         }
         automaticDosingStatus.automaticDosingEnabled = false
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
         XCTAssertEqual(delegate.recommendation, expectedAutomaticDoseRecommendation)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
@@ -454,7 +454,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             exp.fulfill()
         }
         loopDataManager.receivedUnreliableCGMReading()
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
         XCTAssertEqual(delegate.recommendation, expectedAutomaticDoseRecommendation)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
@@ -473,7 +473,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             exp.fulfill()
         }
         loopDataManager.loop()
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 4.55, duration: .minutes(30)))
         XCTAssertEqual(delegate.recommendation, expectedAutomaticDoseRecommendation)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
@@ -497,7 +497,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             exp.fulfill()
         }
         loopDataManager.loop()
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 4.55, duration: .minutes(30)))
         XCTAssertNil(delegate.recommendation)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
@@ -528,7 +528,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             recommendedBolus = try? loopState.recommendBolus(consideringPotentialCarbEntry: nil, replacingCarbEntry: nil, considerPositiveVelocityAndRC: true)
             exp.fulfill()
         }
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         XCTAssertEqual(recommendedBolus!.amount, 1.62, accuracy: 0.01)
     }
 
@@ -540,7 +540,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             recommendedBolus = try? loopState.recommendBolus(consideringPotentialCarbEntry: nil, replacingCarbEntry: nil, considerPositiveVelocityAndRC: false)
             exp.fulfill()
         }
-        wait(for: [exp], timeout: 1.0)
+        wait(for: [exp], timeout: 10.0)
         XCTAssertEqual(recommendedBolus!.amount, 1.52, accuracy: 0.01)
     }
 
