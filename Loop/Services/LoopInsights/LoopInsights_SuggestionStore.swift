@@ -93,6 +93,12 @@ final class LoopInsights_SuggestionStore: ObservableObject {
         let newRecords = suggestions.map { LoopInsightsSuggestionRecord(suggestion: $0) }
         records.append(contentsOf: newRecords)
         saveRecords()
+
+        // All callers use this batch path, so without this the DataLayer never sees "generated" events
+        for suggestion in suggestions {
+            postSuggestionNotification(action: "generated", suggestion: suggestion, applyMode: nil)
+        }
+
         return newRecords
     }
 
