@@ -270,6 +270,11 @@ class VoiceSearchIntegrationTests: XCTestCase {
         // Simulate a voice search
         service.simulateVoiceSearch(text: testText)
 
+        // The simulate helpers publish on the main queue; let that run before checking.
+        let published = expectation(description: "main queue")
+        DispatchQueue.main.async { published.fulfill() }
+        wait(for: [published], timeout: 1)
+
         // Verify the result is available
         XCTAssertNotNil(service.lastSearchResult)
         XCTAssertEqual(service.lastSearchResult?.transcribedText, testText)
@@ -282,6 +287,11 @@ class VoiceSearchIntegrationTests: XCTestCase {
         let error = VoiceSearchError.speechRecognitionPermissionDenied
 
         service.simulateError(error)
+
+        // The simulate helpers publish on the main queue; let that run before checking.
+        let published = expectation(description: "main queue")
+        DispatchQueue.main.async { published.fulfill() }
+        wait(for: [published], timeout: 1)
 
         XCTAssertNotNil(service.searchError)
         XCTAssertEqual(service.searchError?.localizedDescription, error.localizedDescription)

@@ -221,6 +221,11 @@ class BarcodeScannerIntegrationTests: XCTestCase {
         // Simulate a barcode scan
         service.simulateScan(barcode: testBarcode)
 
+        // The simulate helpers publish on the main queue; let that run before checking.
+        let published = expectation(description: "main queue")
+        DispatchQueue.main.async { published.fulfill() }
+        wait(for: [published], timeout: 1)
+
         // Verify the result is available
         XCTAssertNotNil(service.lastScanResult)
         XCTAssertEqual(service.lastScanResult?.barcodeString, testBarcode)
@@ -233,8 +238,68 @@ class BarcodeScannerIntegrationTests: XCTestCase {
 
         service.simulateError(error)
 
+        // The simulate helpers publish on the main queue; let that run before checking.
+        let published = expectation(description: "main queue")
+        DispatchQueue.main.async { published.fulfill() }
+        wait(for: [published], timeout: 1)
+
         XCTAssertNotNil(service.scanError)
         XCTAssertEqual(service.scanError?.localizedDescription, error.localizedDescription)
         XCTAssertFalse(service.isScanning)
+    }
+}
+
+// MARK: - QR code preference
+
+final class FoodFinder_CodePreferenceTests: XCTestCase {
+    private func code(_ value: String, _ type: VNBarcodeSymbology, _ confidence: Float = 0.9) -> BarcodeScanResult {
+        BarcodeScanResult(barcodeString: value, barcodeType: type, confidence: confidence, bounds: .zero)
+    }
+    private let start = Date(timeIntervalSince1970: 1_800_000_000)
+
+    func testBarcodeWinsOverQRInTheSameFrame() {
+        let picked = FoodFinder_CodePreference.choose(from: [code("https://x/0123", .qr, 0.99), code("012345678905", .ean13, 0.85)], mode: .preferBarcode)
+        XCTAssertEqual(picked?.barcodeType, .ean13)
+    }
+
+    func testEqualModePicksHighestConfidence() {
+        let picked = FoodFinder_CodePreference.choose(from: [code("q", .qr, 0.99), code("012345678905", .ean13, 0.85)], mode: .equal)
+        XCTAssertEqual(picked?.barcodeType, .qr)
+    }
+
+    func testOffModeNeverPicksQROrDataMatrix() {
+        XCTAssertNil(FoodFinder_CodePreference.choose(from: [code("q", .qr), code("d", .dataMatrix)], mode: .off))
+        XCTAssertEqual(FoodFinder_CodePreference.choose(from: [code("q", .qr), code("012345678905", .upce)], mode: .off)?.barcodeType, .upce)
+    }
+
+    func testQRAloneWaitsThenIsAccepted() {
+        var wait = FoodFinder_QRWait()
+        let qr = code("0123456789012", .qr)
+        XCTAssertFalse(wait.shouldAccept(qr, mode: .preferBarcode, now: start))
+        XCTAssertFalse(wait.shouldAccept(qr, mode: .preferBarcode, now: start.addingTimeInterval(FoodFinder_QRWait.delay - 0.1)))
+        XCTAssertTrue(wait.shouldAccept(qr, mode: .preferBarcode, now: start.addingTimeInterval(FoodFinder_QRWait.delay)))
+    }
+
+    func testDifferentQRRestartsTheWait() {
+        var wait = FoodFinder_QRWait()
+        XCTAssertFalse(wait.shouldAccept(code("a", .qr), mode: .preferBarcode, now: start))
+        XCTAssertFalse(wait.shouldAccept(code("b", .qr), mode: .preferBarcode, now: start.addingTimeInterval(FoodFinder_QRWait.delay)))
+    }
+
+    func testBarcodeAndEqualModeAreAcceptedAtOnceAndClearTheWait() {
+        var wait = FoodFinder_QRWait()
+        XCTAssertFalse(wait.shouldAccept(code("a", .qr), mode: .preferBarcode, now: start))
+        XCTAssertTrue(wait.shouldAccept(code("012345678905", .ean13), mode: .preferBarcode, now: start.addingTimeInterval(0.2)))
+        XCTAssertFalse(wait.shouldAccept(code("a", .qr), mode: .preferBarcode, now: start.addingTimeInterval(FoodFinder_QRWait.delay)))
+        var equalWait = FoodFinder_QRWait()
+        XCTAssertTrue(equalWait.shouldAccept(code("a", .qr), mode: .equal, now: start))
+    }
+
+    func testModeDefaultsToPreferBarcode() {
+        let defaults = UserDefaults(suiteName: "FoodFinder_CodePreferenceTests")!
+        defaults.removePersistentDomain(forName: "FoodFinder_CodePreferenceTests")
+        XCTAssertEqual(FoodFinder_QRCodeMode.load(from: defaults), .preferBarcode)
+        defaults.set("off", forKey: FoodFinder_FeatureFlags.Keys.qrCodeMode)
+        XCTAssertEqual(FoodFinder_QRCodeMode.load(from: defaults), .off)
     }
 }

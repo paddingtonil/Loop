@@ -239,7 +239,9 @@ struct OpenFoodFactsProduct: Codable, Identifiable, Hashable {
 
     /// Whether this product has sufficient nutritional data for Loop
     var hasSufficientNutritionalData: Bool {
-        return nutriments.carbohydrates >= 0 && !displayName.isEmpty
+        // displayName is never empty (it falls back to "Unknown Product"), so check the real fields.
+        let hasName = [productName, brands].contains { !($0?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) }
+        return nutriments.carbohydrates >= 0 && hasName
     }
 
     // MARK: - Hashable & Equatable

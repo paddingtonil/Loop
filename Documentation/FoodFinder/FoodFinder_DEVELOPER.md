@@ -66,6 +66,37 @@ Documentation/FoodFinder/
 
 Total: ~29 lines across 3 existing Loop files. No LoopKit changes.
 
+## Barcode scanner: QR code handling
+
+`FoodFinder_ScannerService.swift` asks Vision for regular barcodes and for QR, Data Matrix, PDF417
+and Aztec. Per frame, `FoodFinder_CodePreference.choose(from:mode:)` picks the code according to
+`FoodFinder_QRCodeMode` (`FoodFinder_FeatureFlags.swift`, key
+`com.loopkit.Loop.foodFinderQRCodeMode`, default `.preferBarcode`):
+
+| Mode | Rule |
+|---|---|
+| `.preferBarcode` | Any regular barcode wins. A QR-only detection goes through `FoodFinder_QRWait`: held for 1 s (`delay`) and accepted only if the same QR is still read then; a different QR restarts the wait; a barcode clears it |
+| `.equal` | Highest confidence, any type |
+| `.off` | QR and Data Matrix ignored |
+
+Why the wait: the QR code and barcode on a package rarely come into view or focus in the same frame,
+so without it the first one read wins. Non-food QR codes (links, contacts) are rejected in every
+mode. Tests: `FoodFinder_CodePreferenceTests` in `FoodFinder_BarcodeScannerTests.swift`.
+
+## Shared AI model search (PowerPack)
+
+`Views/PowerPack/PowerPack_ModelFinderView.swift` — `PowerPack_ModelFinderBar(purpose:)`, placed
+under the Model field in FoodFinder (`.vision`), LoopInsights (`.text`) and AutoPresets (`.text`)
+settings. Each provider button opens `PowerPack_AIProvider.searchURL(purpose:)` (a Google search)
+in `LoopInsights_SafariView`. It writes no settings and needs no key.
+
+`Services/PowerPack/PowerPack_ModelFinder.swift` also holds an API-key model tester
+(`PowerPack_ModelFinder.run`) with `LoopTests/PowerPack/PowerPack_ModelFinderTests.swift`. Nothing
+calls it now; kept by decision for possible reuse.
+
+Models that refuse a temperature setting are deliberately unsupported: every request (and Test
+Connection) sends one, for consistent results.
+
 ## Data flow at meal entry
 
 ```

@@ -106,13 +106,15 @@ extension UIAlertController {
         )
         
         for availableCGMManager in availableCGMManagers.sorted(by: {$0.localizedTitle < $1.localizedTitle}) {
-            addAction(UIAlertAction(
+            let action = UIAlertAction(
                 title: availableCGMManager.localizedTitle,
                 style: .default,
                 handler: { (_) in
                     selectionHandler(availableCGMManager.identifier)
             }
-            ))
+            )
+            DirectConnect_Branding.style(action) // DirectConnect (PowerPack) — purple entry
+            addAction(action)
         }
 
         addCancelAction()

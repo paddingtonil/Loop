@@ -20,6 +20,7 @@ struct AISettingsView: View {
     @AppStorage("com.loopkit.Loop.advancedDosingRecommendationsEnabled") private var advancedDosingRecommendationsEnabled: Bool = false
     @AppStorage("com.loopkit.Loop.locationTaggingEnabled") private var locationTaggingEnabled: Bool = true
     @AppStorage("com.loopkit.Loop.carbTrackingEnabled") private var carbTrackingEnabled: Bool = false
+    @AppStorage(FoodFinder_FeatureFlags.Keys.qrCodeMode) private var qrCodeMode: FoodFinder_QRCodeMode = .preferBarcode
     @AppStorage("com.loopkit.Loop.analysisHistoryRetentionDays") private var retentionDays: Int = 7
 
     // AI configuration (non-secret settings)
@@ -105,6 +106,21 @@ struct AISettingsView: View {
 // MARK: - Sections
 
 extension AISettingsView {
+    /// Why each QR setting exists: packages often carry a QR code (usually a marketing link) beside
+    /// the barcode, and the barcode is the reliable product lookup.
+    fileprivate var qrCodeModeExplanation: String {
+        switch qrCodeMode {
+        case .preferBarcode:
+            return "When the camera sees a QR code, the scanner waits 1 second for a regular barcode and uses the barcode if one appears. A QR code is used only when no barcode is found."
+        case .equal:
+            return "The scanner uses whichever code it reads most clearly, barcode or QR code."
+        case .off:
+            return "The scanner ignores QR and Data Matrix codes and reads only regular barcodes."
+        }
+    }
+}
+
+extension AISettingsView {
 
     // MARK: Feature Toggle
 
@@ -160,6 +176,30 @@ extension AISettingsView {
                     Divider()
                     Toggle("Advanced Dosing Insights", isOn: $advancedDosingRecommendationsEnabled)
                     Text("Enable advanced dosing advice including Fat/Protein Units (FPUs) calculations. Prolongs analysis.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Divider()
+                    // A Menu with a one-line label: the plain menu Picker moved a long choice onto
+                    // its own line below "QR Codes".
+                    HStack {
+                        Text("QR Codes")
+                        Spacer()
+                        Menu {
+                            Picker("QR Codes", selection: $qrCodeMode) {
+                                ForEach(FoodFinder_QRCodeMode.allCases) { mode in
+                                    Text(mode.title).tag(mode)
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(qrCodeMode.title)
+                                    .lineLimit(1)
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.caption)
+                            }
+                        }
+                    }
+                    Text(qrCodeModeExplanation)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Divider()
@@ -409,6 +449,9 @@ extension AISettingsView {
                     }
                 }
 
+                // Model finder (PowerPack) — web search for models that accept FoodFinder's requests
+                PowerPack_ModelFinderBar(purpose: .vision)
+
                 // Test Connection
                 HStack(spacing: 12) {
                     Button(action: testConnection) {
@@ -420,7 +463,7 @@ extension AISettingsView {
                             }
                             Text("Test Connection")
                         }
-                        .foregroundColor(Color(red: 107/255, green: 47/255, blue: 160/255))
+                        .foregroundColor(.green)
                     }
                     .buttonStyle(.plain)
                     .disabled(isTesting || apiKey.isEmpty || baseURL.isEmpty)
@@ -607,7 +650,7 @@ extension AISettingsView {
                             }
                             Text("Test Connection")
                         }
-                        .foregroundColor(.purple)
+                        .foregroundColor(.green)
                     }
                     .buttonStyle(.plain)
                     .disabled(isTestingSpoonacular || spoonacularAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

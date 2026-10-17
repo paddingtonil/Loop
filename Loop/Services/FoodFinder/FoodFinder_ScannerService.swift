@@ -42,6 +42,8 @@ class BarcodeScannerService: NSObject, ObservableObject {
     
     /// Flag to prevent multiple simultaneous scan processing
     private var isProcessingScan: Bool = false
+    /// Holds back a QR-only detection briefly so a barcode coming into view can win.
+    private var qrWait = FoodFinder_QRWait()
     
     /// Session health monitoring
     private var lastValidFrameTime: Date = Date()
@@ -461,7 +463,16 @@ class BarcodeScannerService: NSObject, ObservableObject {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
-        stopScanning()
+        // Not stopScanning(): it schedules blocks that capture self, which crashes during
+        // deallocation ("Cannot form weak reference ... over-released"). Clean up without self.
+        sessionHealthTimer?.invalidate()
+        duplicatePreventionTimer?.invalidate()
+        let session = captureSession
+        sessionQueue.async {
+            if session.isRunning {
+                session.stopRunning()
+            }
+        }
     }
     
     /// Request camera permission
@@ -1294,7 +1305,8 @@ class BarcodeScannerService: NSObject, ObservableObject {
         }
         
         // Prioritize traditional barcodes over QR codes when both are present
-        let bestBarcode = selectBestBarcode(from: validBarcodes)
+        let qrMode = FoodFinder_QRCodeMode.load()
+        let bestBarcode = selectBestBarcode(from: validBarcodes, mode: qrMode)
         guard let selectedBarcode = bestBarcode else {
             return
         }
@@ -1316,6 +1328,14 @@ class BarcodeScannerService: NSObject, ObservableObject {
             return
         }
         
+        // A QR code seen first is held for a moment; a barcode in a later frame replaces it.
+        guard qrWait.shouldAccept(selectedBarcode, mode: qrMode, now: Date()) else {
+            #if DEBUG
+            print("🔍 QR code held: waiting for a barcode")
+            #endif
+            return
+        }
+
         // Check for duplicates
         guard !recentlyScannedBarcodes.contains(selectedBarcode.barcodeString) else {
             #if DEBUG
@@ -1425,9 +1445,19 @@ class BarcodeScannerService: NSObject, ObservableObject {
         return false
     }
     
-    /// Select the best barcode from detected options, prioritizing traditional barcodes over QR codes
-    private func selectBestBarcode(from barcodes: [BarcodeScanResult]) -> BarcodeScanResult? {
+    /// Select the best barcode from detected options according to the QR code setting.
+    private func selectBestBarcode(from barcodes: [BarcodeScanResult], mode: FoodFinder_QRCodeMode) -> BarcodeScanResult? {
         guard !barcodes.isEmpty else { return nil }
+        if mode != .preferBarcode {
+            guard let picked = FoodFinder_CodePreference.choose(from: barcodes, mode: mode) else { return nil }
+            if FoodFinder_CodePreference.isQRLike(picked), isNonFoodQRCode(picked.barcodeString) {
+                DispatchQueue.main.async {
+                    self.scanError = BarcodeScanError.scanningFailed("This QR code is not a food product code and cannot be scanned")
+                }
+                return nil
+            }
+            return picked
+        }
         
         // Separate traditional barcodes from QR codes
         let traditionalBarcodes = barcodes.filter { result in
@@ -1842,3 +1872,56 @@ extension BarcodeScannerService {
     }
 }
 #endif
+
+// MARK: - QR code preference
+
+/// Pure choice of which detected code to use, so the rules can be unit-tested.
+enum FoodFinder_CodePreference {
+    static func isQRLike(_ result: BarcodeScanResult) -> Bool {
+        result.barcodeType == .qr || result.barcodeType == .dataMatrix
+    }
+
+    /// The code to use from one camera frame. `preferBarcode` takes any regular barcode first.
+    static func choose(from results: [BarcodeScanResult], mode: FoodFinder_QRCodeMode) -> BarcodeScanResult? {
+        let byConfidence: (BarcodeScanResult, BarcodeScanResult) -> Bool = { $0.confidence < $1.confidence }
+        let barcodes = results.filter { !isQRLike($0) }
+        switch mode {
+        case .preferBarcode:
+            return barcodes.max(by: byConfidence) ?? results.filter(isQRLike).max(by: byConfidence)
+        case .equal:
+            return results.max(by: byConfidence)
+        case .off:
+            return barcodes.max(by: byConfidence)
+        }
+    }
+}
+
+/// Holds a QR-only detection for `delay` seconds. The QR code and barcode on a package rarely
+/// come into the camera's view, or into focus, at the same moment; without a wait the first one
+/// read wins and a barcode seen half a second later is never used.
+struct FoodFinder_QRWait {
+    static let delay: TimeInterval = 1.0
+
+    private var heldCode: String?
+    private var heldSince: Date?
+
+    mutating func shouldAccept(_ result: BarcodeScanResult, mode: FoodFinder_QRCodeMode, now: Date) -> Bool {
+        guard mode == .preferBarcode, FoodFinder_CodePreference.isQRLike(result) else {
+            reset()
+            return true
+        }
+        guard heldCode == result.barcodeString, let since = heldSince else {
+            heldCode = result.barcodeString
+            heldSince = now
+            return false
+        }
+        guard now.timeIntervalSince(since) >= Self.delay else { return false }
+        reset()
+        return true
+    }
+
+    private mutating func reset() {
+        heldCode = nil
+        heldSince = nil
+    }
+}

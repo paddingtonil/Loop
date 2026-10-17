@@ -579,8 +579,11 @@ struct AutoPresets_CalendarTriggerEditView: View {
 
     private var keywordSection: some View {
         Section {
-            TextField("e.g. Gym, Spin Class, Run, Yoga", text: $keyword)
-                .autocapitalization(.words)
+            HStack {
+                TextField("e.g. Gym, Spin Class, Run, Yoga", text: $keyword)
+                    .autocapitalization(.words)
+                AutoPresets_ClearTextButton(text: $keyword)
+            }
         } header: {
             Text("Keyword")
         } footer: {

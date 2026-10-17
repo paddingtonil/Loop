@@ -735,6 +735,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 hudView.cgmStatusHUD.presentStatusHighlight(self.deviceManager.cgmStatusHighlight)
                 hudView.cgmStatusHUD.presentStatusBadge(self.deviceManager.cgmStatusBadge)
                 hudView.cgmStatusHUD.lifecycleProgress = self.deviceManager.cgmLifecycleProgress
+                hudView.cgmStatusHUD.footnote = DirectConnect_FeatureFlags.isEnabled ? (self.deviceManager.cgmManager as? DirectConnect_G7CGMManager)?.hudFootnote : nil // DirectConnect (PowerPack) — last sensor contact
 
                 // Pump Status
                 hudView.pumpStatusHUD.presentStatusHighlight(self.deviceManager.pumpStatusHighlight)

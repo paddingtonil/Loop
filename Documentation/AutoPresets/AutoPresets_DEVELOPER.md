@@ -96,6 +96,24 @@ Beyond motion detection, AutoPresets supports two opt-in trigger sources:
 
 Both are opt-in per trigger and require the relevant iOS permission (Calendar, Always-On Location). They piggy-back on the same `AutoPresets_Delegate` that the motion pipeline uses, so override semantics are identical regardless of trigger source.
 
+### Setting a location (`AutoPresets_GeofenceSettingsView.swift`)
+
+`AutoPresets_GeofenceEditView` sets the pin three ways: **Search Address or Place**
+(`AutoPresets_PlaceSearchView` + `AutoPresets_PlaceCompleter`, an `MKLocalSearchCompleter` for
+addresses and points of interest, resolved to coordinates with `MKLocalSearch`), **Pin Map Center**
+(the map's region center, marked by a + overlay), and **Use My Current Location**. **Show in Maps**
+opens the pin with `MKMapItem.openInMaps`. External maps apps cannot return a place, so the search is
+in-app. Search results are ranked near the map only once a pin exists (the default map center is a
+placeholder city).
+
+`AutoPresets_ClearTextButton` (same file) is the grey "x" on the Name field, the search box, and the
+calendar Keyword field (`AutoPresets_CalendarSettingsView.swift`).
+
+### AI model search
+
+`PowerPack_ModelFinderBar(purpose: .text)` under the Model field in `AutoPresets_SettingsView.swift`;
+see `FoodFinder_DEVELOPER.md` → "Shared AI model search".
+
 ## DataLayer events
 
 Posted via NotificationCenter to keep AutoPresets decoupled from DataLayer:

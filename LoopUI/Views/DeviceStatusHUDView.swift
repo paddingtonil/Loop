@@ -56,7 +56,64 @@ import LoopKitUI
             progressView.isHidden = false
             progressView.progress = Float(lifecycleProgress.percentComplete.clamped(to: 0...1))
             progressView.tintColor = lifecycleProgress.progressState.color
+            positionFootnote()
         }
+    }
+
+    // MARK: - Footnote (PowerPack)
+
+    /// Small grey line shown just under the pill (DirectConnect uses it for the last sensor
+    /// contact). Placed below the lifecycle progress bar when that bar is showing. nil hides it.
+    public var footnote: NSAttributedString? {
+        didSet {
+            guard footnote != oldValue else { return }
+            if footnote != nil, footnoteLabel.superview == nil {
+                installFootnoteLabel()
+            }
+            footnoteLabel.attributedText = footnote
+            footnoteLabel.isHidden = footnote == nil
+            positionFootnote()
+        }
+    }
+
+    private lazy var footnoteLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 11)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.8
+        label.isAccessibilityElement = false
+        return label
+    }()
+
+    /// The strip between the pill (or the progress bar, when shown) and the bottom of this view,
+    /// which is where the next block on the screen starts. The footnote is centered in it.
+    private let footnoteGap = UILayoutGuide()
+    private var footnoteUnderPill: NSLayoutConstraint?
+    private var footnoteUnderProgress: NSLayoutConstraint?
+
+    private func installFootnoteLabel() {
+        guard let backgroundView = backgroundView else { return }
+        addSubview(footnoteLabel)
+        addLayoutGuide(footnoteGap)
+        footnoteUnderPill = footnoteGap.topAnchor.constraint(equalTo: backgroundView.bottomAnchor)
+        footnoteUnderProgress = footnoteGap.topAnchor.constraint(equalTo: progressView.bottomAnchor)
+        NSLayoutConstraint.activate([
+            footnoteGap.bottomAnchor.constraint(equalTo: bottomAnchor),
+            footnoteLabel.centerYAnchor.constraint(equalTo: footnoteGap.centerYAnchor),
+            footnoteLabel.centerXAnchor.constraint(equalTo: backgroundView.centerXAnchor),
+            footnoteLabel.widthAnchor.constraint(lessThanOrEqualTo: backgroundView.widthAnchor),
+        ])
+        positionFootnote()
+    }
+
+    private func positionFootnote() {
+        guard footnoteLabel.superview != nil else { return }
+        let underProgress = !progressView.isHidden
+        footnoteUnderPill?.isActive = !underProgress
+        footnoteUnderProgress?.isActive = underProgress
     }
     
     public var adjustViewsForNarrowDisplay: Bool = false {
@@ -78,6 +135,7 @@ import LoopKitUI
     private func resetProgress() {
         progressView.isHidden = true
         progressView.progress = 0
+        positionFootnote()
     }
     
     func setup() {

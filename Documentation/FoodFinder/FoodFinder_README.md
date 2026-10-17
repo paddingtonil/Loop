@@ -36,7 +36,20 @@ FoodFinder runs on a **bring-your-own API key** model. You configure your prefer
 4. **Adjust serving count** if you ate more or less than one serving.
 5. **Tap Apply.**
 
-If a product isn't in OpenFoodFacts, the result screen offers a "Try AI Camera" fallback.
+If a product isn't in OpenFoodFacts, or its entry has neither a product name nor a brand, the
+result screen offers a "Try AI Camera" fallback.
+
+**QR codes.** The scanner also reads QR and Data Matrix codes that contain a product number. Many
+packages print a QR code (often a marketing link) beside the barcode, and the barcode is the more
+reliable lookup. The **QR Codes** setting controls this:
+
+| Choice | What the scanner does |
+|---|---|
+| **Barcode first** (default) | Waits 1 second when it sees only a QR code; uses a barcode if one appears, otherwise the QR code |
+| **Equal** | Uses whichever code reads most clearly |
+| **Off** | Ignores QR and Data Matrix codes |
+
+QR codes that only link to a website, email, phone number or social media are always rejected.
 
 ### Voice Search
 
@@ -77,6 +90,12 @@ Settings → FoodFinder Settings:
 | **Use Location Context** | OFF | Asks for Location permission first time. Sends place name to AI prompt. |
 | **Allow Voice Input** | ON | Toggle off to hide the microphone button. |
 | **Allow Barcode Scanning** | ON | Toggle off to hide the barcode button. |
+| **QR Codes** | Barcode first | How the barcode scanner treats QR codes (see Barcode Scan). |
+
+**Finding a model:** under the Model field, the **OpenAI / Claude / Gemini / Grok** buttons open a
+Google search, inside Loop, for that provider's current model IDs that accept a temperature
+setting and photo input. They change no settings and need no API key. Copy a model name into the Model
+field, then tap **Test Connection** (green).
 
 ## API keys
 

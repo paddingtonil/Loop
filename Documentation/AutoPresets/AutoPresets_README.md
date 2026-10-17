@@ -80,6 +80,29 @@ This toggle is hidden in the UI. CoreMotion's activity classifier is too slow an
 5. **Enable AutoPresets** — Toggle the main switch on
 6. **Grant Motion permission** — Allow "Motion & Fitness" access when prompted
 
+## Location Triggers
+
+AutoPresets → **Location Triggers** → **Add Location** turns a preset on when you arrive at, or leave, a place.
+
+Ways to set the place:
+
+- **Search Address or Place:** type an address, business or landmark; suggestions appear as you
+  type (Apple's map search). Tapping one sets the pin and fills the Name if it is empty.
+- **Pin Map Center:** move the map; the + marks the point saved.
+- **Use My Current Location:** while you are there.
+- **Show in Maps** opens the saved pin in Apple Maps to check it. Maps apps cannot send a place
+  back to Loop, which is why the search is built into this screen.
+
+The Name field, the search box and the Keyword field (Calendar Triggers → Add Keyword) each have a grey **x** that clears
+the text.
+
+## AI Configuration
+
+Under the Model field, the **OpenAI / Claude / Gemini / Grok** buttons open a Google search, inside
+Loop, for that provider's current model IDs that accept a temperature setting. They change no
+settings and need no API key. Copy a model name into the Model field, then tap **Test Connection**
+(green).
+
 ## Activity Log
 
 The settings screen shows the last 20 events:

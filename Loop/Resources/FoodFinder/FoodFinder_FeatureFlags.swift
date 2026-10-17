@@ -81,6 +81,36 @@ extension FoodFinder_FeatureFlags {
 
         // Migration tracking
         static let byoMigrationComplete             = "com.loopkit.Loop.byoMigrationComplete"
+
+        // Barcode scanner: how QR and Data Matrix codes are treated
+        static let qrCodeMode                       = "com.loopkit.Loop.foodFinderQRCodeMode"
+    }
+}
+
+// MARK: - QR Code Handling
+
+/// How the barcode scanner treats QR (and Data Matrix) codes, which some packages print next to
+/// the regular barcode. The regular barcode is the more reliable product lookup.
+enum FoodFinder_QRCodeMode: String, CaseIterable, Identifiable {
+    /// Use a QR code only when no regular barcode appears within a short wait.
+    case preferBarcode
+    /// Use whichever code reads most clearly.
+    case equal
+    /// Ignore QR and Data Matrix codes.
+    case off
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .preferBarcode: return NSLocalizedString("Barcode first", comment: "FoodFinder QR mode prefer barcode")
+        case .equal: return NSLocalizedString("Equal", comment: "FoodFinder QR mode equal")
+        case .off: return NSLocalizedString("Off", comment: "FoodFinder QR mode off")
+        }
+    }
+
+    static func load(from defaults: UserDefaults = .standard) -> FoodFinder_QRCodeMode {
+        defaults.string(forKey: FoodFinder_FeatureFlags.Keys.qrCodeMode).flatMap(FoodFinder_QRCodeMode.init(rawValue:)) ?? .preferBarcode
     }
 }
 

@@ -116,7 +116,13 @@ final class LoopInsights_DataAggregatorTests: XCTestCase {
         XCTAssertGreaterThan(stats.glucoseStats.sampleCount, 0)
     }
 
-    func testInsufficientDataThrows() async {
+    func testInsufficientDataThrows() async throws {
+        // The aggregator also reads glucose from Apple Health, which a test cannot empty. On a
+        // simulator whose Apple Health holds glucose (an onboarded Loop), "no data" cannot happen.
+        let end = Date()
+        let healthGlucose = (try? await LoopInsights_HealthKitManager().fetchGlucoseSamples(start: end.addingTimeInterval(-7 * 86400), end: end)) ?? []
+        try XCTSkipIf(!healthGlucose.isEmpty, "Apple Health on this simulator has \(healthGlucose.count) glucose samples; this test needs none")
+
         // No glucose samples
         mockProvider.mockGlucoseSamples = []
 

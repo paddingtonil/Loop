@@ -736,6 +736,50 @@
 		1A6B35DD2E1B9833D7DA57AA /* PowerPack_BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7B17C02B7B5CF8CBE27C65 /* PowerPack_BuildInfo.swift */; };
 		3899284456069E71DE92D3E4 /* PowerPack_UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987E5D2B695A97D178511EC9 /* PowerPack_UpdateChecker.swift */; };
 		5F98171F4CC40844F719FAD0 /* PowerPack_APIUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49F3796521706FE90018866 /* PowerPack_APIUsage.swift */; };
+		85C3A00CA83157EFA4F4EB56 /* DirectConnect_ECC.c in Sources */ = {isa = PBXBuildFile; fileRef = 2E2EBE77379C5B04F21310BF /* DirectConnect_ECC.c */; };
+		EC575892E0DB522179F61E53 /* DirectConnect_AlarmSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FFF556ADA96ABAA237A415D /* DirectConnect_AlarmSettings.swift */; };
+		D79E7E26AFBAEE92A857A885 /* DirectConnect_BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E4255886BFED8CC9E947BA /* DirectConnect_BluetoothManager.swift */; };
+		18080E387A811F029415B914 /* DirectConnect_Bytes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9D6F37539611BEFCCD57009 /* DirectConnect_Bytes.swift */; };
+		CAF2F40E6853F31C5158F652 /* DirectConnect_Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3116793DE5AD522FB294D9B6 /* DirectConnect_Diagnostics.swift */; };
+		8619CA7B2BAB6062F9D466FE /* DirectConnect_G7CGMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4278766440784E79DEC22653 /* DirectConnect_G7CGMManager.swift */; };
+		3ADAE72164BC62D1F09F611D /* DirectConnect_G7Calibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9207E6E38ADD35AD5244C93 /* DirectConnect_G7Calibration.swift */; };
+		05022C8F5D47E03FBFD7525B /* DirectConnect_G7Certificates.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACF60459368C4AD65585242C /* DirectConnect_G7Certificates.swift */; };
+		E4ECD8F41A42D06D8F1F7DA1 /* DirectConnect_G7Crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FBB0AB2FA8C93DEB5F22E8 /* DirectConnect_G7Crypto.swift */; };
+		2E8AB92A034DF1CD56561409 /* DirectConnect_G7Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294F5690254CCD288E45E108 /* DirectConnect_G7Messages.swift */; };
+		7987B045E76CDBADF14F7811 /* DirectConnect_G7Pairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD94E6A49DC099A15D4342B /* DirectConnect_G7Pairing.swift */; };
+		CDE1C25F58591CBB0EA97CDB /* DirectConnect_G7Sensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2BE6BF2FB97617BA644B4BE /* DirectConnect_G7Sensor.swift */; };
+		5257E8200B2392E1F8CB70F2 /* DirectConnect_G7State.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1614CB90DCCAB162A657CC6 /* DirectConnect_G7State.swift */; };
+		0E356D9D41D704BE6B919258 /* DirectConnect_GlucoseAlarms.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3518D33898D5088EBF5F51D /* DirectConnect_GlucoseAlarms.swift */; };
+		3D377866BD8A8D00560A9DBC /* DirectConnect_KeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1A761C09EC2006E9E209AA /* DirectConnect_KeyStore.swift */; };
+		1EF6AD30147C1B73BBE2EAA1 /* DirectConnect_PeripheralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F98B612104BC96C82A4066 /* DirectConnect_PeripheralManager.swift */; };
+		517B6D44649D113FC5F1326C /* DirectConnect_SensorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E53FD82A1BE4BC1C05D2468C /* DirectConnect_SensorModel.swift */; };
+		1AC85D6D3503DC2E3BD0A8B8 /* DirectConnect_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DACBE22A498EFCC85F26F2C /* DirectConnect_FeatureFlags.swift */; };
+		E2F1965E33458F40F4A77F45 /* DirectConnect_AlarmSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75AECD0068F9A54F2360542 /* DirectConnect_AlarmSettingsView.swift */; };
+		CBB7F0A8BC506104B75C021D /* DirectConnect_CGMManager+UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB00E82B34FBA61B58C7D3BE /* DirectConnect_CGMManager+UI.swift */; };
+		A7A5FC671C271C465400E8A7 /* DirectConnect_CalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52314C06CFEA41B85298AEE7 /* DirectConnect_CalibrationView.swift */; };
+		F3F2C3CE6F7398ECAED263BA /* DirectConnect_DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D10C5994DD24357BFDD50B6 /* DirectConnect_DiagnosticsView.swift */; };
+		EA79389A481370ED0BCC5E07 /* DirectConnect_SensorStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F56BC7C4E840ED1A3DB23206 /* DirectConnect_SensorStatusView.swift */; };
+		8C168E7F33E38E0D1FDC7195 /* DirectConnect_SensorStatusViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D557D518F0ECBC174A3F171F /* DirectConnect_SensorStatusViewModel.swift */; };
+		717C996CB1C24118862989B5 /* DirectConnect_SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCED87DC03EEC366734E2F36 /* DirectConnect_SettingsView.swift */; };
+		3F0FB11A9A04B197B00C8717 /* DirectConnect_SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DFEA851DAF9573D9CB9595 /* DirectConnect_SetupView.swift */; };
+		18A2E05EC0ACD57DD8DABD56 /* DirectConnect_UICoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD378D2AC9194B156AF87075 /* DirectConnect_UICoordinator.swift */; };
+		FAE7EDB91989E5CC19551E97 /* DirectConnect_AlarmSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90419C38B151D38E78042E21 /* DirectConnect_AlarmSettingsTests.swift */; };
+		2A6C8245B1729AC6506CE5F1 /* DirectConnect_G7CalibrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E6233AE82C2AE06408A748 /* DirectConnect_G7CalibrationTests.swift */; };
+		02B6FEAA8A770FD158A23485 /* DirectConnect_G7CryptoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6D85FA8C63954ED39978A4 /* DirectConnect_G7CryptoTests.swift */; };
+		CC1D0F3E0F42989A5D732199 /* DirectConnect_G7MessagesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 588713B472DA20B0165B854F /* DirectConnect_G7MessagesTests.swift */; };
+		078CB45FD501FC406A0755C1 /* DirectConnect_G7PairingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44896217CEA3EF441079A9E7 /* DirectConnect_G7PairingTests.swift */; };
+		335E6695DFF16A6A87968347 /* DirectConnect_GlucoseAlarmsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22CB2DDA5673D77AF7DE2A5E /* DirectConnect_GlucoseAlarmsTests.swift */; };
+		A70D5B32B7276093C9991BF5 /* DirectConnect_SensorModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7433DAC7C92AE2911822FF0 /* DirectConnect_SensorModelTests.swift */; };
+		B941AD9E2FFEA482A0063432 /* DirectConnect_StateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BF7F79E7D461FEA88A9988 /* DirectConnect_StateTests.swift */; };
+		963EE5190695B8445F5F7002 /* DirectConnect_Branding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B8071EBA9DA6319F28A1019 /* DirectConnect_Branding.swift */; };
+		8872C006DBA6B3EB44A0290E /* DirectConnect_Tips.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC84EEA968380BDB86F73693 /* DirectConnect_Tips.swift */; };
+		330001C7F46F82CC54985DBA /* PowerPack_ModelFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD885CE92AF94E65A4495D2 /* PowerPack_ModelFinder.swift */; };
+		FEBD22F20417AF37389238A1 /* PowerPack_ModelFinderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D14B64D51F1390475658AA17 /* PowerPack_ModelFinderView.swift */; };
+		6E3638F47CFE70F23DF31FA3 /* PowerPack_ModelFinderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3914844F3B46275DADCD356 /* PowerPack_ModelFinderTests.swift */; };
+		9E201ADCAC38719F08BC0EF0 /* DirectConnect_RecoveryPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6ECA3734CF55BDD6566165F /* DirectConnect_RecoveryPolicy.swift */; };
+		3B1B3FA09AF95FB52D9D1355 /* DirectConnect_ConnectionHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E965C504809BB1C4D50919 /* DirectConnect_ConnectionHealth.swift */; };
+		E499CFEE6C2BB2873306326C /* DirectConnect_RecoveryPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699AC1C5B4F4908523522E78 /* DirectConnect_RecoveryPolicyTests.swift */; };
+		EA78340342C2CA685AEC6D14 /* DirectConnect_ConnectionHealthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E9A1AE34FC4C65A419D336 /* DirectConnect_ConnectionHealthTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1707,6 +1751,64 @@
 		5D7B17C02B7B5CF8CBE27C65 /* PowerPack_BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPack_BuildInfo.swift; sourceTree = "<group>"; };
 		987E5D2B695A97D178511EC9 /* PowerPack_UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPack_UpdateChecker.swift; sourceTree = "<group>"; };
 		F49F3796521706FE90018866 /* PowerPack_APIUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPack_APIUsage.swift; sourceTree = "<group>"; };
+		2E2EBE77379C5B04F21310BF /* DirectConnect_ECC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "DirectConnect_ECC.c"; sourceTree = "<group>"; };
+		77DFB9C32B581D524125337C /* DirectConnect_ECC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DirectConnect_ECC.h"; sourceTree = "<group>"; };
+		D8FF411BC8C426BD7F8E36B7 /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE.txt"; sourceTree = "<group>"; };
+		FE0EE93DAA0248E10FFF68A2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "README.md"; sourceTree = "<group>"; };
+		3C9566C36D462F3BFBEFC299 /* asm_arm.inc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "asm_arm.inc"; sourceTree = "<group>"; };
+		991073BC8F7931617200D1F0 /* asm_arm_mult_square.inc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "asm_arm_mult_square.inc"; sourceTree = "<group>"; };
+		F0E0E10760377B6669E08E04 /* asm_arm_mult_square_umaal.inc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "asm_arm_mult_square_umaal.inc"; sourceTree = "<group>"; };
+		59C57C87E5244962CE808E5F /* curve-specific.inc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "curve-specific.inc"; sourceTree = "<group>"; };
+		55EB15D5456877775AD30BD5 /* platform-specific.inc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "platform-specific.inc"; sourceTree = "<group>"; };
+		609411AE4EF1A6A013404A7E /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "types.h"; sourceTree = "<group>"; };
+		57F9EB703FAC70BFCEDE306C /* uECC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "uECC.c"; sourceTree = "<group>"; };
+		199E6F21A6A58B842D0AD016 /* uECC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "uECC.h"; sourceTree = "<group>"; };
+		0C19A532DAB906F4CB54108D /* uECC_vli.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "uECC_vli.h"; sourceTree = "<group>"; };
+		1775F48F3FA52573968892F8 /* DirectConnect-Bridging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DirectConnect-Bridging.h"; sourceTree = "<group>"; };
+		2FFF556ADA96ABAA237A415D /* DirectConnect_AlarmSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_AlarmSettings.swift"; sourceTree = "<group>"; };
+		01E4255886BFED8CC9E947BA /* DirectConnect_BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_BluetoothManager.swift"; sourceTree = "<group>"; };
+		F9D6F37539611BEFCCD57009 /* DirectConnect_Bytes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_Bytes.swift"; sourceTree = "<group>"; };
+		3116793DE5AD522FB294D9B6 /* DirectConnect_Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_Diagnostics.swift"; sourceTree = "<group>"; };
+		4278766440784E79DEC22653 /* DirectConnect_G7CGMManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7CGMManager.swift"; sourceTree = "<group>"; };
+		E9207E6E38ADD35AD5244C93 /* DirectConnect_G7Calibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7Calibration.swift"; sourceTree = "<group>"; };
+		ACF60459368C4AD65585242C /* DirectConnect_G7Certificates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7Certificates.swift"; sourceTree = "<group>"; };
+		35FBB0AB2FA8C93DEB5F22E8 /* DirectConnect_G7Crypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7Crypto.swift"; sourceTree = "<group>"; };
+		294F5690254CCD288E45E108 /* DirectConnect_G7Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7Messages.swift"; sourceTree = "<group>"; };
+		6FD94E6A49DC099A15D4342B /* DirectConnect_G7Pairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7Pairing.swift"; sourceTree = "<group>"; };
+		F2BE6BF2FB97617BA644B4BE /* DirectConnect_G7Sensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7Sensor.swift"; sourceTree = "<group>"; };
+		E1614CB90DCCAB162A657CC6 /* DirectConnect_G7State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7State.swift"; sourceTree = "<group>"; };
+		F3518D33898D5088EBF5F51D /* DirectConnect_GlucoseAlarms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_GlucoseAlarms.swift"; sourceTree = "<group>"; };
+		2F1A761C09EC2006E9E209AA /* DirectConnect_KeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_KeyStore.swift"; sourceTree = "<group>"; };
+		64F98B612104BC96C82A4066 /* DirectConnect_PeripheralManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_PeripheralManager.swift"; sourceTree = "<group>"; };
+		E53FD82A1BE4BC1C05D2468C /* DirectConnect_SensorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_SensorModel.swift"; sourceTree = "<group>"; };
+		558C29342924F3C16DADB32C /* LICENSE-GPL-3.0.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-GPL-3.0.txt"; sourceTree = "<group>"; };
+		8DACBE22A498EFCC85F26F2C /* DirectConnect_FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_FeatureFlags.swift"; sourceTree = "<group>"; };
+		A75AECD0068F9A54F2360542 /* DirectConnect_AlarmSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_AlarmSettingsView.swift"; sourceTree = "<group>"; };
+		CB00E82B34FBA61B58C7D3BE /* DirectConnect_CGMManager+UI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_CGMManager+UI.swift"; sourceTree = "<group>"; };
+		52314C06CFEA41B85298AEE7 /* DirectConnect_CalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_CalibrationView.swift"; sourceTree = "<group>"; };
+		8D10C5994DD24357BFDD50B6 /* DirectConnect_DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_DiagnosticsView.swift"; sourceTree = "<group>"; };
+		F56BC7C4E840ED1A3DB23206 /* DirectConnect_SensorStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_SensorStatusView.swift"; sourceTree = "<group>"; };
+		D557D518F0ECBC174A3F171F /* DirectConnect_SensorStatusViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_SensorStatusViewModel.swift"; sourceTree = "<group>"; };
+		CCED87DC03EEC366734E2F36 /* DirectConnect_SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_SettingsView.swift"; sourceTree = "<group>"; };
+		19DFEA851DAF9573D9CB9595 /* DirectConnect_SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_SetupView.swift"; sourceTree = "<group>"; };
+		CD378D2AC9194B156AF87075 /* DirectConnect_UICoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_UICoordinator.swift"; sourceTree = "<group>"; };
+		90419C38B151D38E78042E21 /* DirectConnect_AlarmSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_AlarmSettingsTests.swift"; sourceTree = "<group>"; };
+		47E6233AE82C2AE06408A748 /* DirectConnect_G7CalibrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7CalibrationTests.swift"; sourceTree = "<group>"; };
+		1C6D85FA8C63954ED39978A4 /* DirectConnect_G7CryptoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7CryptoTests.swift"; sourceTree = "<group>"; };
+		588713B472DA20B0165B854F /* DirectConnect_G7MessagesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7MessagesTests.swift"; sourceTree = "<group>"; };
+		44896217CEA3EF441079A9E7 /* DirectConnect_G7PairingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_G7PairingTests.swift"; sourceTree = "<group>"; };
+		22CB2DDA5673D77AF7DE2A5E /* DirectConnect_GlucoseAlarmsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_GlucoseAlarmsTests.swift"; sourceTree = "<group>"; };
+		C7433DAC7C92AE2911822FF0 /* DirectConnect_SensorModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_SensorModelTests.swift"; sourceTree = "<group>"; };
+		F5BF7F79E7D461FEA88A9988 /* DirectConnect_StateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_StateTests.swift"; sourceTree = "<group>"; };
+		1B8071EBA9DA6319F28A1019 /* DirectConnect_Branding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_Branding.swift"; sourceTree = "<group>"; };
+		BC84EEA968380BDB86F73693 /* DirectConnect_Tips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_Tips.swift"; sourceTree = "<group>"; };
+		ECD885CE92AF94E65A4495D2 /* PowerPack_ModelFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PowerPack_ModelFinder.swift"; sourceTree = "<group>"; };
+		D14B64D51F1390475658AA17 /* PowerPack_ModelFinderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PowerPack_ModelFinderView.swift"; sourceTree = "<group>"; };
+		B3914844F3B46275DADCD356 /* PowerPack_ModelFinderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PowerPack_ModelFinderTests.swift"; sourceTree = "<group>"; };
+		D6ECA3734CF55BDD6566165F /* DirectConnect_RecoveryPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_RecoveryPolicy.swift"; sourceTree = "<group>"; };
+		B1E965C504809BB1C4D50919 /* DirectConnect_ConnectionHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_ConnectionHealth.swift"; sourceTree = "<group>"; };
+		699AC1C5B4F4908523522E78 /* DirectConnect_RecoveryPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_RecoveryPolicyTests.swift"; sourceTree = "<group>"; };
+		26E9A1AE34FC4C65A419D336 /* DirectConnect_ConnectionHealthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_ConnectionHealthTests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2369,6 +2471,8 @@
 				73D1F909821AB044995D15C9 /* LoopInsights */,
 				41FE167B28A4E1B5C20E5CD4 /* DataLayer */,
 				889763863213CA976E18850D /* SiteAtlas */,
+				754059120AD39C18D87B00E7 /* DirectConnect */,
+				73B25506DA231DCF67593716 /* PowerPack */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -2421,6 +2525,7 @@
 				D5C648AD636FDE5276D80627 /* AutoPresets */,
 				70DE5AA0A23DBC5E57519E2B /* LoopInsights */,
 				CAC8868C9D604DCDDD42CE42 /* DataLayer */,
+				16784F334693021281537AFE /* DirectConnect */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -2443,6 +2548,8 @@
 				93F4741D9B20D83B5B586D72 /* FoodFinder */,
 				DEFFCA5690808CDE50EF27AF /* FoodFinder */,
 				A9003624677C30C77E7B43C1 /* LoopInsights */,
+				0B1A2222C97445B13EC30765 /* DirectConnect */,
+				CC70CFCD214F323E150C74E4 /* PowerPack */,
 			);
 			path = LoopTests;
 			sourceTree = "<group>";
@@ -3173,6 +3280,7 @@
 				4432E0AF82A533BD805DD582 /* LoopInsights */,
 				78A132379753FE176147ADB0 /* DataLayer */,
 				510BD1AC420DD61DBA9B7E33 /* SiteAtlas */,
+				1768D383F1C0F21EC69B8D49 /* PowerPack */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -3242,6 +3350,7 @@
 				95EE87C37CEB4BDEE4977D24 /* FoodFinder */,
 				88CDF3C03FB7CEA878C97FA3 /* LoopInsights */,
 				C3FF320DE58F34A77D4D5254 /* DataLayer */,
+				D15EA1F9289C990ABEFBA8A2 /* DirectConnect */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -3548,6 +3657,129 @@
 				D956D2BCFB715323F53E463B /* BodyMapBack.png */,
 			);
 			path = SiteAtlas;
+			sourceTree = "<group>";
+		};
+		49050A2F43A074991FC0B31A /* micro-ecc */ = {
+			isa = PBXGroup;
+			children = (
+				D8FF411BC8C426BD7F8E36B7 /* LICENSE.txt */,
+				FE0EE93DAA0248E10FFF68A2 /* README.md */,
+				3C9566C36D462F3BFBEFC299 /* asm_arm.inc */,
+				991073BC8F7931617200D1F0 /* asm_arm_mult_square.inc */,
+				F0E0E10760377B6669E08E04 /* asm_arm_mult_square_umaal.inc */,
+				59C57C87E5244962CE808E5F /* curve-specific.inc */,
+				55EB15D5456877775AD30BD5 /* platform-specific.inc */,
+				609411AE4EF1A6A013404A7E /* types.h */,
+				57F9EB703FAC70BFCEDE306C /* uECC.c */,
+				199E6F21A6A58B842D0AD016 /* uECC.h */,
+				0C19A532DAB906F4CB54108D /* uECC_vli.h */,
+			);
+			path = "micro-ecc";
+			sourceTree = "<group>";
+		};
+		12070989F35744E86A1C41CF /* Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				2E2EBE77379C5B04F21310BF /* DirectConnect_ECC.c */,
+				77DFB9C32B581D524125337C /* DirectConnect_ECC.h */,
+				49050A2F43A074991FC0B31A /* micro-ecc */,
+			);
+			path = "Crypto";
+			sourceTree = "<group>";
+		};
+		16784F334693021281537AFE /* DirectConnect */ = {
+			isa = PBXGroup;
+			children = (
+				D6ECA3734CF55BDD6566165F /* DirectConnect_RecoveryPolicy.swift */,
+				B1E965C504809BB1C4D50919 /* DirectConnect_ConnectionHealth.swift */,
+				12070989F35744E86A1C41CF /* Crypto */,
+				1775F48F3FA52573968892F8 /* DirectConnect-Bridging.h */,
+				2FFF556ADA96ABAA237A415D /* DirectConnect_AlarmSettings.swift */,
+				01E4255886BFED8CC9E947BA /* DirectConnect_BluetoothManager.swift */,
+				F9D6F37539611BEFCCD57009 /* DirectConnect_Bytes.swift */,
+				3116793DE5AD522FB294D9B6 /* DirectConnect_Diagnostics.swift */,
+				4278766440784E79DEC22653 /* DirectConnect_G7CGMManager.swift */,
+				E9207E6E38ADD35AD5244C93 /* DirectConnect_G7Calibration.swift */,
+				ACF60459368C4AD65585242C /* DirectConnect_G7Certificates.swift */,
+				35FBB0AB2FA8C93DEB5F22E8 /* DirectConnect_G7Crypto.swift */,
+				294F5690254CCD288E45E108 /* DirectConnect_G7Messages.swift */,
+				6FD94E6A49DC099A15D4342B /* DirectConnect_G7Pairing.swift */,
+				F2BE6BF2FB97617BA644B4BE /* DirectConnect_G7Sensor.swift */,
+				E1614CB90DCCAB162A657CC6 /* DirectConnect_G7State.swift */,
+				F3518D33898D5088EBF5F51D /* DirectConnect_GlucoseAlarms.swift */,
+				2F1A761C09EC2006E9E209AA /* DirectConnect_KeyStore.swift */,
+				64F98B612104BC96C82A4066 /* DirectConnect_PeripheralManager.swift */,
+				E53FD82A1BE4BC1C05D2468C /* DirectConnect_SensorModel.swift */,
+				558C29342924F3C16DADB32C /* LICENSE-GPL-3.0.txt */,
+			);
+			path = "DirectConnect";
+			sourceTree = "<group>";
+		};
+		D15EA1F9289C990ABEFBA8A2 /* DirectConnect */ = {
+			isa = PBXGroup;
+			children = (
+				8DACBE22A498EFCC85F26F2C /* DirectConnect_FeatureFlags.swift */,
+			);
+			path = "DirectConnect";
+			sourceTree = "<group>";
+		};
+		754059120AD39C18D87B00E7 /* DirectConnect */ = {
+			isa = PBXGroup;
+			children = (
+				BC84EEA968380BDB86F73693 /* DirectConnect_Tips.swift */,
+				1B8071EBA9DA6319F28A1019 /* DirectConnect_Branding.swift */,
+				A75AECD0068F9A54F2360542 /* DirectConnect_AlarmSettingsView.swift */,
+				CB00E82B34FBA61B58C7D3BE /* DirectConnect_CGMManager+UI.swift */,
+				52314C06CFEA41B85298AEE7 /* DirectConnect_CalibrationView.swift */,
+				8D10C5994DD24357BFDD50B6 /* DirectConnect_DiagnosticsView.swift */,
+				F56BC7C4E840ED1A3DB23206 /* DirectConnect_SensorStatusView.swift */,
+				D557D518F0ECBC174A3F171F /* DirectConnect_SensorStatusViewModel.swift */,
+				CCED87DC03EEC366734E2F36 /* DirectConnect_SettingsView.swift */,
+				19DFEA851DAF9573D9CB9595 /* DirectConnect_SetupView.swift */,
+				CD378D2AC9194B156AF87075 /* DirectConnect_UICoordinator.swift */,
+			);
+			path = "DirectConnect";
+			sourceTree = "<group>";
+		};
+		0B1A2222C97445B13EC30765 /* DirectConnect */ = {
+			isa = PBXGroup;
+			children = (
+				699AC1C5B4F4908523522E78 /* DirectConnect_RecoveryPolicyTests.swift */,
+				26E9A1AE34FC4C65A419D336 /* DirectConnect_ConnectionHealthTests.swift */,
+				90419C38B151D38E78042E21 /* DirectConnect_AlarmSettingsTests.swift */,
+				47E6233AE82C2AE06408A748 /* DirectConnect_G7CalibrationTests.swift */,
+				1C6D85FA8C63954ED39978A4 /* DirectConnect_G7CryptoTests.swift */,
+				588713B472DA20B0165B854F /* DirectConnect_G7MessagesTests.swift */,
+				44896217CEA3EF441079A9E7 /* DirectConnect_G7PairingTests.swift */,
+				22CB2DDA5673D77AF7DE2A5E /* DirectConnect_GlucoseAlarmsTests.swift */,
+				C7433DAC7C92AE2911822FF0 /* DirectConnect_SensorModelTests.swift */,
+				F5BF7F79E7D461FEA88A9988 /* DirectConnect_StateTests.swift */,
+			);
+			path = "DirectConnect";
+			sourceTree = "<group>";
+		};
+		1768D383F1C0F21EC69B8D49 /* PowerPack */ = {
+			isa = PBXGroup;
+			children = (
+				ECD885CE92AF94E65A4495D2 /* PowerPack_ModelFinder.swift */,
+			);
+			path = "PowerPack";
+			sourceTree = "<group>";
+		};
+		73B25506DA231DCF67593716 /* PowerPack */ = {
+			isa = PBXGroup;
+			children = (
+				D14B64D51F1390475658AA17 /* PowerPack_ModelFinderView.swift */,
+			);
+			path = "PowerPack";
+			sourceTree = "<group>";
+		};
+		CC70CFCD214F323E150C74E4 /* PowerPack */ = {
+			isa = PBXGroup;
+			children = (
+				B3914844F3B46275DADCD356 /* PowerPack_ModelFinderTests.swift */,
+			);
+			path = "PowerPack";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -4268,6 +4500,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9E201ADCAC38719F08BC0EF0 /* DirectConnect_RecoveryPolicy.swift in Sources */,
+				3B1B3FA09AF95FB52D9D1355 /* DirectConnect_ConnectionHealth.swift in Sources */,
 				E99E746DC66A23098BEE7C6D /* SiteAtlas_FeatureFlags.swift in Sources */,
 				A3E380B614277C4C788365FA /* SiteAtlas_Storage.swift in Sources */,
 				97C5ABDCD645F8D01E91DC0D /* SiteAtlas_Coordinator.swift in Sources */,
@@ -4606,6 +4840,37 @@
 				1A6B35DD2E1B9833D7DA57AA /* PowerPack_BuildInfo.swift in Sources */,
 				3899284456069E71DE92D3E4 /* PowerPack_UpdateChecker.swift in Sources */,
 				5F98171F4CC40844F719FAD0 /* PowerPack_APIUsage.swift in Sources */,
+				85C3A00CA83157EFA4F4EB56 /* DirectConnect_ECC.c in Sources */,
+				EC575892E0DB522179F61E53 /* DirectConnect_AlarmSettings.swift in Sources */,
+				D79E7E26AFBAEE92A857A885 /* DirectConnect_BluetoothManager.swift in Sources */,
+				18080E387A811F029415B914 /* DirectConnect_Bytes.swift in Sources */,
+				CAF2F40E6853F31C5158F652 /* DirectConnect_Diagnostics.swift in Sources */,
+				8619CA7B2BAB6062F9D466FE /* DirectConnect_G7CGMManager.swift in Sources */,
+				3ADAE72164BC62D1F09F611D /* DirectConnect_G7Calibration.swift in Sources */,
+				05022C8F5D47E03FBFD7525B /* DirectConnect_G7Certificates.swift in Sources */,
+				E4ECD8F41A42D06D8F1F7DA1 /* DirectConnect_G7Crypto.swift in Sources */,
+				2E8AB92A034DF1CD56561409 /* DirectConnect_G7Messages.swift in Sources */,
+				7987B045E76CDBADF14F7811 /* DirectConnect_G7Pairing.swift in Sources */,
+				CDE1C25F58591CBB0EA97CDB /* DirectConnect_G7Sensor.swift in Sources */,
+				5257E8200B2392E1F8CB70F2 /* DirectConnect_G7State.swift in Sources */,
+				0E356D9D41D704BE6B919258 /* DirectConnect_GlucoseAlarms.swift in Sources */,
+				3D377866BD8A8D00560A9DBC /* DirectConnect_KeyStore.swift in Sources */,
+				1EF6AD30147C1B73BBE2EAA1 /* DirectConnect_PeripheralManager.swift in Sources */,
+				517B6D44649D113FC5F1326C /* DirectConnect_SensorModel.swift in Sources */,
+				1AC85D6D3503DC2E3BD0A8B8 /* DirectConnect_FeatureFlags.swift in Sources */,
+				E2F1965E33458F40F4A77F45 /* DirectConnect_AlarmSettingsView.swift in Sources */,
+				CBB7F0A8BC506104B75C021D /* DirectConnect_CGMManager+UI.swift in Sources */,
+				A7A5FC671C271C465400E8A7 /* DirectConnect_CalibrationView.swift in Sources */,
+				F3F2C3CE6F7398ECAED263BA /* DirectConnect_DiagnosticsView.swift in Sources */,
+				EA79389A481370ED0BCC5E07 /* DirectConnect_SensorStatusView.swift in Sources */,
+				8C168E7F33E38E0D1FDC7195 /* DirectConnect_SensorStatusViewModel.swift in Sources */,
+				717C996CB1C24118862989B5 /* DirectConnect_SettingsView.swift in Sources */,
+				8872C006DBA6B3EB44A0290E /* DirectConnect_Tips.swift in Sources */,
+				963EE5190695B8445F5F7002 /* DirectConnect_Branding.swift in Sources */,
+				3F0FB11A9A04B197B00C8717 /* DirectConnect_SetupView.swift in Sources */,
+				18A2E05EC0ACD57DD8DABD56 /* DirectConnect_UICoordinator.swift in Sources */,
+				330001C7F46F82CC54985DBA /* PowerPack_ModelFinder.swift in Sources */,
+				FEBD22F20417AF37389238A1 /* PowerPack_ModelFinderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4751,6 +5016,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E499CFEE6C2BB2873306326C /* DirectConnect_RecoveryPolicyTests.swift in Sources */,
+				EA78340342C2CA685AEC6D14 /* DirectConnect_ConnectionHealthTests.swift in Sources */,
 				A9DF02CB24F72B9E00B7C988 /* CriticalEventLogTests.swift in Sources */,
 				1D80313D24746274002810DF /* AlertStoreTests.swift in Sources */,
 				C1777A6625A125F100595963 /* ManualEntryDoseViewModelTests.swift in Sources */,
@@ -4795,6 +5062,15 @@
 				9B8960934E11016BD5A3C893 /* FoodFinder_BarcodeScannerTests.swift in Sources */,
 				823DED9A0D02CE040129F44E /* FoodFinder_OpenFoodFactsTests.swift in Sources */,
 				47448AE2656870E8609E484C /* FoodFinder_VoiceSearchTests.swift in Sources */,
+				FAE7EDB91989E5CC19551E97 /* DirectConnect_AlarmSettingsTests.swift in Sources */,
+				2A6C8245B1729AC6506CE5F1 /* DirectConnect_G7CalibrationTests.swift in Sources */,
+				02B6FEAA8A770FD158A23485 /* DirectConnect_G7CryptoTests.swift in Sources */,
+				CC1D0F3E0F42989A5D732199 /* DirectConnect_G7MessagesTests.swift in Sources */,
+				078CB45FD501FC406A0755C1 /* DirectConnect_G7PairingTests.swift in Sources */,
+				335E6695DFF16A6A87968347 /* DirectConnect_GlucoseAlarmsTests.swift in Sources */,
+				A70D5B32B7276093C9991BF5 /* DirectConnect_SensorModelTests.swift in Sources */,
+				B941AD9E2FFEA482A0063432 /* DirectConnect_StateTests.swift in Sources */,
+				6E3638F47CFE70F23DF31FA3 /* PowerPack_ModelFinderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5451,6 +5727,7 @@
 		43776FB71B8022E90074EA36 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				SWIFT_OBJC_BRIDGING_HEADER = "Loop/Managers/DirectConnect/DirectConnect-Bridging.h";
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "$(APPICON_NAME)";
 				CODE_SIGN_ENTITLEMENTS = "$(LOOP_ENTITLEMENTS)";
@@ -5481,6 +5758,7 @@
 		43776FB81B8022E90074EA36 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				SWIFT_OBJC_BRIDGING_HEADER = "Loop/Managers/DirectConnect/DirectConnect-Bridging.h";
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "$(APPICON_NAME)";
 				CODE_SIGN_ENTITLEMENTS = "$(LOOP_ENTITLEMENTS)";

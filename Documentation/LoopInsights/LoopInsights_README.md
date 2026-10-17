@@ -152,6 +152,13 @@ Settings → LoopInsights → Settings:
 | **Background Monitor** | OFF | Periodic background analysis with notifications for high-confidence patterns. |
 | **Developer Mode** | OFF | Long-press the LoopInsights header 5 times to unlock. |
 
+**Finding a model:** under the Model field, the **OpenAI / Claude / Gemini / Grok** buttons open a
+Google search, inside Loop, for that provider's current model IDs that accept a temperature
+setting. They change no settings and need no API key. Copy a model name into the Model
+field, then tap **Test Connection** (green).
+
+The Nightscout **Test Connection** button is also green.
+
 ## Privacy
 
 - **Your data goes to your chosen AI provider.** PowerPack does not proxy.

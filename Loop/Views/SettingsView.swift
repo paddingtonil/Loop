@@ -409,6 +409,8 @@ extension SettingsView {
                 .listRowBackground(PowerPackGroupBorder(position: .top))
             bolusProSettingsRow
                 .listRowBackground(PowerPackGroupBorder(position: .middle))
+            directConnectSettingsRow
+                .listRowBackground(PowerPackGroupBorder(position: .middle))
             foodFinderSettingsRow
                 .listRowBackground(PowerPackGroupBorder(position: .middle))
             loopInsightsSettingsRow
@@ -454,6 +456,19 @@ extension SettingsView {
                             .font(.system(size: 36)),
                         label: NSLocalizedString("BolusPro", comment: "Title text for button to BolusPro Settings"),
                         descriptiveText: NSLocalizedString("Protein & fat-aware bolusing for long absorption meals", comment: "Descriptive text for BolusPro Settings"))
+        }
+    }
+
+    // DirectConnect — single settings insertion point
+    private var directConnectSettingsRow: some View {
+        NavigationLink(destination: DirectConnect_SettingsView()) {
+            LargeButton(action: {},
+                        includeArrow: false,
+                        imageView: Image(systemName: DirectConnect_Branding.iconName)
+                            .foregroundColor(DirectConnect_Branding.color)
+                            .font(.system(size: 32)),
+                        label: NSLocalizedString("DirectConnect", comment: "Title text for button to DirectConnect Settings"),
+                        descriptiveText: NSLocalizedString("Dexcom G7 / ONE+ / Stelo without the Dexcom app", comment: "Descriptive text for DirectConnect Settings"))
         }
     }
 
@@ -849,10 +864,12 @@ struct PluginPopover: UIViewControllerRepresentable {
 
         let alert = UIAlertController(title: title, message: nil, preferredStyle: .actionSheet)
         for action in actions {
-            alert.addAction(UIAlertAction(title: action.title, style: .default) { _ in
+            let alertAction = UIAlertAction(title: action.title, style: .default) { _ in
                 self.isPresented = false
                 action.handler()
-            })
+            }
+            DirectConnect_Branding.style(alertAction) // DirectConnect (PowerPack) — purple entry
+            alert.addAction(alertAction)
         }
 
         alert.addAction(UIAlertAction(

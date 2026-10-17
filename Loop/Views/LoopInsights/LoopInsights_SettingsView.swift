@@ -445,6 +445,9 @@ struct LoopInsights_SettingsView: View {
                     }
                 }
 
+                // Model finder (PowerPack) — find and fill a model that accepts LoopInsights' requests
+                PowerPack_ModelFinderBar(purpose: .text)
+
                 // Test Connection
                 HStack(spacing: 12) {
                     Button(action: testConnection) {
@@ -456,7 +459,7 @@ struct LoopInsights_SettingsView: View {
                             }
                             Text(NSLocalizedString("Test Connection", comment: "LoopInsights test connection button"))
                         }
-                        .foregroundColor(Color(red: 26/255, green: 138/255, blue: 158/255))
+                        .foregroundColor(.green)
                     }
                     .buttonStyle(.plain)
                     .disabled(isTesting || apiKeyText.isEmpty || baseURL.isEmpty)
@@ -1344,7 +1347,7 @@ struct LoopInsights_SettingsView: View {
                                 }
                                 Text("Test Connection")
                             }
-                            .foregroundColor(Color(red: 26/255, green: 138/255, blue: 158/255))
+                            .foregroundColor(.green)
                         }
                         .buttonStyle(.plain)
                         .disabled(isTestingNightscout || nightscoutConfig.siteURL.isEmpty)

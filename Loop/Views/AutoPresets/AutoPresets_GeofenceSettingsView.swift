@@ -245,6 +245,7 @@ struct AutoPresets_GeofenceEditView: View {
     // Map state
     @State private var region: MKCoordinateRegion
     @State private var showingDeleteConfirm = false
+    @State private var showingPlaceSearch = false
 
     private let existingLocation: AutoPresetsGeofenceLocation?
     private let availablePresets: [TemporaryScheduleOverridePreset]
@@ -319,8 +320,11 @@ struct AutoPresets_GeofenceEditView: View {
 
     private var nameSection: some View {
         Section("Name") {
-            TextField("e.g. Gym, Office, Park", text: $name)
-                .textFieldStyle(.automatic)
+            HStack {
+                TextField("e.g. Gym, Office, Park", text: $name)
+                    .textFieldStyle(.automatic)
+                AutoPresets_ClearTextButton(text: $name)
+            }
         }
     }
 
@@ -333,14 +337,39 @@ struct AutoPresets_GeofenceEditView: View {
             .frame(height: 200)
             .cornerRadius(8)
             .overlay(alignment: .center) {
-                if !hasSetLocation {
-                    VStack(spacing: 4) {
-                        Image(systemName: "mappin")
-                            .font(.title2)
-                        Text("Use button below to set location")
-                            .font(.caption)
-                    }
+                // Crosshair marks the point "Pin Map Center" saves.
+                Image(systemName: "plus")
+                    .font(.title3.weight(.light))
                     .foregroundColor(.secondary)
+                    .allowsHitTesting(false)
+            }
+
+            // Search for an address or place
+            Button {
+                showingPlaceSearch = true
+            } label: {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                    Text("Search Address or Place")
+                }
+            }
+            .sheet(isPresented: $showingPlaceSearch) {
+                // The map starts on a placeholder city until a location is set; don't rank results near it.
+                AutoPresets_PlaceSearchView(searchRegion: hasSetLocation ? region : nil) { place in
+                    setLocation(place.coordinate)
+                    if name.trimmingCharacters(in: .whitespaces).isEmpty {
+                        name = place.name
+                    }
+                }
+            }
+
+            // Pin wherever the user has moved the map
+            Button {
+                setLocation(region.center)
+            } label: {
+                HStack {
+                    Image(systemName: "scope")
+                    Text("Pin Map Center")
                 }
             }
 
@@ -364,11 +393,24 @@ struct AutoPresets_GeofenceEditView: View {
                         .font(.caption.monospaced())
                         .foregroundColor(.secondary)
                 }
+
+                // Check the pin in the Maps app; Maps cannot send a place back to Loop.
+                Button {
+                    let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude))
+                    let item = MKMapItem(placemark: placemark)
+                    item.name = name.isEmpty ? nil : name
+                    item.openInMaps(launchOptions: nil)
+                } label: {
+                    HStack {
+                        Image(systemName: "map")
+                        Text("Show in Maps")
+                    }
+                }
             }
         } header: {
             Text("Location")
         } footer: {
-            Text("Tap \"Use My Current Location\" while at the place you want to save.")
+            Text("Search for an address or place, move the map and tap \"Pin Map Center\", or tap \"Use My Current Location\" while you are there.")
         }
     }
 
@@ -467,6 +509,13 @@ struct AutoPresets_GeofenceEditView: View {
         }
     }
 
+    private func setLocation(_ coordinate: CLLocationCoordinate2D) {
+        latitude = coordinate.latitude
+        longitude = coordinate.longitude
+        region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+        hasSetLocation = true
+    }
+
     // MARK: - Save
 
     private var canSave: Bool {
@@ -494,6 +543,146 @@ struct AutoPresets_GeofenceEditView: View {
             geofenceManager.addLocation(location)
         }
         dismiss()
+    }
+}
+
+// MARK: - Place Search
+
+/// A place chosen in the search sheet.
+struct AutoPresets_SearchedPlace {
+    let name: String
+    let coordinate: CLLocationCoordinate2D
+}
+
+/// Suggests addresses and places as the user types, using Apple's map search.
+final class AutoPresets_PlaceCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
+    @Published var query = "" {
+        didSet {
+            if query.isEmpty {
+                results = []
+            } else {
+                completer.queryFragment = query
+            }
+        }
+    }
+    @Published private(set) var results: [MKLocalSearchCompletion] = []
+    @Published private(set) var errorText: String?
+
+    private let completer = MKLocalSearchCompleter()
+
+    init(region: MKCoordinateRegion?) {
+        super.init()
+        completer.delegate = self
+        // Ranks matches near the map first without excluding places elsewhere.
+        if let region = region {
+            completer.region = region
+        }
+        completer.resultTypes = [.address, .pointOfInterest]
+    }
+
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        errorText = nil
+        results = completer.results
+    }
+
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        errorText = error.localizedDescription
+    }
+}
+
+struct AutoPresets_PlaceSearchView: View {
+    let onSelect: (AutoPresets_SearchedPlace) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var completer: AutoPresets_PlaceCompleter
+    @State private var resolving = false
+    @State private var resolveError: String?
+
+    init(searchRegion: MKCoordinateRegion?, onSelect: @escaping (AutoPresets_SearchedPlace) -> Void) {
+        self.onSelect = onSelect
+        _completer = StateObject(wrappedValue: AutoPresets_PlaceCompleter(region: searchRegion))
+    }
+
+    var body: some View {
+        NavigationView {
+            List {
+                Section {
+                    HStack {
+                        TextField("Address, business or landmark", text: $completer.query)
+                            .textContentType(.fullStreetAddress)
+                            .disableAutocorrection(true)
+                        AutoPresets_ClearTextButton(text: $completer.query)
+                    }
+                }
+                if let error = resolveError ?? completer.errorText {
+                    Section {
+                        Label(error, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                    }
+                }
+                Section {
+                    ForEach(completer.results, id: \.self) { result in
+                        Button {
+                            resolve(result)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(result.title).foregroundColor(.primary)
+                                if !result.subtitle.isEmpty {
+                                    Text(result.subtitle).font(.caption).foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .disabled(resolving)
+                    }
+                }
+            }
+            .navigationTitle("Search Location")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .principal) {
+                    if resolving { SwiftUI.ProgressView() }
+                }
+            }
+        }
+    }
+
+    /// A suggestion has no coordinates; a full search for it returns them.
+    private func resolve(_ completion: MKLocalSearchCompletion) {
+        resolving = true
+        resolveError = nil
+        MKLocalSearch(request: MKLocalSearch.Request(completion: completion)).start { response, error in
+            resolving = false
+            guard let item = response?.mapItems.first else {
+                resolveError = error?.localizedDescription ?? "No location found for that result."
+                return
+            }
+            onSelect(AutoPresets_SearchedPlace(name: item.name ?? completion.title, coordinate: item.placemark.coordinate))
+            dismiss()
+        }
+    }
+}
+
+// MARK: - Clear Button
+
+/// Grey "x" that empties a text field; hidden while the field is already empty.
+struct AutoPresets_ClearTextButton: View {
+    @Binding var text: String
+
+    var body: some View {
+        if !text.isEmpty {
+            Button {
+                text = ""
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.secondary)
+            }
+            // Plain style keeps the tap on the icon; a Form row otherwise sends it to the whole row.
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Clear"))
+        }
     }
 }
 

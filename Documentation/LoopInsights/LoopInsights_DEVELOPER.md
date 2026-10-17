@@ -96,6 +96,12 @@ LoopKit fork (`taylorpatterson-T1D/LoopKit`):
 |---|---|---|
 | `LoopKit/LoopUI/Views/TherapySettingsView.swift` | ~5 lines | Therapy help link surface (uses static `TherapyHelpRegistry` set from Loop side) |
 
+## AI model search
+
+The Model field in `LoopInsights_SettingsView.swift` is followed by `PowerPack_ModelFinderBar(purpose: .text)`.
+Details in `FoodFinder_DEVELOPER.md` → "Shared AI model search". Models that refuse a temperature
+setting are unsupported; `LoopInsights_AIServiceAdapter` always sends one.
+
 ## Coordinator boot sequence
 
 ```
