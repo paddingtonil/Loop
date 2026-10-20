@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "filename": "Thunder_Sound_FX.caf",
+      "idiom": "universal",
+      "universal-type-identifier": "com.apple.coreaudio-format"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

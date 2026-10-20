@@ -30,6 +30,11 @@ Files containing xDrip4iOS-derived code:
   Loop/Managers/DirectConnect/DirectConnect_G7Sensor.swift
   Loop/Managers/DirectConnect/DirectConnect_SensorModel.swift
 
+Alarm sounds from xDrip4iOS (commit c268542), converted from CAF PCM to CAF AAC:
+  Loop/DefaultAssets.xcassets/DirectConnectSounds/ (117 data sets)
+xDrip4iOS states that most of these were copied from the Spike project
+(https://github.com/SpikeApp/Spike/tree/master/src/assets/sounds).
+
 ------------------------------------------------------------------------------
 
                     GNU GENERAL PUBLIC LICENSE

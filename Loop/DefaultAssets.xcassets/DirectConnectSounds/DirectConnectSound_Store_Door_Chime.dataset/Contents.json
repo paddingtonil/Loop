@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "filename": "Store_Door_Chime.caf",
+      "idiom": "universal",
+      "universal-type-identifier": "com.apple.coreaudio-format"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "filename": "Burglar_Alarm_Siren_1.caf",
+      "idiom": "universal",
+      "universal-type-identifier": "com.apple.coreaudio-format"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

@@ -1,13 +1,17 @@
 //
 //  DirectConnect_GlucoseAlarms.swift
 //  Loop (AID) PowerPack — based on LoopKit/Loop.
-//  DirectConnect — Glucose, rate, signal and sensor-lifetime alarm evaluation.
+//  DirectConnect — Glucose, rate, signal and sensor-lifetime alarm evaluation, and the
+//  player that sounds alarms through the silent switch.
 //  Idea by Taylor Patterson. Coded by Claude Code.
 //  Copyright © 2026 LoopKit Authors and Taylor Patterson.
 
+import AVFoundation
 import Foundation
 import HealthKit
 import LoopKit
+import MediaPlayer
+import UIKit
 
 struct DirectConnect_AlarmReading {
     let date: Date
@@ -30,6 +34,14 @@ struct DirectConnect_AlarmState: Codable, Equatable {
 enum DirectConnect_AlarmAction: Equatable {
     case issue(DirectConnect_AlarmKind, value: Double?)
     case retract(DirectConnect_AlarmKind)
+}
+
+/// What the CGM manager does with Loop's alert system and the alarm player, in order.
+enum DirectConnect_AlarmStep: Equatable {
+    case retractAlert(DirectConnect_AlarmKind)
+    case issueAlert(DirectConnect_AlarmKind, value: Double?)
+    case playSound(DirectConnect_AlarmKind)
+    case stopSound(DirectConnect_AlarmKind)
 }
 
 /// Pure functions: (inputs, settings, state) → actions. The CGM manager turns actions into
@@ -55,6 +67,18 @@ enum DirectConnect_GlucoseAlarms {
         oncePerEpisode(.fallingFast, active: isFalling, at: reading.date, value: reading.mgdl, state: &state, into: &actions)
         oncePerEpisode(.risingFast, active: isRising, at: reading.date, value: reading.mgdl, state: &state, into: &actions)
         return actions
+    }
+
+    /// Every issue first retracts the alarm's earlier alert. Loop's AlertStore marks only the
+    /// latest alert with an identifier as retracted, so without this a repeated alarm leaves its
+    /// earlier alerts open and Loop shows them again at every launch.
+    static func steps(for actions: [DirectConnect_AlarmAction]) -> [DirectConnect_AlarmStep] {
+        actions.flatMap { action -> [DirectConnect_AlarmStep] in
+            switch action {
+            case let .issue(kind, value): return [.retractAlert(kind), .issueAlert(kind, value: value), .playSound(kind)]
+            case let .retract(kind): return [.retractAlert(kind), .stopSound(kind)]
+            }
+        }
     }
 
     // MARK: - Signal loss
@@ -180,5 +204,140 @@ enum DirectConnect_GlucoseAlarms {
             return String(format: "%.1f mmol/L", mgdl / 18.0182)
         }
         return String(format: "%.0f mg/dL", mgdl)
+    }
+}
+
+// MARK: - Alarm sound player
+
+/// Plays alarm sounds with Loop's own audio session. Loop is not approved by Apple for critical
+/// notifications, so a notification alone only vibrates when the phone is on silent; playing
+/// audio in the `.playback` category is not muted by the silent switch or a Focus. Loop's
+/// `audio` background mode lets the sound start during a background sensor wake and keeps
+/// Loop running while it plays.
+final class DirectConnect_AlarmPlayer: NSObject {
+    static let shared = DirectConnect_AlarmPlayer()
+
+    private var player: AVAudioPlayer?
+    private(set) var playingKind: DirectConnect_AlarmKind?
+    private var playingRepeats = false
+    private var volumeBeforeAlarm: Float?
+    private var volumeView: MPVolumeView?
+    private var testStopWork: DispatchWorkItem?
+
+    private override init() {
+        super.init()
+        // Opening Loop means the user is awake and looking at the alarm.
+        NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.stop()
+        }
+    }
+
+    /// Starts the sound. Returns a line for the diagnostics log. A repeating alarm already
+    /// playing is not replaced by one that plays once.
+    @discardableResult
+    func play(_ playback: DirectConnect_AlarmPlayback, kind: DirectConnect_AlarmKind, testSeconds: TimeInterval? = nil) -> String {
+        dispatchPrecondition(condition: .onQueue(.main))
+        if player?.isPlaying == true, playingRepeats, !playback.repeatsUntilAcknowledged, testSeconds == nil {
+            return "Alarm sound for \(kind.rawValue) skipped; \(playingKind?.rawValue ?? "another alarm") is sounding"
+        }
+        stop()
+        let session = AVAudioSession.sharedInstance()
+        do {
+            // `.playback` ignores the silent switch; `.ambient` obeys it. Both mix with other
+            // audio, which lets the session start while Loop is in the background.
+            if playback.playsThroughSilent {
+                try session.setCategory(.playback, mode: .default, options: [.duckOthers])
+            } else {
+                try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+            }
+            try session.setActive(true)
+            guard let data = playback.sound.audioData() else {
+                stop()
+                return "Alarm sound \(playback.sound.rawValue) for \(kind.rawValue) not found"
+            }
+            let player = try AVAudioPlayer(data: data, fileTypeHint: playback.sound.isXDrip ? AVFileType.caf.rawValue : AVFileType.wav.rawValue)
+            // xDrip sounds run up to 30 seconds, so a non-urgent alarm plays them once; the short
+            // generated tones play three times.
+            player.numberOfLoops = playback.repeatsUntilAcknowledged || testSeconds != nil ? -1 : (playback.sound.isXDrip ? 0 : 2)
+            player.volume = 1
+            player.delegate = self
+            self.player = player
+            playingKind = kind
+            playingRepeats = playback.repeatsUntilAcknowledged
+            setAlarmVolume(Float(playback.volume))
+            guard player.play() else {
+                stop()
+                return "Alarm sound for \(kind.rawValue) failed to start"
+            }
+            if let testSeconds = testSeconds {
+                let work = DispatchWorkItem { [weak self] in self?.stop() }
+                testStopWork = work
+                DispatchQueue.main.asyncAfter(deadline: .now() + testSeconds, execute: work)
+            }
+            return "Alarm sound \(playback.sound.rawValue) playing for \(kind.rawValue) (through silent: \(playback.playsThroughSilent), volume \(Int(playback.volume * 100))%, phone volume was \(Int(session.outputVolume * 100))%)"
+        } catch {
+            stop()
+            return "Alarm sound for \(kind.rawValue) failed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Stops the sound. With a kind, stops only if that alarm is the one sounding.
+    func stop(kind: DirectConnect_AlarmKind? = nil) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        if let kind = kind, kind != playingKind { return }
+        testStopWork?.cancel()
+        testStopWork = nil
+        player?.stop()
+        player = nil
+        playingKind = nil
+        playingRepeats = false
+        restoreSystemVolume()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    var isPlaying: Bool { player?.isPlaying == true }
+
+    // MARK: Volume
+
+    // iOS has no public call to set the media volume. Moving the slider inside an MPVolumeView is
+    // the method other CGM apps use. It must be checked on a device, with the phone locked and in
+    // the background.
+    private func setAlarmVolume(_ volume: Float) {
+        let current = AVAudioSession.sharedInstance().outputVolume
+        guard abs(current - volume) > 0.01 else { return }
+        if volumeBeforeAlarm == nil {
+            volumeBeforeAlarm = current
+        }
+        setSystemVolume(volume)
+    }
+
+    /// Changes the level of the sound playing now, for the volume slider while choosing a sound.
+    func changeVolume(to volume: Double) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard isPlaying else { return }
+        setAlarmVolume(Float(volume))
+    }
+
+    private func restoreSystemVolume() {
+        guard let previous = volumeBeforeAlarm else { return }
+        volumeBeforeAlarm = nil
+        setSystemVolume(previous)
+    }
+
+    private func setSystemVolume(_ value: Float) {
+        let view = volumeView ?? MPVolumeView(frame: CGRect(x: -2000, y: -2000, width: 1, height: 1))
+        volumeView = view
+        guard let slider = view.subviews.compactMap({ $0 as? UISlider }).first else { return }
+        // The slider ignores a value set in the same run loop pass that created it.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            slider.setValue(value, animated: false)
+            slider.sendActions(for: .valueChanged)
+        }
+    }
+}
+
+extension DirectConnect_AlarmPlayer: AVAudioPlayerDelegate {
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        if player === self.player { stop() }
     }
 }

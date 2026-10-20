@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "filename": "Alert_Tone_Ringtone_2.caf",
+      "idiom": "universal",
+      "universal-type-identifier": "com.apple.coreaudio-format"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

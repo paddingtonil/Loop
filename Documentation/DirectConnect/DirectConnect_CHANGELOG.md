@@ -2,6 +2,59 @@
 
 Branch `feat/DirectConnect` (Loop repo). Not yet committed or released.
 
+## 2026-10-18 — Urgent Low alarm was not heard overnight
+
+### Finding (from the diagnostics log)
+Glucose stayed under 50 mg/dL from about 12:00 to 2:30 AM Pacific. `Alarm: urgentLow` was logged
+six times (12:01, 12:26, 1:41, 1:56, 2:11, 2:21 AM), so the alarm rules fired correctly. None was
+heard. Loop is built without Apple's critical-alert permission (`CRITICAL_ALERTS_ENABLED` off, no
+entitlement), so the Urgent Low notification was delivered as an ordinary notification, which only
+vibrates on silent.
+
+### Changes
+| Change | Files |
+|---|---|
+| Loop plays each alarm's sound with its own audio player | `DirectConnect_GlucoseAlarms.swift` (new `DirectConnect_AlarmPlayer`), `DirectConnect_G7CGMManager.swift` |
+| Per-alarm Play Through Silent switch. On: `.playback` audio category (not muted by the silent switch or a Focus), system volume raised to full and restored afterwards, Loop's Mute Alerts ignored. Off: `.ambient` category (muted by the silent switch), Mute Alerts applies. Default on for Urgent Low and Falling Fast (turning it off asks for confirmation), off for the others | same, `DirectConnect_AlarmSettingsView.swift` |
+| Urgent Low and Falling Fast repeat until acknowledged, until Loop is opened, or until the alarm clears, and cannot be set to no sound. Other alarms play the sound three times | same |
+| Sound choices Siren, Alarm Clock, Pulse, Chime, None; generated in code as WAV data, no audio files added | `DirectConnect_AlarmSettings.swift` (`DirectConnect_AlarmSound`, `DirectConnect_AlarmPlayback`) |
+| Per-alarm Sound picker and Test Sound button (6 seconds, same rules as a real alarm) | `DirectConnect_AlarmSettingsView.swift` |
+| Every play, skip and failure is written to the diagnostics log with the volume | `DirectConnect_G7CGMManager.swift` |
+| Tests: play-through on and off, defaults, urgent alarms cannot be silent, sound settings round trip, every sound renders audible WAV data | `DirectConnect_AlarmSettingsTests.swift` |
+
+### Old alarm shown again at launch
+After installing the build, Loop showed "Urgent Low Glucose — Glucose is 45 mg/dL" with glucose at
+105. That was the 2:11 AM alert. Urgent Low repeated at 2:11 and 2:21 AM under the same alert
+identifier; when the low ended, Loop's `AlertStore.recordRetraction` marked only the latest alert
+(2:21) retracted, and Loop re-shows unretracted, unacknowledged alerts at every launch. Change:
+DirectConnect retracts an alarm's earlier alert before issuing it again
+(`DirectConnect_GlucoseAlarms.steps(for:)`, used by `DirectConnect_G7CGMManager.apply`), with a
+test in `DirectConnect_GlucoseAlarmsTests.swift`. LoopKit's `AlertStore.swift` is unchanged.
+The alert already left open on the phone stays until OK is pressed once.
+
+### xDrip4iOS sound library
+The 117 sounds xDrip4iOS offers (its `ConstantsSounds.swift`, commit c268542) were added as data
+sets in `Loop/DefaultAssets.xcassets/DirectConnectSounds/`, converted from 94 MB of PCM to 13 MB of
+AAC with `afconvert -d aac -b 96000`. An asset catalog already in the Loop target holds them, so the
+Xcode project file is unchanged. `DirectConnect_AlarmSound` became a struct covering the 4 generated
+tones and the xDrip4iOS sounds. The Sound row opens a list screen with both groups; tapping a sound
+selects it and plays it for 6 seconds with that alarm's play-through rules, and the list stays open
+(as in iOS Settings → Sounds). Tests check
+every xDrip4iOS sound loads from the app. The Option B installer must copy the
+`DirectConnectSounds` folder (not yet changed).
+
+### Per-alarm volume
+Each alarm has a Volume setting (10–100%, default 40%) on its Sound list screen; the slider replays
+the selected sound at the new level. While any alarm sounds, Loop sets the phone's media volume to
+that level and restores it afterwards. This replaces the full-volume rule for play-through alarms,
+so Urgent Low and Falling Fast also start at 40%. Tests: default 40%, round trip, 10% minimum,
+playback uses the alarm's own level.
+
+### Not yet checked on a device
+- That the sound starts during a background sensor wake with the phone locked.
+- That setting the volume with `MPVolumeView` works in the background. iOS has no public call for
+  this; if it does not work, the alarm plays at the phone's current media volume.
+
 ## 2026-10-09 — First build and device test
 
 ### Built

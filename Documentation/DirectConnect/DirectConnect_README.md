@@ -88,13 +88,28 @@ Settings → PowerPack → DirectConnect → Glucose Alarms (also from the senso
 | Sensor Expiring | 24 h and 2 h before the end | on/off |
 | Sensor Ended or Failed | when the sensor stops | on/off |
 
-**Sound, silent switch and Focus:** every alarm plays Loop's notification sound and shows a
-banner, including when Loop is open. With the phone's ring/silent switch set to silent, **every
-alarm only vibrates, Urgent Low included**: sounding through silent needs Apple's Critical Alerts
-permission, which Loop builds do not have. Low, High, Falling Fast, Signal Loss and Sensor Ended
-still arrive during a Focus; Rising Fast and Sensor Expiring can be held by a Focus. Loop's own
-**Mute Alerts** setting silences all of them while it is on. **Keep the ring switch on (not
-silent) overnight** if you need to hear Urgent Low, and test it once before relying on it.
+**Sound, silent switch and Focus:** every alarm shows a notification. Apple lets only approved
+apps send notifications that sound on silent, and Loop builds are not approved, so Loop also plays
+each alarm's sound itself:
+
+- **Play Through Silent** (each alarm): on plays the alarm even with the phone on
+  silent, in a Focus, or with Loop's **Mute Alerts** on. Off follows the phone's settings, so the
+  alarm makes no sound on silent. It is **on by default for Urgent Low and Falling Fast** (turning
+  it off asks for confirmation) and off for the others.
+- **Urgent Low and Falling Fast** repeat their sound until you open Loop, press OK, or glucose
+  leaves the alarm range. Their sound can be changed but not set to None. Other alarms play their
+  sound three times; **None (vibrate only)** turns an alarm's sound off.
+- **Sound** opens a list: Loop's four tones (Siren, Alarm Clock, Pulse, Chime) and the 117 sounds
+  from xDrip4iOS. Tapping a sound in the list selects it and plays it for 6 seconds, as in iOS
+  Settings → Sounds; the list stays open. The **Volume** slider at the top of the list (default
+  40%) sets that alarm's loudness: while the alarm sounds, Loop sets the phone's media volume to
+  that level and puts it back afterwards, so the alarm does not depend on the volume the phone was
+  left at. Moving the slider replays the sound at the new level. **Test Sound** plays the alarm for 6 seconds with the same rules it uses at
+  night. With a non-urgent alarm, an xDrip4iOS sound (up to 30 seconds) plays once.
+
+Loop can play a sound only while iOS keeps Loop running. If iOS has closed Loop, no sensor readings
+arrive and no alarm can fire. Test Urgent Low with the phone locked and on silent before relying
+on it.
 
 ## Sensor screen
 
@@ -155,7 +170,8 @@ DirectConnect's core, the sensor pairing and communication with G7-family sensor
 not exist.
 
 Also used: LoopKit's G7SensorKit (MIT) for the CGM manager structure, and micro-ecc by Kenneth
-MacKay (BSD-2-Clause) for the P-256 arithmetic.
+MacKay (BSD-2-Clause) for the P-256 arithmetic. The 117 xDrip4iOS alarm sounds come from
+xDrip4iOS, which took most of them from the Spike project.
 
 ## License
 

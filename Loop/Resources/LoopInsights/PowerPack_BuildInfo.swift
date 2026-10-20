@@ -35,7 +35,7 @@ enum PowerPack_BuildInfo {
     /// points. The committed default here is what Option A clone-and-build
     /// users see; the installer overwrites this with FEATURE_VERSION from
     /// install_features.sh at Phase 4c.
-    static let version = "0.3.20"
+    static let version = "0.3.21"
 
     /// Loop submodule short SHA at install time. `"dev"` for Option A
     /// developer builds (direct clone + Xcode); a real 7-char short SHA
@@ -47,10 +47,10 @@ enum PowerPack_BuildInfo {
 
     /// User-facing display string for the footer card. Two formats:
     ///   "PowerPack v0.1.0 (8bd0a85)" — installer build
-    ///   "PowerPack v0.1.0-dev"        — developer build (Option A)
+    ///   "PowerPack v0.1.0"            — clone-and-build (Option A), which is a release build too
     static var displayString: String {
         if commitShortSHA == "dev" || commitShortSHA.isEmpty {
-            return "PowerPack v\(version)-dev"
+            return "PowerPack v\(version)"
         }
         return "PowerPack v\(version) (\(commitShortSHA))"
     }

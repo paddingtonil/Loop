@@ -148,6 +148,9 @@ final class DirectConnect_G7CGMManager: CGMManager {
     }
 
     func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier, completion: @escaping (Error?) -> Void) {
+        if let kind = DirectConnect_AlarmKind(rawValue: alertIdentifier) {
+            DispatchQueue.main.async { DirectConnect_AlarmPlayer.shared.stop(kind: kind) }
+        }
         completion(nil)
     }
 
@@ -313,21 +316,50 @@ final class DirectConnect_G7CGMManager: CGMManager {
     // MARK: - Alarms
 
     private func apply(_ actions: [DirectConnect_AlarmAction]) {
-        for action in actions {
-            switch action {
-            case let .issue(kind, value):
+        for step in DirectConnect_GlucoseAlarms.steps(for: actions) {
+            switch step {
+            case let .retractAlert(kind):
+                let identifier = Alert.Identifier(managerIdentifier: pluginIdentifier, alertIdentifier: kind.rawValue)
+                delegate.notify { $0?.retractAlert(identifier: identifier) }
+            case let .issueAlert(kind, value):
                 let alert = DirectConnect_GlucoseAlarms.alert(for: kind, value: value, managerIdentifier: pluginIdentifier, unit: displayUnit)
                 logDeviceCommunication("Alarm: \(kind.rawValue)", type: .receive)
                 delegate.notify { $0?.issueAlert(alert) }
-            case let .retract(kind):
-                retract(kind)
+            case let .playSound(kind):
+                playSound(for: kind)
+            case let .stopSound(kind):
+                DispatchQueue.main.async { DirectConnect_AlarmPlayer.shared.stop(kind: kind) }
             }
         }
     }
 
     private func retract(_ kind: DirectConnect_AlarmKind) {
-        let identifier = Alert.Identifier(managerIdentifier: pluginIdentifier, alertIdentifier: kind.rawValue)
-        delegate.notify { $0?.retractAlert(identifier: identifier) }
+        apply([.retract(kind)])
+    }
+
+    /// Loop's Mute Alerts setting. AlertManager's accessor for it is fileprivate, so this reads
+    /// the same UserDefaults key AlertManager writes.
+    private static func loopAlertsMuted() -> Bool {
+        guard let raw = UserDefaults.standard.object(forKey: "com.loopkit.Loop.alertMuterConfiguration") as? AlertMuter.Configuration.RawValue,
+              let configuration = AlertMuter.Configuration(rawValue: raw) else {
+            return false
+        }
+        return configuration.shouldMute
+    }
+
+    /// The notification alone is silent when the phone is on silent, so Loop also plays the
+    /// alarm's sound itself.
+    private func playSound(for kind: DirectConnect_AlarmKind) {
+        let settings = DirectConnect_AlarmSettings.load(from: .standard)
+        let muted = Self.loopAlertsMuted()
+        guard let playback = DirectConnect_AlarmPlayback.for(kind, settings: settings, loopAlertsMuted: muted) else {
+            logDeviceCommunication("Alarm sound for \(kind.rawValue): none (sound off or Loop alerts muted)", type: .receive)
+            return
+        }
+        DispatchQueue.main.async { [weak self] in
+            let result = DirectConnect_AlarmPlayer.shared.play(playback, kind: kind)
+            self?.logDeviceCommunication(result, type: .receive)
+        }
     }
 
     private func evaluateReadingAlarms(mgdl: Double, trendRate: Double?, at date: Date) {

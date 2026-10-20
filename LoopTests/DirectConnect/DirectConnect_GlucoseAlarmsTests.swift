@@ -174,6 +174,16 @@ final class DirectConnect_GlucoseAlarmsTests: XCTestCase {
         XCTAssertTrue(a.backgroundContent.body.contains("3.5"))
     }
 
+    func testEachIssueClearsTheEarlierAlertOfTheSameAlarm() {
+        // Loop's AlertStore marks only the latest alert with an identifier as retracted. On
+        // 2026-10-18 Urgent Low repeated at 2:11 and 2:21 AM; the low ended and only the 2:21 alert
+        // was retracted, so Loop re-showed "Glucose is 45 mg/dL" at every launch.
+        XCTAssertEqual(DirectConnect_GlucoseAlarms.steps(for: [.issue(.urgentLow, value: 45)]),
+                       [.retractAlert(.urgentLow), .issueAlert(.urgentLow, value: 45), .playSound(.urgentLow)])
+        XCTAssertEqual(DirectConnect_GlucoseAlarms.steps(for: [.retract(.urgentLow)]),
+                       [.retractAlert(.urgentLow), .stopSound(.urgentLow)])
+    }
+
     func testStateCodableRoundTrip() throws {
         var s = DirectConnect_AlarmState()
         _ = eval(r(0, 68), &s)
