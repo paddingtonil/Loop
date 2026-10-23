@@ -208,7 +208,21 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                     retryContext.update(with: .carbs)
                 }
 
-                reloadGroup.leave()
+                // BolusPro FPU entries are virtual carbs; they must not count toward the daily total.
+                self.deviceManager.carbStore.getCarbStatus(start: midnight, end: nil, effectVelocities: nil) { (statusResult) in
+                    if case .success(let statuses) = statusResult, let total = carbTotal {
+                        let fpuGrams = statuses
+                            .map { $0.entry }
+                            .filter { $0.isBolusProFPU }
+                            .reduce(0.0) { $0 + $1.quantity.doubleValue(for: .gram()) }
+                        if fpuGrams > 0 {
+                            let adjusted = max(0, total.quantity.doubleValue(for: .gram()) - fpuGrams)
+                            carbTotal = CarbValue(startDate: total.startDate, value: adjusted)
+                        }
+                    }
+
+                    reloadGroup.leave()
+                }
             }
         }
 
@@ -349,7 +363,13 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
             let status = carbStatuses[indexPath.row]
             let carbText = carbFormatter.string(from: status.entry.quantity.doubleValue(for: unit), unit: unit.unitString)
 
-            if let carbText = carbText, let foodType = status.entry.foodType {
+            if let carbText = carbText, status.entry.isBolusProFPU {
+                // Virtual BolusPro carbs: label as FPU (amount stays in grams, duration is on the date line).
+                cell.valueLabel?.text = String(
+                    format: NSLocalizedString("%1$@: %2$@", comment: "Formats (1: carb value) and (2: food type)"),
+                    carbText, BolusPro_FeatureFlags.fpuEntryMarker
+                )
+            } else if let carbText = carbText, let foodType = status.entry.foodType {
                 cell.valueLabel?.text = String(
                     format: NSLocalizedString("%1$@: %2$@", comment: "Formats (1: carb value) and (2: food type)"),
                     carbText, foodType

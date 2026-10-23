@@ -86,6 +86,128 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
     }
 
     // MARK: Tests
+    // MARK: BolusPro FPU exclusion
+
+    /// Builds a live-capture loop manager whose carb history is the captured entries plus `extraCarbEntries`.
+    private func setUpLiveCapture(extraCarbEntries: [StoredCarbEntry] = []) {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let url = bundle.url(forResource: "live_capture_input", withExtension: "json")!
+        let predictionInput = try! decoder.decode(LoopPredictionInput.self, from: try! Data(contentsOf: url))
+
+        let basalRateSchedule = BasalRateSchedule(dailyItems: [
+            RepeatingScheduleValue(startTime: 0, value: predictionInput.settings.basal.first!.value)
+        ])
+        let insulinSensitivitySchedule = InsulinSensitivitySchedule(
+            unit: .milligramsPerDeciliter,
+            dailyItems: [
+                RepeatingScheduleValue(startTime: 0, value: predictionInput.settings.sensitivity.first!.value.doubleValue(for: .milligramsPerDeciliter))
+            ],
+            timeZone: .utcTimeZone
+        )!
+        let carbRatioSchedule = CarbRatioSchedule(
+            unit: .gram(),
+            dailyItems: [
+                RepeatingScheduleValue(startTime: 0.0, value: predictionInput.settings.carbRatio.first!.value)
+            ],
+            timeZone: .utcTimeZone
+        )!
+
+        let settings = LoopSettings(
+            dosingEnabled: false,
+            glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
+            insulinSensitivitySchedule: insulinSensitivitySchedule,
+            basalRateSchedule: basalRateSchedule,
+            carbRatioSchedule: carbRatioSchedule,
+            maximumBasalRatePerHour: 10,
+            maximumBolus: 20,
+            suspendThreshold: predictionInput.settings.suspendThreshold,
+            automaticDosingStrategy: .automaticBolus
+        )
+
+        let glucoseStore = MockGlucoseStore()
+        glucoseStore.storedGlucose = predictionInput.glucoseHistory
+
+        let currentDate = glucoseStore.latestGlucose!.startDate
+        now = currentDate
+
+        let doseStore = MockDoseStore()
+        doseStore.basalProfile = basalRateSchedule
+        doseStore.basalProfileApplyingOverrideHistory = doseStore.basalProfile
+        doseStore.sensitivitySchedule = insulinSensitivitySchedule
+        doseStore.doseHistory = predictionInput.doses
+        doseStore.lastAddedPumpData = predictionInput.doses.last!.startDate
+
+        let carbStore = MockCarbStore()
+        carbStore.insulinSensitivityScheduleApplyingOverrideHistory = insulinSensitivitySchedule
+        carbStore.carbRatioSchedule = carbRatioSchedule
+        carbStore.carbRatioScheduleApplyingOverrideHistory = carbRatioSchedule
+        carbStore.carbHistory = predictionInput.carbEntries + extraCarbEntries
+
+        dosingDecisionStore = MockDosingDecisionStore()
+        automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
+        loopDataManager = LoopDataManager(
+            lastLoopCompleted: currentDate,
+            basalDeliveryState: .active(currentDate),
+            settings: settings,
+            overrideHistory: TemporaryScheduleOverrideHistory(),
+            analyticsServicesManager: AnalyticsServicesManager(),
+            localCacheDuration: .days(1),
+            doseStore: doseStore,
+            glucoseStore: glucoseStore,
+            carbStore: carbStore,
+            dosingDecisionStore: dosingDecisionStore,
+            latestStoredSettingsProvider: MockLatestStoredSettingsProvider(),
+            now: { currentDate },
+            pumpInsulinType: .novolog,
+            automaticDosingStatus: automaticDosingStatus,
+            trustedTimeOffset: { 0 }
+        )
+    }
+
+    private func manualBolusAmount() -> Double {
+        let exp = expectation(description: #function)
+        var amount = 0.0
+        loopDataManager.getLoopState { (_, loopState) in
+            amount = (try? loopState.recommendBolus(consideringPotentialCarbEntry: nil, replacingCarbEntry: nil, considerPositiveVelocityAndRC: true))?.amount ?? 0
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 100.0)
+        return amount
+    }
+
+    private func recentCarbEntry(foodType: String?) -> StoredCarbEntry {
+        // Started shortly before the latest glucose, still absorbing, so its remaining effect matters.
+        StoredCarbEntry(
+            startDate: now.addingTimeInterval(-.minutes(30)),
+            quantity: HKQuantity(unit: .gram(), doubleValue: 22),
+            foodType: foodType,
+            absorptionTime: .hours(3)
+        )
+    }
+
+    func testManualBolusRecommendationIgnoresBolusProFPUEntry() {
+        setUpLiveCapture()
+        let baseline = manualBolusAmount()
+
+        setUpLiveCapture(extraCarbEntries: [recentCarbEntry(foodType: BolusPro_FeatureFlags.fpuEntryMarker)])
+        let withFPU = manualBolusAmount()
+
+        XCTAssertEqual(baseline, withFPU, accuracy: 0.001)
+    }
+
+    func testManualBolusRecommendationCountsOrdinaryCarbEntry() {
+        // Sensitivity control: the same entry without the FPU marker must change the recommendation,
+        // otherwise the FPU test above would pass trivially.
+        setUpLiveCapture()
+        let baseline = manualBolusAmount()
+
+        setUpLiveCapture(extraCarbEntries: [recentCarbEntry(foodType: "🥩")])
+        let withOrdinaryCarbs = manualBolusAmount()
+
+        XCTAssertGreaterThan(withOrdinaryCarbs, baseline + 0.1)
+    }
+
     func testForecastFromLiveCaptureInputData() {
 
         let decoder = JSONDecoder()

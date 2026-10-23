@@ -1323,7 +1323,8 @@ extension LoopDataManager {
         potentialCarbEntry: NewCarbEntry? = nil,
         replacingCarbEntry replacedCarbEntry: StoredCarbEntry? = nil,
         includingPendingInsulin: Bool = false,
-        includingPositiveVelocityAndRC: Bool = true
+        includingPositiveVelocityAndRC: Bool = true,
+        excludingFPUCarbEntries: Bool = false
     ) throws -> [PredictedGlucoseValue] {
         dispatchPrecondition(condition: .onQueue(dataAccessQueue))
 
@@ -1351,7 +1352,22 @@ extension LoopDataManager {
         var effects: [[GlucoseEffect]] = []
 
         let insulinCounteractionEffects = insulinCounteractionEffectsOverride ?? self.insulinCounteractionEffects
+        var carbEffectOverride = carbEffectOverride
+        var recentCarbEntries = self.recentCarbEntries
         if inputs.contains(.carbs) {
+            // BolusPro FPU entries are virtual carbs meant for the automatic loop. Manual bolus
+            // recommendations leave them out so their remaining effect is not dosed for again.
+            if excludingFPUCarbEntries, let recent = recentCarbEntries, recent.contains(where: { $0.isBolusProFPU }) {
+                let withoutFPU = recent.filter { !$0.isBolusProFPU }
+                recentCarbEntries = withoutFPU
+                carbEffectOverride = try carbStore.glucoseEffects(
+                    of: withoutFPU,
+                    startingAt: lastGlucoseDate.addingTimeInterval(-type(of: retrospectiveCorrection).retrospectionInterval),
+                    endingAt: nil,
+                    effectVelocities: insulinCounteractionEffects
+                )
+            }
+
             if let potentialCarbEntry = potentialCarbEntry {
                 let retrospectiveStart = lastGlucoseDate.addingTimeInterval(-type(of: retrospectiveCorrection).retrospectionInterval)
 
@@ -1370,7 +1386,7 @@ extension LoopDataManager {
 
                     effects.append(potentialCarbEffect)
                 } else {
-                    var recentEntries = self.recentCarbEntries ?? []
+                    var recentEntries = recentCarbEntries ?? []
                     if let replacedCarbEntry = replacedCarbEntry, let index = recentEntries.firstIndex(of: replacedCarbEntry) {
                         recentEntries.remove(at: index)
                     }
@@ -1458,7 +1474,8 @@ extension LoopDataManager {
                     potentialCarbEntry: potentialCarbEntry,
                     replacingCarbEntry: replacedCarbEntry,
                     includingPendingInsulin: includingPendingInsulin,
-                    includingPositiveVelocityAndRC: includingPositiveVelocityAndRC)
+                    includingPositiveVelocityAndRC: includingPositiveVelocityAndRC,
+                    excludingFPUCarbEntries: excludingFPUCarbEntries)
             }
              
             let alpha = 1 - damper
@@ -1506,7 +1523,8 @@ extension LoopDataManager {
         potentialCarbEntry: NewCarbEntry?,
         replacingCarbEntry replacedCarbEntry: StoredCarbEntry?,
         includingPendingInsulin: Bool,
-        considerPositiveVelocityAndRC: Bool
+        considerPositiveVelocityAndRC: Bool,
+        excludingFPUCarbEntries: Bool = false
     ) throws -> [PredictedGlucoseValue] {
         let retrospectiveStart = glucose.date.addingTimeInterval(-type(of: retrospectiveCorrection).retrospectionInterval)
         let earliestEffectDate = Date(timeInterval: .hours(-24), since: now())
@@ -1591,7 +1609,8 @@ extension LoopDataManager {
             potentialCarbEntry: potentialCarbEntry,
             replacingCarbEntry: replacedCarbEntry,
             includingPendingInsulin: true,
-            includingPositiveVelocityAndRC: considerPositiveVelocityAndRC
+            includingPositiveVelocityAndRC: considerPositiveVelocityAndRC,
+            excludingFPUCarbEntries: excludingFPUCarbEntries
         )
     }
 
@@ -1605,7 +1624,7 @@ extension LoopDataManager {
 
         let pendingInsulin = try getPendingInsulin()
         let shouldIncludePendingInsulin = pendingInsulin > 0
-        let prediction = try predictGlucoseFromManualGlucose(glucose, potentialBolus: nil, potentialCarbEntry: potentialCarbEntry, replacingCarbEntry: replacedCarbEntry, includingPendingInsulin: shouldIncludePendingInsulin, considerPositiveVelocityAndRC: considerPositiveVelocityAndRC)
+        let prediction = try predictGlucoseFromManualGlucose(glucose, potentialBolus: nil, potentialCarbEntry: potentialCarbEntry, replacingCarbEntry: replacedCarbEntry, includingPendingInsulin: shouldIncludePendingInsulin, considerPositiveVelocityAndRC: considerPositiveVelocityAndRC, excludingFPUCarbEntries: true)
         return try recommendManualBolus(forPrediction: prediction, consideringPotentialCarbEntry: potentialCarbEntry)
     }
 
@@ -1620,7 +1639,7 @@ extension LoopDataManager {
 
         let pendingInsulin = try getPendingInsulin()
         let shouldIncludePendingInsulin = pendingInsulin > 0
-        let prediction = try predictGlucose(using: .all, potentialBolus: nil, potentialCarbEntry: potentialCarbEntry, replacingCarbEntry: replacedCarbEntry, includingPendingInsulin: shouldIncludePendingInsulin, includingPositiveVelocityAndRC: considerPositiveVelocityAndRC)
+        let prediction = try predictGlucose(using: .all, potentialBolus: nil, potentialCarbEntry: potentialCarbEntry, replacingCarbEntry: replacedCarbEntry, includingPendingInsulin: shouldIncludePendingInsulin, includingPositiveVelocityAndRC: considerPositiveVelocityAndRC, excludingFPUCarbEntries: true)
         return try recommendBolusValidatingDataRecency(forPrediction: prediction, consideringPotentialCarbEntry: potentialCarbEntry)
     }
 

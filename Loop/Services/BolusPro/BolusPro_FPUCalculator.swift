@@ -94,7 +94,7 @@ enum BolusPro_FPUCalculator {
     /// The secondary entry:
     /// - `startDate` = primary `startDate` + configured `fpuDelayMinutes`
     /// - `absorptionTime` = configured `fpuAbsorptionHours`
-    /// - `foodType` = `BolusPro_FeatureFlags.fpuEntryEmoji` (🥩) so users
+    /// - `foodType` = `BolusPro_FeatureFlags.fpuEntryMarker` ("🥩 FPU") so users
     ///   can identify it in carb history
     static func makeSecondaryEntry(
         primaryStartDate: Date,
@@ -118,7 +118,7 @@ enum BolusPro_FPUCalculator {
             date: Date(),
             quantity: HKQuantity(unit: .gram(), doubleValue: result.bonusGrams),
             startDate: secondaryStart,
-            foodType: BolusPro_FeatureFlags.fpuEntryEmoji,
+            foodType: BolusPro_FeatureFlags.fpuEntryMarker,
             absorptionTime: absorption
         )
     }

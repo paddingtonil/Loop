@@ -10,6 +10,7 @@
 //
 
 import Foundation
+import LoopKit
 
 /// Central on/off switch and tunable defaults for BolusPro.
 /// Loop host files check `BolusPro_FeatureFlags.isEnabled` to gate UI insertion.
@@ -131,4 +132,27 @@ extension BolusPro_FeatureFlags {
     /// Emoji used as `foodType` on the secondary FPU carb entry, so users can
     /// tell the protein/fat tail apart from the primary carb entry in history.
     static let fpuEntryEmoji = "🥩"
+
+    /// Exact `foodType` stored on the secondary FPU carb entry. The emoji alone
+    /// is not a reliable identifier (users use it for real meals), so FPU
+    /// entries are recognized only by this full string.
+    static let fpuEntryMarker = "\(fpuEntryEmoji) FPU"
 }
+
+/// `CarbEntry` does not expose `foodType`, so the FPU check is added to the
+/// two concrete entry types that carry it.
+protocol BolusProFPUIdentifiable {
+    var foodType: String? { get }
+}
+
+extension BolusProFPUIdentifiable {
+    /// True for the virtual protein/fat carb tail created by BolusPro. These
+    /// entries drive the automatic loop but are excluded from the daily carb
+    /// total and from manual bolus recommendations.
+    var isBolusProFPU: Bool {
+        foodType == BolusPro_FeatureFlags.fpuEntryMarker
+    }
+}
+
+extension NewCarbEntry: BolusProFPUIdentifiable {}
+extension StoredCarbEntry: BolusProFPUIdentifiable {}

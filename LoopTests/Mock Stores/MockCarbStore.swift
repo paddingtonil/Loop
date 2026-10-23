@@ -81,7 +81,27 @@ class MockCarbStore: CarbStoreProtocol {
     }
     
     func glucoseEffects<Sample>(of samples: [Sample], startingAt start: Date, endingAt end: Date?, effectVelocities: [LoopKit.GlucoseEffectVelocity]) throws -> [LoopKit.GlucoseEffect] where Sample : LoopKit.CarbEntry {
-        return []
+        // Scenarios without configured schedules keep returning no effects.
+        guard let carbRatioScheduleApplyingOverrideHistory,
+              let insulinSensitivityScheduleApplyingOverrideHistory,
+              let minCarbDate = samples.map({ $0.startDate }).min(),
+              let maxCarbDate = samples.map({ $0.startDate }).max()
+        else {
+            return []
+        }
+
+        let carbRatio = carbRatioScheduleApplyingOverrideHistory.between(start: minCarbDate, end: maxCarbDate)
+        let insulinSensitivity = insulinSensitivityScheduleApplyingOverrideHistory.quantitiesBetween(start: minCarbDate, end: maxCarbDate)
+        return samples.map(
+            to: effectVelocities,
+            carbRatio: carbRatio,
+            insulinSensitivity: insulinSensitivity
+        ).dynamicGlucoseEffects(
+            from: start,
+            to: end,
+            carbRatios: carbRatio,
+            insulinSensitivities: insulinSensitivity
+        )
     }
     
     func getCarbsOnBoardValues(start: Date, end: Date?, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (CarbStoreResult<[CarbValue]>) -> Void) {
