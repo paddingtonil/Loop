@@ -68,6 +68,7 @@ final class LoopDataManager {
     private var timeBasedDoseApplicationFactor: Double = 1.0
 
     private var insulinOnBoard: InsulinValue?
+    private var circulatingBasalInsulin: InsulinValue?
     
     private var liveActivityManager: LiveActivityManagerProxy?
 
@@ -1214,6 +1215,19 @@ extension LoopDataManager {
             updateGroup.leave()
         }
 
+        // Informational only (uploaded to Nightscout); a failure must not add a warning or block the loop
+        updateGroup.enter()
+        doseStore.circulatingBasalInsulin(at: now()) { result in
+            switch result {
+            case .failure(let error):
+                self.logger.error("Failed to get circulating basal insulin: %{public}@", String(describing: error))
+                self.circulatingBasalInsulin = nil
+            case .success(let cbiValue):
+                self.circulatingBasalInsulin = cbiValue
+            }
+            updateGroup.leave()
+        }
+
         _ = updateGroup.wait(timeout: .distantFuture)
 
         if retrospectiveGlucoseDiscrepancies == nil {
@@ -1237,6 +1251,7 @@ extension LoopDataManager {
         dosingDecision.historicalGlucose = historicalGlucose
         dosingDecision.carbsOnBoard = carbsOnBoard
         dosingDecision.insulinOnBoard = self.insulinOnBoard
+        dosingDecision.circulatingBasalInsulin = self.circulatingBasalInsulin
         dosingDecision.glucoseTargetRangeSchedule = settings.effectiveGlucoseTargetRangeSchedule()
 
         // These will be updated by updatePredictedGlucoseAndRecommendedDose, if possible
