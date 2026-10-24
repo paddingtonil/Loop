@@ -714,10 +714,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
 
             // Circulating basal insulin (informational; not used by Loop for dosing)
-            if let cbiValue = cbiValue {
-                self.currentCBIDescription = self.cbiFormatter.string(from: NSNumber(value: cbiValue)).map { String(format: NSLocalizedString("CBI %@ U", comment: "The subtitle format describing circulating basal insulin in units. (1: localized insulin amount)"), $0) }
-            } else {
-                self.currentCBIDescription = nil
+            // Only refresh the value when this reload fetched insulin data; other reloads (e.g. glucose only) must keep the last value
+            if currentContext.contains(.insulin) {
+                if let cbiValue = cbiValue {
+                    self.currentCBIDescription = self.cbiFormatter.string(from: NSNumber(value: cbiValue)).map { String(format: NSLocalizedString("CBI %@ U", comment: "The subtitle format describing circulating basal insulin in units. (1: localized insulin amount)"), $0) }
+                } else {
+                    self.currentCBIDescription = nil
+                }
             }
 
             // Insulin Delivery
