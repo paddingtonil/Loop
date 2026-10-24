@@ -66,6 +66,10 @@ class MockDoseStore: DoseStoreProtocol {
         completion(.success(.init(startDate: scenario.currentDate, value: 9.5)))
     }
     
+    func circulatingBasalInsulin(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
+        completion(.success(.init(startDate: scenario.currentDate, value: 0)))
+    }
+
     func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
         completion("")
     }
