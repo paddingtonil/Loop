@@ -261,6 +261,12 @@ final class LoopDataManager {
             return
         }
 
+        // DataLayer (PowerPack) — every override path ends here, so record start/end once
+        DataLayer_SettingsChangeEvents.post(
+            DataLayer_SettingsChangeEvents.overrideEvents(old: oldValue.scheduleOverride, new: newValue.scheduleOverride)
+                + DataLayer_SettingsChangeEvents.overrideEvents(old: oldValue.preMealOverride, new: newValue.preMealOverride)
+        )
+
         var invalidateCachedEffects = false
 
         dosingEnabled = newValue.dosingEnabled
@@ -2679,38 +2685,6 @@ extension LoopDataManager: ServicesManagerDelegate {
     
     func enactOverride(_ override: TemporaryScheduleOverride?) async {
         mutateSettings { settings in settings.scheduleOverride = override }
-
-        // DataLayer: override activated/deactivated
-        if let override = override {
-            let overrideType: String
-            let presetName: String
-            switch override.context {
-            case .preMeal: overrideType = "preMeal"; presetName = "Pre-Meal"
-            case .legacyWorkout: overrideType = "workout"; presetName = "Workout"
-            case .preset(let preset): overrideType = "preset"; presetName = preset.name
-            case .custom: overrideType = "custom"; presetName = "Custom"
-            }
-            NotificationCenter.default.post(
-                name: Notification.Name("com.loopkit.Loop.overrideActivated"),
-                object: nil,
-                userInfo: [
-                    "overrideType": overrideType,
-                    "presetName": presetName,
-                    "insulinNeedsScale": override.settings.insulinNeedsScaleFactor as Any,
-                    "targetRangeLow": override.settings.targetRange?.lowerBound.doubleValue(for: .milligramsPerDeciliter) as Any,
-                    "targetRangeHigh": override.settings.targetRange?.upperBound.doubleValue(for: .milligramsPerDeciliter) as Any
-                ]
-            )
-        } else {
-            NotificationCenter.default.post(
-                name: Notification.Name("com.loopkit.Loop.overrideDeactivated"),
-                object: nil,
-                userInfo: [
-                    "overrideType": "cleared",
-                    "presetName": ""
-                ]
-            )
-        }
     }
     
     enum EnactOverrideError: LocalizedError {
@@ -2822,10 +2796,7 @@ extension LoopDataManager: AutoPresets_Delegate {
 
     func autoPresets(_ coordinator: AutoPresets_Coordinator,
                      shouldDeactivatePreset preset: TemporaryScheduleOverridePreset) {
-        guard let currentOverride = settings.scheduleOverride,
-              case let .preset(currentPreset) = currentOverride.context,
-              currentPreset.id == preset.id
-        else {
+        guard AutoPresets_shouldDeactivate(currentOverride: settings.scheduleOverride, preset: preset) else {
             return
         }
 

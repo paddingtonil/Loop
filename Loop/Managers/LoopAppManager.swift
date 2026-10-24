@@ -194,6 +194,7 @@ class LoopAppManager: NSObject {
         alertPermissionsChecker.delegate = alertManager
         
         trustedTimeChecker = TrustedTimeChecker(alertManager: alertManager)
+        BolusPro_SaveFailureAlert.alertIssuer = alertManager
 
         settingsManager = SettingsManager(cacheStore: cacheStore,
                                                expireAfter: localCacheDuration,

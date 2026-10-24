@@ -23,6 +23,7 @@ struct SiteAtlas_SettingsView: View {
     @State private var zoneToggleCount = 0
     @State private var featureEnabled = SiteAtlas_FeatureFlags.isEnabled
     @State private var autoPromptEnabled = SiteAtlas_FeatureFlags.autoPromptEnabled
+    @State private var historyNewestFirst = SiteAtlas_FeatureFlags.historyNewestFirst
 
     var body: some View {
         List {
@@ -254,15 +255,15 @@ struct SiteAtlas_SettingsView: View {
     }
 
     private var historySection: some View {
-        Section("History (\(visibleEntries.count) sites)") {
+        Section {
             if visibleEntries.isEmpty {
                 Text("No sites logged yet")
                     .foregroundColor(.secondary)
                     .font(.subheadline)
             } else {
-                ForEach(groupedByMonth, id: \.key) { month, monthEntries in
-                    Section(header: Text(month)) {
-                        ForEach(monthEntries) { entry in
+                ForEach(groupedByMonth, id: \.monthStart) { group in
+                    Section(header: Text(group.title)) {
+                        ForEach(group.entries) { entry in
                             Button {
                                 editingEntry = entry
                             } label: {
@@ -288,6 +289,20 @@ struct SiteAtlas_SettingsView: View {
                         }
                     }
                 }
+            }
+        } header: {
+            HStack {
+                Text("History (\(visibleEntries.count) sites)")
+                Spacer()
+                Button {
+                    historyNewestFirst.toggle()
+                    SiteAtlas_FeatureFlags.historyNewestFirst = historyNewestFirst
+                } label: {
+                    Label(historyNewestFirst ? "Newest First" : "Oldest First", systemImage: "arrow.up.arrow.down")
+                        .font(.caption)
+                }
+                .textCase(nil)
+                .accessibilityHint("Reverses the order of the history list")
             }
         }
     }
@@ -412,15 +427,8 @@ struct SiteAtlas_SettingsView: View {
         visibleEntries.sorted { $0.date < $1.date }
     }
 
-    private var groupedByMonth: [(key: String, value: [SiteAtlas_SiteEntry])] {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-
-        let grouped = Dictionary(grouping: visibleEntries.sorted { $0.date > $1.date }) {
-            formatter.string(from: $0.date)
-        }
-
-        return grouped.sorted { $0.key > $1.key }
+    private var groupedByMonth: [SiteAtlas_MonthGroup] {
+        SiteAtlas_groupByMonth(visibleEntries, newestFirst: historyNewestFirst)
     }
 
     // MARK: - Actions

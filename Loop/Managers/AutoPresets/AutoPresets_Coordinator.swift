@@ -81,8 +81,15 @@ public class AutoPresets_Coordinator: ObservableObject {
         return .fallbackMgdl
     }
 
-    // Track which preset we activated so we can deactivate the same one
-    private var activatedPresetId: UUID?
+    // Track which override we activated so we can deactivate the same one.
+    // Saved in storage because Loop can restart while the override is active.
+    private var activatedOverride: AutoPresetsActivatedOverride? {
+        get { storage.activatedOverride }
+        set { storage.activatedOverride = newValue }
+    }
+
+    /// Ends a restored override if no activity is confirmed within the stop interval.
+    private var pendingRestoredOverrideEnd: DispatchWorkItem?
 
     // MARK: - Public Settings Access
 
@@ -208,6 +215,7 @@ public class AutoPresets_Coordinator: ObservableObject {
         applySettingsToDetectionManager()
         activityDetectionManager.startMonitoring()
         isMonitoring = true
+        restoreActivatedOverride()
 
         os_log(
             "AutoPresets monitoring started - activities: %{public}@, continuous activity time: %.0fs, stop: %.0fs",
@@ -221,6 +229,8 @@ public class AutoPresets_Coordinator: ObservableObject {
 
     /// Stop monitoring
     public func stop() {
+        pendingRestoredOverrideEnd?.cancel()
+        pendingRestoredOverrideEnd = nil
         activityDetectionManager.stopMonitoring()
         isMonitoring = false
         currentDetectedActivity = nil
@@ -268,36 +278,32 @@ public class AutoPresets_Coordinator: ObservableObject {
             return
         }
 
-        // Only a FOREIGN override blocks activation. An override that matches one
-        // of our activity-mapped presets is treated as ours and adopted/replaced
-        // — it's typically a leftover from before an app restart (activatedPresetId
-        // is in-memory only, so it resets while Loop keeps the override active).
-        // Without this, a single leftover override would permanently block every
-        // future activation until manually cleared.
-        if let active = currentOverride(), activatedPresetId == nil {
-            let managedPresetIds = Set(AutoPresetsActivityType.allCases.compactMap { settings.presetId(for: $0) })
-            let activeIsManaged: Bool
-            if case let .preset(activePreset) = active.context {
-                activeIsManaged = managedPresetIds.contains(activePreset.id)
-            } else {
-                activeIsManaged = false
-            }
-
-            if !activeIsManaged {
-                os_log(
-                    "Foreign override active (not an AutoPresets preset), skipping activation",
-                    log: log,
-                    type: .info
-                )
-                fileLog.log("activatePreset SKIPPED — a foreign override is active (not one AutoPresets manages); leaving it untouched")
-                return
-            }
-
+        // Only a FOREIGN override blocks activation; see AutoPresets_activationDecision.
+        let managedPresetIds = Set(AutoPresetsActivityType.allCases.compactMap { settings.presetId(for: $0) })
+        switch AutoPresets_activationDecision(activeOverride: currentOverride(), managedPresetIds: managedPresetIds, now: Date()) {
+        case .skipForeignOverride:
+            os_log(
+                "Foreign override active (not an AutoPresets preset), skipping activation",
+                log: log,
+                type: .info
+            )
+            fileLog.log("activatePreset SKIPPED — a foreign override is active (not one AutoPresets manages); leaving it untouched")
+            return
+        case .replaceManaged:
             fileLog.log("activatePreset — an AutoPresets-managed override is already active; adopting/replacing it")
+        case .apply:
+            break
         }
 
-        activatedPresetId = preset.id
+        pendingRestoredOverrideEnd?.cancel()
+        pendingRestoredOverrideEnd = nil
         delegate?.autoPresets(self, shouldActivatePreset: preset)
+        // The delegate sets the override synchronously; record its identifier.
+        activatedOverride = AutoPresetsActivatedOverride(
+            presetId: preset.id,
+            activity: activity,
+            overrideSyncIdentifier: currentOverride()?.syncIdentifier
+        )
         logEvent(.presetActivated, activity: activity, presetName: preset.name)
         fileLog.log("activatePreset APPLIED — '\(preset.name)' for \(activity.displayName) (delegate \(delegate == nil ? "MISSING" : "notified"))")
 
@@ -318,19 +324,24 @@ public class AutoPresets_Coordinator: ObservableObject {
     }
 
     private func deactivatePreset(for activity: AutoPresetsActivityType) {
-        guard let presetId = activatedPresetId,
-              let preset = availablePresets().first(where: { $0.id == presetId })
+        guard let record = activatedOverride,
+              let preset = availablePresets().first(where: { $0.id == record.presetId })
         else {
             os_log(
                 "No AutoPresets-activated preset to deactivate",
                 log: log,
                 type: .debug
             )
-            activatedPresetId = nil
+            activatedOverride = nil
             return
         }
 
-        activatedPresetId = nil
+        activatedOverride = nil
+        // Leave the override alone if the user replaced it or restarted the preset by hand
+        guard AutoPresets_restoreDecision(record: record, currentOverride: currentOverride(), now: Date()) == .endUnlessActivityResumes else {
+            fileLog.log("deactivatePreset SKIPPED — the override AutoPresets started is no longer the active one")
+            return
+        }
         delegate?.autoPresets(self, shouldDeactivatePreset: preset)
         logEvent(.presetDeactivated, activity: activity, presetName: preset.name)
 
@@ -349,6 +360,116 @@ public class AutoPresets_Coordinator: ObservableObject {
             activity.displayName
         )
     }
+
+    /// After a restart, ends the override AutoPresets started before it unless
+    /// the activity is confirmed again within the stop interval. Without this the
+    /// override stays on until its own end time, because the activity that
+    /// started it is not known to the new detection session and never "stops".
+    private func restoreActivatedOverride() {
+        switch AutoPresets_restoreDecision(record: activatedOverride, currentOverride: currentOverride(), now: Date()) {
+        case .none:
+            return
+        case .forget:
+            fileLog.log("restore — saved AutoPresets override is no longer active; forgetting it")
+            activatedOverride = nil
+        case .endUnlessActivityResumes:
+            guard currentDetectedActivity == nil, let record = activatedOverride else { return }
+            let interval = settings.stopInterval
+            fileLog.log("restore — AutoPresets override still active after restart; ending it in \(interval)s unless \(record.activity.displayName) is confirmed")
+            pendingRestoredOverrideEnd?.cancel()
+            let workItem = DispatchWorkItem { [weak self] in
+                guard let self, self.currentDetectedActivity == nil else { return }
+                self.pendingRestoredOverrideEnd = nil
+                self.deactivatePreset(for: record.activity)
+            }
+            pendingRestoredOverrideEnd = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + interval, execute: workItem)
+        }
+    }
+}
+
+// MARK: - Activation Rules
+
+/// What to do at monitoring start with the override AutoPresets saved as started.
+enum AutoPresets_RestoreDecision: Equatable {
+    /// Nothing was saved.
+    case none
+    /// The saved override is gone, expired or replaced; drop the record.
+    case forget
+    /// The saved override is still the active one; end it unless the activity resumes.
+    case endUnlessActivityResumes
+}
+
+/// Compares the saved record with Loop's current override by sync identifier,
+/// so an override the user started (even from the same preset) is never ended.
+/// - Parameters:
+///   - record: The override AutoPresets saved as started, or nil.
+///   - currentOverride: Loop's current `scheduleOverride`.
+///   - now: The current time; a finished override counts as gone.
+/// - Returns: Whether the record still describes the active override.
+func AutoPresets_restoreDecision(
+    record: AutoPresetsActivatedOverride?,
+    currentOverride: TemporaryScheduleOverride?,
+    now: Date
+) -> AutoPresets_RestoreDecision {
+    guard let record else { return .none }
+    guard let currentOverride,
+          !currentOverride.hasFinished(relativeTo: now),
+          let savedId = record.overrideSyncIdentifier,
+          currentOverride.syncIdentifier == savedId
+    else {
+        return .forget
+    }
+    return .endUnlessActivityResumes
+}
+
+/// What AutoPresets may do with Loop's current override when an activity is confirmed.
+enum AutoPresets_ActivationDecision: Equatable {
+    /// No override is in effect; start the preset.
+    case apply
+    /// One of the presets AutoPresets manages is active; replace it.
+    case replaceManaged
+    /// An override AutoPresets does not manage is active or scheduled; leave it alone.
+    case skipForeignOverride
+}
+
+/// Decides whether a confirmed activity may start its preset.
+///
+/// Decided from the override itself, not from what this coordinator remembers
+/// starting: the coordinator's memory resets at app restart (so a leftover
+/// managed preset must still be adoptable), and it does not see the user
+/// replacing an AutoPresets preset with their own override (which must not be
+/// replaced back).
+/// - Parameters:
+///   - activeOverride: Loop's current `scheduleOverride`.
+///   - managedPresetIds: IDs of the presets mapped to activities in AutoPresets settings.
+///   - now: The current time; an override that has finished no longer counts.
+/// - Returns: The action `activatePreset` takes.
+func AutoPresets_activationDecision(
+    activeOverride: TemporaryScheduleOverride?,
+    managedPresetIds: Set<UUID>,
+    now: Date
+) -> AutoPresets_ActivationDecision {
+    guard let active = activeOverride, !active.hasFinished(relativeTo: now) else {
+        return .apply
+    }
+    if case let .preset(activePreset) = active.context, managedPresetIds.contains(activePreset.id) {
+        return .replaceManaged
+    }
+    return .skipForeignOverride
+}
+
+/// Whether ending `preset`'s activity should clear Loop's current override.
+/// Only the same preset is cleared, so an override the user started meanwhile stays.
+/// - Parameters:
+///   - currentOverride: Loop's current `scheduleOverride`.
+///   - preset: The preset AutoPresets started for the activity that ended.
+/// - Returns: True when the current override is that preset.
+func AutoPresets_shouldDeactivate(currentOverride: TemporaryScheduleOverride?, preset: TemporaryScheduleOverridePreset) -> Bool {
+    guard let currentOverride, case let .preset(currentPreset) = currentOverride.context else {
+        return false
+    }
+    return currentPreset.id == preset.id
 }
 
 // MARK: - AutoPresets_ActivityDetectionDelegate

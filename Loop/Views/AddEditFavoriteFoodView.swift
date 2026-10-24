@@ -90,10 +90,16 @@ struct AddEditFavoriteFoodView: View {
         VStack(spacing: 10) {
             // Thumbnail from AI camera capture
             if let thumb = viewModel.thumbnailImage {
-                Image(uiImage: thumb)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                // The fixed-size frame sets the layout width; a .fill image sized
+                // by height alone takes a wide photo's width and widens the whole card.
+                Color.clear
+                    .frame(maxWidth: .infinity)
                     .frame(height: 120)
+                    .overlay(
+                        Image(uiImage: thumb)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    )
                     .clipped()
                     .cornerRadius(8)
                     .padding(.bottom, 4)

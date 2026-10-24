@@ -22,6 +22,7 @@ public class AutoPresets_Storage {
     private static let suiteName = "com.loopkit.Loop.AutoPresets"
     private static let settingsKey = "settings"
     private static let migrationKey = "didMigrateFromLegacy"
+    private static let activatedOverrideKey = "activatedOverride"
 
     // MARK: - Properties
 
@@ -29,8 +30,26 @@ public class AutoPresets_Storage {
 
     // MARK: - Initialization
 
-    public init() {
-        self.defaults = UserDefaults(suiteName: Self.suiteName) ?? .standard
+    /// - Parameter defaults: Injected by tests; the app uses the AutoPresets suite.
+    public init(defaults: UserDefaults? = nil) {
+        self.defaults = defaults ?? UserDefaults(suiteName: Self.suiteName) ?? .standard
+    }
+
+    // MARK: - Activated Override
+
+    /// The override AutoPresets started and has not yet ended, or nil.
+    public var activatedOverride: AutoPresetsActivatedOverride? {
+        get {
+            guard let data = defaults.data(forKey: Self.activatedOverrideKey) else { return nil }
+            return try? JSONDecoder().decode(AutoPresetsActivatedOverride.self, from: data)
+        }
+        set {
+            if let newValue, let data = try? JSONEncoder().encode(newValue) {
+                defaults.set(data, forKey: Self.activatedOverrideKey)
+            } else {
+                defaults.removeObject(forKey: Self.activatedOverrideKey)
+            }
+        }
     }
 
     // MARK: - Settings Access

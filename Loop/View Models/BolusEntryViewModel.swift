@@ -435,13 +435,14 @@ final class BolusEntryViewModel: ObservableObject {
 
                 // BolusPro — save the optional secondary FPU entry alongside
                 // the primary. Failure here doesn't roll back the primary
-                // (the user already committed to that bolus); we just log
-                // and surface an alert so they know the tail isn't covered.
+                // (the user already committed to that bolus); we log and
+                // alert through AlertManager so they know the tail isn't covered.
                 if let secondary = bolusProSecondaryEntry {
                     if let storedSecondary = await saveCarbEntry(secondary, replacingEntry: nil) {
                         self.analyticsServicesManager?.didAddCarbs(source: "BolusPro", amount: storedSecondary.quantity.doubleValue(for: .gram()))
                     } else {
                         log.error("BolusPro secondary entry save failed — primary already saved.")
+                        BolusPro_SaveFailureAlert.issue(for: secondary)
                     }
                 }
 

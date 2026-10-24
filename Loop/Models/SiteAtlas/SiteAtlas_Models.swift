@@ -222,6 +222,42 @@ enum SiteAtlas_Zones {
     }
 }
 
+// MARK: - History Grouping
+
+/// One month of site entries in the History list.
+struct SiteAtlas_MonthGroup: Equatable {
+    let monthStart: Date
+    let title: String
+    let entries: [SiteAtlas_SiteEntry]
+}
+
+/// Groups entries by calendar month for the History list.
+/// Months and the entries inside them are both ordered by date, so the
+/// order is chronological rather than alphabetical by month name.
+/// - Parameters:
+///   - entries: Entries to show, in any order.
+///   - newestFirst: True for newest month and entry first; false for oldest first.
+///   - calendar: Sets the month boundaries, time zone and month-name language.
+/// - Returns: One group per month that has entries.
+func SiteAtlas_groupByMonth(_ entries: [SiteAtlas_SiteEntry], newestFirst: Bool, calendar: Calendar = .current) -> [SiteAtlas_MonthGroup] {
+    let formatter = DateFormatter()
+    formatter.calendar = calendar
+    formatter.timeZone = calendar.timeZone
+    formatter.locale = calendar.locale ?? .current
+    formatter.dateFormat = "MMMM yyyy"
+
+    let ordered: (Date, Date) -> Bool = newestFirst ? { $0 > $1 } : { $0 < $1 }
+    let byMonth = Dictionary(grouping: entries) { calendar.dateInterval(of: .month, for: $0.date)?.start ?? $0.date }
+
+    return byMonth.keys.sorted(by: ordered).map { monthStart in
+        SiteAtlas_MonthGroup(
+            monthStart: monthStart,
+            title: formatter.string(from: monthStart),
+            entries: byMonth[monthStart, default: []].sorted { ordered($0.date, $1.date) }
+        )
+    }
+}
+
 // MARK: - Site Data Container
 
 /// Top-level container for JSON persistence.

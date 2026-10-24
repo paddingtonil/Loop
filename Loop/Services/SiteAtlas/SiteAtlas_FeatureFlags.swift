@@ -31,6 +31,13 @@ enum SiteAtlas_FeatureFlags {
         get { UserDefaults.standard.bool(forKey: Keys.siteAtlasAutoPromptEnabled) }
         set { UserDefaults.standard.set(newValue, forKey: Keys.siteAtlasAutoPromptEnabled) }
     }
+
+    /// History list order — persisted in UserDefaults.
+    /// Defaults to true (newest first) when the user has never changed it.
+    static var historyNewestFirst: Bool {
+        get { UserDefaults.standard.object(forKey: Keys.siteAtlasHistoryNewestFirst) as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: Keys.siteAtlasHistoryNewestFirst) }
+    }
 }
 
 // MARK: - UserDefaults Keys
@@ -39,5 +46,6 @@ extension SiteAtlas_FeatureFlags {
     enum Keys {
         static let siteAtlasEnabled = "com.loopkit.Loop.siteAtlasEnabled"
         static let siteAtlasAutoPromptEnabled = "com.loopkit.Loop.siteAtlasAutoPromptEnabled"
+        static let siteAtlasHistoryNewestFirst = "com.loopkit.Loop.siteAtlasHistoryNewestFirst"
     }
 }

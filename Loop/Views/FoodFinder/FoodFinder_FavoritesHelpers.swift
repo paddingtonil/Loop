@@ -121,6 +121,20 @@ enum FoodFinder_FavoriteEditHelper {
         }
         return FoodFinder_FavoritesViewModel.truncatedName(name)
     }
+
+    /// Whether a favorite food already exists under any of `candidateNames`.
+    /// Names are compared after the same trimming and 30-character cut used
+    /// when a favorite is saved, so a long product name matches its saved favorite.
+    /// - Parameters:
+    ///   - candidateNames: Names the selected food is known by (product name, AI-extracted name).
+    ///   - favoriteNames: Names of the saved favorite foods.
+    /// - Returns: True when a non-empty candidate matches a saved favorite.
+    static func isFavorited(candidateNames: [String], favoriteNames: [String]) -> Bool {
+        let saved = Set(favoriteNames.map(FoodFinder_FavoritesViewModel.truncatedName))
+        return candidateNames
+            .map(FoodFinder_FavoritesViewModel.truncatedName)
+            .contains { !$0.isEmpty && saved.contains($0) }
+    }
 }
 
 // MARK: - FoodFinder_FavoritesHelper

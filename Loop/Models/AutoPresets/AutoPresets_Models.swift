@@ -88,6 +88,22 @@ public struct AutoPresetsLogEntry: Codable, Identifiable, Equatable {
     }
 }
 
+// MARK: - Activated Override Record
+
+/// The override AutoPresets started, saved so it is still known after Loop restarts.
+public struct AutoPresetsActivatedOverride: Codable, Equatable {
+    public let presetId: UUID
+    public let activity: AutoPresetsActivityType
+    /// Identifies this exact override; the same preset started again by hand gets a new one.
+    public let overrideSyncIdentifier: UUID?
+
+    public init(presetId: UUID, activity: AutoPresetsActivityType, overrideSyncIdentifier: UUID?) {
+        self.presetId = presetId
+        self.activity = activity
+        self.overrideSyncIdentifier = overrideSyncIdentifier
+    }
+}
+
 // MARK: - Settings Model
 
 /// All settings for the AutoPresets feature

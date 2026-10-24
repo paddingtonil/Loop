@@ -8,6 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		120490CB2CBFB25A006BDF0A /* NegativeInsulinDamperSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120490CA2CBFB25A006BDF0A /* NegativeInsulinDamperSelectionView.swift */; };
+		7FFB9F133DAB9E25FF9D850D /* SiteAtlas_HistoryGroupingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B4FE398C26752DB548BD5A /* SiteAtlas_HistoryGroupingTests.swift */; };
+		86827A522972C6EEE6532D72 /* BolusPro_SaveFailureAlertTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46BF86CCA4C1ABA4261677C0 /* BolusPro_SaveFailureAlertTests.swift */; };
+		A79B24C14E6227CE3C10F9F1 /* AutoPresets_CoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170082831FCBEFE4A7E2BEEF /* AutoPresets_CoordinatorTests.swift */; };
+		B302F7C1607144F0D67ED088 /* DataLayer_SettingsChangeEventsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7CBA25A5E57D95B6153465 /* DataLayer_SettingsChangeEventsTests.swift */; };
+		6ED39E4A4284019855494012 /* FoodFinder_FavoritesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7CFB580073DD651C1C3C462 /* FoodFinder_FavoritesTests.swift */; };
+		EB8050F51056C6DEA160DAFC /* BolusPro_SaveFailureAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48E73C9F6E29C2D0AD805972 /* BolusPro_SaveFailureAlert.swift */; };
+		F02023783A371262DFDFDAA9 /* DataLayer_SettingsChangeEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DF8CB527C3C1DE064B4BC /* DataLayer_SettingsChangeEvents.swift */; };
 		E99E746DC66A23098BEE7C6D /* SiteAtlas_FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00DAF82811DE6BE326F7610 /* SiteAtlas_FeatureFlags.swift */; };
 		A3E380B614277C4C788365FA /* SiteAtlas_Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF4A7212FE066CC7754F207 /* SiteAtlas_Storage.swift */; };
 		97C5ABDCD645F8D01E91DC0D /* SiteAtlas_Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2644A16811D8A9EA3F4B89AF /* SiteAtlas_Coordinator.swift */; };
@@ -951,6 +958,13 @@
 
 /* Begin PBXFileReference section */
 		120490CA2CBFB25A006BDF0A /* NegativeInsulinDamperSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NegativeInsulinDamperSelectionView.swift; sourceTree = "<group>"; };
+		02B4FE398C26752DB548BD5A /* SiteAtlas_HistoryGroupingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_HistoryGroupingTests.swift; sourceTree = "<group>"; };
+		46BF86CCA4C1ABA4261677C0 /* BolusPro_SaveFailureAlertTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusPro_SaveFailureAlertTests.swift; sourceTree = "<group>"; };
+		170082831FCBEFE4A7E2BEEF /* AutoPresets_CoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPresets_CoordinatorTests.swift; sourceTree = "<group>"; };
+		ED7CBA25A5E57D95B6153465 /* DataLayer_SettingsChangeEventsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_SettingsChangeEventsTests.swift; sourceTree = "<group>"; };
+		B7CFB580073DD651C1C3C462 /* FoodFinder_FavoritesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFinder_FavoritesTests.swift; sourceTree = "<group>"; };
+		48E73C9F6E29C2D0AD805972 /* BolusPro_SaveFailureAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "../../Services/BolusPro/BolusPro_SaveFailureAlert.swift"; sourceTree = "<group>"; };
+		2C4DF8CB527C3C1DE064B4BC /* DataLayer_SettingsChangeEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLayer_SettingsChangeEvents.swift; sourceTree = "<group>"; };
 		D00DAF82811DE6BE326F7610 /* SiteAtlas_FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_FeatureFlags.swift; sourceTree = "<group>"; };
 		FCF4A7212FE066CC7754F207 /* SiteAtlas_Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_Storage.swift; sourceTree = "<group>"; };
 		2644A16811D8A9EA3F4B89AF /* SiteAtlas_Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteAtlas_Coordinator.swift; sourceTree = "<group>"; };
@@ -1920,6 +1934,38 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E28F512436CD61B01143B742 /* SiteAtlas */ = {
+			isa = PBXGroup;
+			children = (
+				02B4FE398C26752DB548BD5A /* SiteAtlas_HistoryGroupingTests.swift */,
+			);
+			path = SiteAtlas;
+			sourceTree = "<group>";
+		};
+		18ACD089D6A5F67865D4F1AD /* BolusPro */ = {
+			isa = PBXGroup;
+			children = (
+				46BF86CCA4C1ABA4261677C0 /* BolusPro_SaveFailureAlertTests.swift */,
+			);
+			path = BolusPro;
+			sourceTree = "<group>";
+		};
+		6E572D88EA1D301BB9F8579D /* AutoPresets */ = {
+			isa = PBXGroup;
+			children = (
+				170082831FCBEFE4A7E2BEEF /* AutoPresets_CoordinatorTests.swift */,
+			);
+			path = AutoPresets;
+			sourceTree = "<group>";
+		};
+		DD34DCF643D8B4B29268B819 /* DataLayer */ = {
+			isa = PBXGroup;
+			children = (
+				ED7CBA25A5E57D95B6153465 /* DataLayer_SettingsChangeEventsTests.swift */,
+			);
+			path = DataLayer;
+			sourceTree = "<group>";
+		};
 		7B0AE0D9D2D919C6882C0799 /* AutoPresets */ = {
 			isa = PBXGroup;
 			children = (
@@ -2533,6 +2579,10 @@
 		43F78D2C1C8FC58F002152D1 /* LoopTests */ = {
 			isa = PBXGroup;
 			children = (
+				E28F512436CD61B01143B742 /* SiteAtlas */,
+				18ACD089D6A5F67865D4F1AD /* BolusPro */,
+				6E572D88EA1D301BB9F8579D /* AutoPresets */,
+				DD34DCF643D8B4B29268B819 /* DataLayer */,
 				E9C58A7624DB510500487A17 /* Fixtures */,
 				B4CAD8772549D2330057946B /* LoopCore */,
 				1DA7A83F24476E8C008257F0 /* Managers */,
@@ -3325,6 +3375,7 @@
 		8C92ACBE693772D89D0718B8 /* FoodFinder */ = {
 			isa = PBXGroup;
 			children = (
+				48E73C9F6E29C2D0AD805972 /* BolusPro_SaveFailureAlert.swift */,
 				6E000C525103B3F398BFC7CF /* FoodFinder_FeatureFlags.swift */,
 				90DA33256FD56059EC12CA84 /* BolusPro_SettingsView.swift */,
 				6C02AEE425D84F297A17782C /* BolusPro_CarbEntrySection.swift */,
@@ -3389,6 +3440,7 @@
 		93F4741D9B20D83B5B586D72 /* FoodFinder */ = {
 			isa = PBXGroup;
 			children = (
+				B7CFB580073DD651C1C3C462 /* FoodFinder_FavoritesTests.swift */,
 				C1A7D02D25418CA0A4DEAC0C /* FoodFinder_BarcodeScannerTests.swift */,
 				1AF9A0E97314FFA90A57CE52 /* FoodFinder_OpenFoodFactsTests.swift */,
 				F7B58807669E37BAD702BA94 /* FoodFinder_VoiceSearchTests.swift */,
@@ -3446,6 +3498,7 @@
 		803F89EF157DE0C769EF451C /* DataLayer */ = {
 			isa = PBXGroup;
 			children = (
+				2C4DF8CB527C3C1DE064B4BC /* DataLayer_SettingsChangeEvents.swift */,
 				0BFDF71A68291C031B8A998D /* DataLayer_Coordinator.swift */,
 			);
 			path = DataLayer;
@@ -4500,6 +4553,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB8050F51056C6DEA160DAFC /* BolusPro_SaveFailureAlert.swift in Sources */,
+				F02023783A371262DFDFDAA9 /* DataLayer_SettingsChangeEvents.swift in Sources */,
 				9E201ADCAC38719F08BC0EF0 /* DirectConnect_RecoveryPolicy.swift in Sources */,
 				3B1B3FA09AF95FB52D9D1355 /* DirectConnect_ConnectionHealth.swift in Sources */,
 				E99E746DC66A23098BEE7C6D /* SiteAtlas_FeatureFlags.swift in Sources */,
@@ -5016,6 +5071,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7FFB9F133DAB9E25FF9D850D /* SiteAtlas_HistoryGroupingTests.swift in Sources */,
+				86827A522972C6EEE6532D72 /* BolusPro_SaveFailureAlertTests.swift in Sources */,
+				A79B24C14E6227CE3C10F9F1 /* AutoPresets_CoordinatorTests.swift in Sources */,
+				B302F7C1607144F0D67ED088 /* DataLayer_SettingsChangeEventsTests.swift in Sources */,
+				6ED39E4A4284019855494012 /* FoodFinder_FavoritesTests.swift in Sources */,
 				E499CFEE6C2BB2873306326C /* DirectConnect_RecoveryPolicyTests.swift in Sources */,
 				EA78340342C2CA685AEC6D14 /* DirectConnect_ConnectionHealthTests.swift in Sources */,
 				A9DF02CB24F72B9E00B7C988 /* CriticalEventLogTests.swift in Sources */,

@@ -147,6 +147,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                     absorptionTime: $viewModel.absorptionTime,
                     absorptionTimeWasEdited: viewModel.absorptionTimeWasEdited,
                     defaultAbsorptionTimes: viewModel.defaultAbsorptionTimes,
+                    onFavoriteFoodSave: onFavoriteFoodSave(_:),
                     favoriteFoodName: $foodFinderFoodName,
                     favoriteFoodImage: $foodFinderImage,
                     restoredAnalysisResult: $viewModel.restoredAnalysisResult,

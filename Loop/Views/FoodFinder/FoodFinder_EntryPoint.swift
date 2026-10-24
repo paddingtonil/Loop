@@ -335,19 +335,12 @@ struct FoodFinder_EntryPoint: View {
                 foodType: foodType,
                 absorptionTime: absorptionTime,
                 name: favoriteFoodName,
-                thumbnailImage: searchVM.capturedAIImage,
+                thumbnailImage: favoriteFoodImage,
                 onSave: { food in
                     showingFavoriteSheet = false
+                    // The host stores the favorite and links `favoriteFoodImage`
+                    // as its thumbnail under the stored favorite's ID.
                     onFavoriteFoodSave?(food)
-
-                    // Save thumbnail linked to the newly created StoredFavoriteFood
-                    if let image = searchVM.capturedAIImage,
-                       let thumbId = FavoriteFoodImageStore.saveThumbnail(from: image) {
-                        var imageMap = UserDefaults.standard.favoriteFoodImageIDs
-                        imageMap[food.name] = thumbId
-                        UserDefaults.standard.favoriteFoodImageIDs = imageMap
-                    }
-
                     loadFavoriteFoods()
                 }
             )
@@ -395,6 +388,8 @@ struct FoodFinder_EntryPoint: View {
                recordedProductID != product.id {
                 recordedProductID = product.id
                 recordBarcodeProduct(product)
+                // Pre-fill the favorite name so either Save-as-Favorite path names it
+                favoriteFoodName = FoodFinder_FavoriteEditHelper.suggestedName(from: product.displayName) ?? ""
             }
         }
         searchVM.onFoodCleared = {
@@ -531,6 +526,7 @@ extension FoodFinder_EntryPoint {
                         .multilineTextAlignment(.center)
                     Button(action: {
                         if !isQuickFavorited(selectedFood) {
+                            prepareFavoriteDraft(for: selectedFood)
                             showingFavoriteSheet = true
                         }
                     }) {
@@ -538,6 +534,7 @@ extension FoodFinder_EntryPoint {
                             .foregroundColor(isQuickFavorited(selectedFood) ? .red : Color(UIColor.tertiaryLabel))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(isQuickFavorited(selectedFood) ? "Saved to Favorite Foods" : "Save to Favorite Foods")
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
 
@@ -1633,8 +1630,18 @@ extension FoodFinder_EntryPoint {
 
     // Quick favorite helpers
     private func isQuickFavorited(_ product: OpenFoodFactsProduct) -> Bool {
-        let name = product.displayName
-        return favoriteFoods.contains { $0.name == name }
+        FoodFinder_FavoriteEditHelper.isFavorited(
+            candidateNames: [product.displayName, favoriteFoodName],
+            favoriteNames: favoriteFoods.map(\.name)
+        )
+    }
+
+    /// Fills the favorite form's name and thumbnail for a scanned or searched
+    /// product. AI results already set both when the analysis arrived.
+    private func prepareFavoriteDraft(for product: OpenFoodFactsProduct) {
+        guard searchVM.lastAIAnalysisResult == nil else { return }
+        favoriteFoodName = FoodFinder_FavoriteEditHelper.suggestedName(from: product.displayName) ?? ""
+        favoriteFoodImage = searchVM.productThumbnailImage
     }
 
     private func toggleQuickFavorite(for product: OpenFoodFactsProduct) {
