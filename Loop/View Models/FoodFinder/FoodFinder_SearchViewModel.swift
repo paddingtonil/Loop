@@ -144,6 +144,12 @@ final class FoodFinder_SearchViewModel: ObservableObject {
     /// Store the captured AI image for display
     @Published var capturedAIImage: UIImage? = nil
 
+    /// True while an AI re-evaluation (after the user edited items) is in flight.
+    @Published var isReevaluatingAI: Bool = false
+
+    /// Error from the last re-evaluation attempt, shown in Food Details.
+    @Published var reevaluationError: String? = nil
+
     // MARK: - Internal / Private State
 
     /// Track the last barcode we searched for to prevent duplicates
@@ -471,6 +477,57 @@ final class FoodFinder_SearchViewModel: ObservableObject {
         let current = effectiveServings(for: index)
         let newValue = max(0.25, current + delta)
         itemServingOverrides[index] = newValue
+    }
+
+    // MARK: - Item Editing & Re-evaluation
+
+    /// Store the user's edits for one detected item. Totals are recomputed locally right away;
+    /// the AI re-evaluation (`reevaluateAfterEdits`) refines them afterwards.
+    func applyItemEdit(index: Int, edited: FoodItemAnalysis) {
+        guard var result = lastAIAnalysisResult,
+              index >= 0, index < result.foodItemsDetailed.count else { return }
+        var item = edited
+        item.userEdited = true
+        result.foodItemsDetailed[index] = item
+        result.totalCarbohydrates = result.foodItemsDetailed.reduce(0) { $0 + $1.carbohydrates }
+        let protein = result.foodItemsDetailed.compactMap { $0.protein }.reduce(0, +)
+        let fat = result.foodItemsDetailed.compactMap { $0.fat }.reduce(0, +)
+        let fiber = result.foodItemsDetailed.compactMap { $0.fiber }.reduce(0, +)
+        let calories = result.foodItemsDetailed.compactMap { $0.calories }.reduce(0, +)
+        result.totalProtein = protein > 0 ? protein : nil
+        result.totalFat = fat > 0 ? fat : nil
+        result.totalFiber = fiber > 0 ? fiber : nil
+        result.totalCalories = calories > 0 ? calories : nil
+        // Per-item serving override no longer applies: the user's numbers are final for this item.
+        itemServingOverrides[index] = item.servingMultiplier > 0 ? item.servingMultiplier : 1.0
+        lastAIAnalysisResult = result
+    }
+
+    /// Ask the AI to re-evaluate the whole plate using the photo plus the user's confirmed edits.
+    /// Returns the revised result (not yet applied) or nil on failure / cancellation.
+    func reevaluateAfterEdits() async -> AIFoodAnalysisResult? {
+        guard let previous = lastAIAnalysisResult else { return nil }
+
+        // User-initiated paid AI action — pass through the spend gate.
+        guard await PowerPack_APIUsage.shared.gate(actionLabel: "Re-evaluating your edited meal", estCostUSD: 0.01) else {
+            return nil
+        }
+
+        isReevaluatingAI = true
+        reevaluationError = nil
+        defer { isReevaluatingAI = false }
+
+        let image = capturedAIImage
+        let excluded = excludedAIItemIndices
+        do {
+            return try await foodFinder_withTimeout(seconds: 150) {
+                try await FoodSearchRouter.shared.reevaluateFood(image: image, previous: previous, excludedIndices: excluded)
+            }
+        } catch {
+            if error is CancellationError { return nil }
+            reevaluationError = "Re-evaluation failed: \(error.localizedDescription). Your edits were kept."
+            return nil
+        }
     }
 
     // MARK: - Voice / Generative Search

@@ -91,6 +91,7 @@ struct FoodFinder_EntryPoint: View {
     @State private var isAdvancedAnalysisExpanded = false
     @State private var isDescriptionExpanded = false
     @State private var expandedRow: Row?
+    @State private var itemEditTarget: FoodFinder_ItemEditTarget?
 
     /// Favorite foods loaded from UserDefaults for quick-favorite toggling.
     /// Kept lightweight — only names are needed for the heart-button check.
@@ -316,6 +317,17 @@ struct FoodFinder_EntryPoint: View {
         }
         .sheet(isPresented: $showingAISettings) {
             AISettingsView()
+        }
+        .sheet(item: $itemEditTarget) { target in
+            FoodFinder_ItemEditSheet(
+                item: target.item,
+                hasPhoto: searchVM.capturedAIImage != nil,
+                onConfirm: { edited, reevaluate in
+                    itemEditTarget = nil
+                    confirmItemEdit(index: target.index, edited: edited, reevaluate: reevaluate)
+                },
+                onCancel: { itemEditTarget = nil }
+            )
         }
         .sheet(isPresented: $showingFavoriteSheet) {
             AddEditFavoriteFoodView(
@@ -839,6 +851,21 @@ extension FoodFinder_EntryPoint {
                         .stroke(Color(.systemOrange).opacity(0.3), lineWidth: 1)
                 )
                 .padding(.top, 4)
+
+                if searchVM.isReevaluatingAI {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                        Text("Re-evaluating with your changes…")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 6)
+                } else if let error = searchVM.reevaluationError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.top, 6)
+                }
             }
         }
     }
@@ -894,6 +921,16 @@ extension FoodFinder_EntryPoint {
                     .background(Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 Button(action: {
+                    itemEditTarget = FoodFinder_ItemEditTarget(index: index, item: item)
+                }) {
+                    Image(systemName: "pencil.circle.fill")
+                        .foregroundColor(item.userEdited == true ? .blue : .secondary)
+                        .font(.system(size: 18, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .disabled(isExcluded || searchVM.isReevaluatingAI)
+                .accessibilityLabel("Edit \(item.name)")
+                Button(action: {
                     if isExcluded { searchVM.excludedAIItemIndices.remove(index) }
                     else { searchVM.excludedAIItemIndices.insert(index) }
                     searchVM.recomputeAIAdjustments()
@@ -915,6 +952,27 @@ extension FoodFinder_EntryPoint {
                     .foregroundColor(isExcluded ? .secondary : .primary)
                     .strikethrough(isExcluded, color: .secondary)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+            if item.userEdited == true || item.weightGrams != nil || !(item.userDescription ?? "").isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    if item.userEdited == true {
+                        Text("Edited by you")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(.systemBlue).opacity(0.15))
+                            .foregroundColor(.blue)
+                            .clipShape(Capsule())
+                    }
+                    if let grams = item.weightGrams, grams > 0 {
+                        FoodFinder_LinePair(label: "Weight:", value: String(format: "%.0f g", grams))
+                    }
+                    if let desc = item.userDescription, !desc.isEmpty {
+                        FoodFinder_LinePair(label: "Description:", value: desc)
+                    }
+                }
+                .opacity(isExcluded ? 0.7 : 1.0)
             }
             VStack(alignment: .leading, spacing: 4) {
                 let trimmedUSDA = item.usdaServingSize?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1244,6 +1302,24 @@ extension FoodFinder_EntryPoint {
             }
         }
 
+    }
+
+    /// Save the user's edits for one item and, when requested, have the AI re-evaluate the
+    /// whole plate using the original photo plus everything the user confirmed.
+    private func confirmItemEdit(index: Int, edited: FoodItemAnalysis, reevaluate: Bool) {
+        searchVM.applyItemEdit(index: index, edited: edited)
+        guard reevaluate else { return }
+        Task { @MainActor in
+            let image = searchVM.capturedAIImage
+            guard let revised = await searchVM.reevaluateAfterEdits() else { return }
+            // New item list: index-based exclusions/overrides from the old list no longer apply
+            // (removed items were already left out by the AI).
+            searchVM.excludedAIItemIndices = []
+            searchVM.itemServingOverrides = [:]
+            handleAIFoodAnalysis(revised)
+            searchVM.capturedAIImage = image
+            recordAnalysis(revised, type: image != nil ? .image : .dictation)
+        }
     }
 
     /// Record an AI analysis to the history store for future re-entry.
@@ -2434,5 +2510,149 @@ struct AIAbsorptionTimePickerRow: View {
 
     private func durationString() -> String {
         return durationFormatter.string(from: absorptionTime) ?? ""
+    }
+}
+
+
+// MARK: - Item Edit Sheet
+
+/// Identifies the Food Details item currently being edited.
+struct FoodFinder_ItemEditTarget: Identifiable {
+    let index: Int
+    let item: FoodItemAnalysis
+    var id: Int { index }
+}
+
+/// Lets the user rewrite what the AI detected for one item: name, description,
+/// portion, weight and nutrition. Confirming can trigger an AI re-evaluation.
+struct FoodFinder_ItemEditSheet: View {
+    let item: FoodItemAnalysis
+    let hasPhoto: Bool
+    let onConfirm: (FoodItemAnalysis, Bool) -> Void
+    let onCancel: () -> Void
+
+    @State private var name: String
+    @State private var descriptionText: String
+    @State private var portion: String
+    @State private var weight: String
+    @State private var carbs: String
+    @State private var calories: String
+    @State private var fat: String
+    @State private var fiber: String
+    @State private var protein: String
+
+    init(item: FoodItemAnalysis,
+         hasPhoto: Bool,
+         onConfirm: @escaping (FoodItemAnalysis, Bool) -> Void,
+         onCancel: @escaping () -> Void) {
+        self.item = item
+        self.hasPhoto = hasPhoto
+        self.onConfirm = onConfirm
+        self.onCancel = onCancel
+        func fmt(_ v: Double?) -> String {
+            guard let v = v else { return "" }
+            return v == v.rounded() ? String(format: "%.0f", v) : String(format: "%.1f", v)
+        }
+        _name = State(initialValue: item.name)
+        _descriptionText = State(initialValue: item.userDescription ?? item.preparationMethod ?? "")
+        _portion = State(initialValue: item.portionEstimate)
+        _weight = State(initialValue: fmt(item.weightGrams))
+        _carbs = State(initialValue: fmt(item.carbohydrates))
+        _calories = State(initialValue: fmt(item.calories))
+        _fat = State(initialValue: fmt(item.fat))
+        _fiber = State(initialValue: fmt(item.fiber))
+        _protein = State(initialValue: fmt(item.protein))
+    }
+
+    private func parse(_ text: String) -> Double? {
+        let cleaned = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+        guard !cleaned.isEmpty, let value = Double(cleaned), value >= 0 else { return nil }
+        return value
+    }
+
+    private var isValid: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func buildEditedItem() -> FoodItemAnalysis {
+        var edited = item
+        edited.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let desc = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        edited.userDescription = desc.isEmpty ? nil : desc
+        let portionTrimmed = portion.trimmingCharacters(in: .whitespacesAndNewlines)
+        edited.portionEstimate = portionTrimmed.isEmpty ? item.portionEstimate : portionTrimmed
+        edited.weightGrams = parse(weight)
+        edited.carbohydrates = parse(carbs) ?? 0
+        edited.calories = parse(calories)
+        edited.fat = parse(fat)
+        edited.fiber = parse(fiber)
+        edited.protein = parse(protein)
+        return edited
+    }
+
+    private func numberField(_ title: String, unit: String, text: Binding<String>) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            TextField("0", text: text)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: 90)
+            Text(unit)
+                .foregroundColor(.secondary)
+                .frame(width: 32, alignment: .leading)
+        }
+    }
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Food")) {
+                    TextField("Food name", text: $name)
+                    TextField("Description (e.g. grilled, no oil)", text: $descriptionText)
+                }
+                Section(header: Text("Portion"),
+                        footer: Text("Enter a weight in grams for the most accurate nutrition. The AI will calculate values for exactly that weight.")) {
+                    TextField("Portion (e.g. 1 cup, 2 slices)", text: $portion)
+                    numberField("Weight", unit: "g", text: $weight)
+                }
+                Section(header: Text("Nutrition"),
+                        footer: Text("Values you change here are treated as correct when the AI re-evaluates.")) {
+                    numberField("Carbs", unit: "g", text: $carbs)
+                    numberField("Calories", unit: "kcal", text: $calories)
+                    numberField("Fat", unit: "g", text: $fat)
+                    numberField("Fiber", unit: "g", text: $fiber)
+                    numberField("Protein", unit: "g", text: $protein)
+                }
+                Section(footer: Text(hasPhoto
+                                     ? "The AI will look at your photo again together with your changes and update the whole meal."
+                                     : "No photo is available, so the AI will re-evaluate from the item list and your changes.")) {
+                    Button(action: { onConfirm(buildEditedItem(), true) }) {
+                        HStack {
+                            Spacer()
+                            Label("Confirm & Re-evaluate with AI", systemImage: "sparkles")
+                                .font(.body.weight(.semibold))
+                            Spacer()
+                        }
+                    }
+                    .disabled(!isValid)
+                    Button(action: { onConfirm(buildEditedItem(), false) }) {
+                        HStack {
+                            Spacer()
+                            Text("Save Without AI")
+                            Spacer()
+                        }
+                    }
+                    .disabled(!isValid)
+                }
+            }
+            .navigationTitle("Edit Item")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: onCancel)
+                }
+            }
+        }
     }
 }

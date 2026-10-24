@@ -406,20 +406,27 @@ If menu shows "Teriyaki Chicken Bowl with White Rice", respond:
 
 /// Individual food item analysis with detailed portion assessment
 struct FoodItemAnalysis: Codable, Equatable {
-    let name: String
-    let portionEstimate: String
+    var name: String
+    var portionEstimate: String
     let usdaServingSize: String?
     let servingMultiplier: Double
-    let preparationMethod: String?
+    var preparationMethod: String?
     let visualCues: String?
-    let carbohydrates: Double
-    let calories: Double?
-    let fat: Double?
-    let fiber: Double?
-    let protein: Double?
-    let assessmentNotes: String?
+    var carbohydrates: Double
+    var calories: Double?
+    var fat: Double?
+    var fiber: Double?
+    var protein: Double?
+    var assessmentNotes: String?
     // Optional per-item absorption time (hours) if provided by the AI
     let absorptionTimeHours: Double?
+
+    /// User-supplied weight of this item in grams (not produced by the AI).
+    var weightGrams: Double? = nil
+    /// User-written description of the item (e.g. "grilled, no oil, skin on").
+    var userDescription: String? = nil
+    /// True once the user has manually edited this item in Food Details.
+    var userEdited: Bool? = nil
 }
 
 /// Type of image being analyzed
