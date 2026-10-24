@@ -525,6 +525,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         var glucoseSamples: [StoredGlucoseSample]?
         var predictedGlucoseValues: [GlucoseValue]?
         var iobValues: [InsulinValue]?
+        var cbiValue: Double?
         var doseEntries: [DoseEntry]?
         var totalDelivery: Double?
         var cobValues: [CarbValue]?
@@ -607,6 +608,19 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     iobValues = []
                 case .success(let values):
                     iobValues = values
+                }
+                reloadGroup.leave()
+            }
+
+            // Circulating basal insulin is informational only; a failure here must not trigger a retry of the insulin context
+            reloadGroup.enter()
+            deviceManager.doseStore.circulatingBasalInsulin(at: Date()) { (result) -> Void in
+                switch result {
+                case .failure(let error):
+                    self.log.error("DoseStore failed to get circulating basal insulin: %{public}@", String(describing: error))
+                    cbiValue = nil
+                case .success(let value):
+                    cbiValue = value.value
                 }
                 reloadGroup.leave()
             }
@@ -697,6 +711,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.currentIOBDescription = String(describing: maxValue.y)
             } else {
                 self.currentIOBDescription = nil
+            }
+
+            // Circulating basal insulin (informational; not used by Loop for dosing)
+            if let cbiValue = cbiValue {
+                self.currentCBIDescription = self.cbiFormatter.string(from: NSNumber(value: cbiValue)).map { String(format: NSLocalizedString("CBI %@ U", comment: "The subtitle format describing circulating basal insulin in units. (1: localized insulin amount)"), $0) }
+            } else {
+                self.currentCBIDescription = nil
             }
 
             // Insulin Delivery
@@ -791,6 +812,17 @@ final class StatusTableViewController: LoopChartsTableViewController {
     // MARK: IOB
 
     private var currentIOBDescription: String?
+
+    /// Circulating basal insulin: insulin still active from all basal delivered, informational only
+    private var currentCBIDescription: String?
+
+    private lazy var cbiFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 1
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }()
 
     // MARK: Dose
 
@@ -1324,7 +1356,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 cell.doesNavigate = automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
             case .iob:
                 if let currentIOB = currentIOBDescription {
-                    cell.setSubtitleAttributedText(chartValueSubtitle(prefix: nil, value: currentIOB, color: .insulinTintColor))
+                    let subtitle = NSMutableAttributedString(attributedString: chartValueSubtitle(prefix: nil, value: currentIOB, color: .insulinTintColor))
+                    if let currentCBI = currentCBIDescription {
+                        subtitle.append(NSAttributedString(string: "  ·  \(currentCBI)", attributes: [.font: UIFont.systemFont(ofSize: 16, weight: .regular), .foregroundColor: UIColor.secondaryLabel]))
+                    }
+                    cell.setSubtitleAttributedText(subtitle)
                 } else {
                     cell.setSubtitleAttributedText(nil)
                 }
