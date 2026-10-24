@@ -156,6 +156,8 @@ class FoodSearchRouter {
     }
 
     /// Builds the prompt addendum describing the previous analysis and the user's corrections.
+    /// Only the fields the user actually changed are marked authoritative; every other number is
+    /// labelled as a stale AI estimate that must be recomputed from the corrected description/weight.
     static func correctionsContext(previous: AIFoodAnalysisResult, excludedIndices: Set<Int>, hasPhoto: Bool) -> String {
         func num(_ v: Double?) -> String { v.map { String(format: "%.1f", $0) } ?? "unknown" }
 
@@ -165,28 +167,46 @@ class FoodSearchRouter {
                 lines.append("\(index + 1). \"\(item.name)\" — REMOVED by the user (not eaten). Leave it out of the revised analysis.")
                 continue
             }
-            let edited = item.userEdited == true
-            var parts = ["\(index + 1). \"\(item.name)\"", "portion: \(item.portionEstimate)"]
-            if let grams = item.weightGrams, grams > 0 { parts.append("weight: \(num(grams)) g") }
-            if let desc = item.userDescription, !desc.isEmpty { parts.append("description: \(desc)") }
-            parts.append("carbs \(num(item.carbohydrates)) g, calories \(num(item.calories)), fat \(num(item.fat)) g, fiber \(num(item.fiber)) g, protein \(num(item.protein)) g")
-            lines.append(parts.joined(separator: "; ") + (edited ? "  [EDITED BY USER]" : ""))
+            let fields = Set(item.editedFields ?? [])
+            var corrections: [String] = []
+            if fields.contains("name") { corrections.append("name = \"\(item.name)\"") }
+            if fields.contains("description"), let d = item.userDescription, !d.isEmpty { corrections.append("description = \"\(d)\"") }
+            if fields.contains("portion") { corrections.append("portion = \"\(item.portionEstimate)\"") }
+            if fields.contains("weight"), let g = item.weightGrams { corrections.append("weight = \(num(g)) g") }
+            if fields.contains("carbs") { corrections.append("carbs = \(num(item.carbohydrates)) g") }
+            if fields.contains("calories") { corrections.append("calories = \(num(item.calories))") }
+            if fields.contains("fat") { corrections.append("fat = \(num(item.fat)) g") }
+            if fields.contains("fiber") { corrections.append("fiber = \(num(item.fiber)) g") }
+            if fields.contains("protein") { corrections.append("protein = \(num(item.protein)) g") }
+
+            var line = "\(index + 1). \"\(item.name)\""
+            if corrections.isEmpty {
+                line += " — no user changes. Previous AI estimate: portion \(item.portionEstimate); carbs \(num(item.carbohydrates)) g, calories \(num(item.calories)), fat \(num(item.fat)) g, fiber \(num(item.fiber)) g, protein \(num(item.protein)) g."
+            } else {
+                line += "\n   USER CORRECTIONS (authoritative, do not override): " + corrections.joined(separator: "; ")
+                let nutritionPinned = !fields.isDisjoint(with: ["carbs", "calories", "fat", "fiber", "protein"])
+                line += "\n   Previous AI estimate (STALE for anything the corrections affect — recompute, do not copy): portion \(item.portionEstimate); carbs \(num(item.carbohydrates)) g, calories \(num(item.calories)), fat \(num(item.fat)) g, fiber \(num(item.fiber)) g, protein \(num(item.protein)) g."
+                if !nutritionPinned {
+                    line += "\n   The user did NOT set nutrition values for this item: derive ALL of its nutrition afresh from the corrected food."
+                }
+            }
+            lines.append(line)
         }
 
         let source = hasPhoto ? "the photo" : "the item list below (no photo is available)"
         return """
 
 
-        THE USER HAS REVIEWED YOUR PREVIOUS ANALYSIS AND CONFIRMED/CORRECTED THE ITEMS.
-        Re-evaluate the whole meal using \(source) together with the user's confirmed information below.
+        THE USER HAS REVIEWED YOUR PREVIOUS ANALYSIS AND CORRECTED IT.
+        Re-evaluate the whole meal using \(source) together with the user's corrections below.
         Rules:
-        - Items marked [EDITED BY USER] are ground truth for name, description, portion, weight and any nutrition values given. Do not rename or override them.
-        - If the user gave a weight in grams, compute nutrition for exactly that weight (look up the per-100 g values for that food, e.g. USDA FoodData Central) instead of the visual portion estimate.
-        - If the user changed nutrition values directly, keep those values for that item.
-        - For items NOT marked as edited, re-check them in light of the corrections and fix anything inconsistent.
-        - Return the complete analysis in the same JSON format as before, with revised totals, confidence, and absorption time.
+        - Fields listed under USER CORRECTIONS are facts supplied by the user and override what you see in the photo. If the user's description contradicts the photo (e.g. the user says the rice is cauliflower rice), trust the user.
+        - Every field that is NOT listed under USER CORRECTIONS must be recomputed from the corrected food, description, portion and weight. Never reuse a previous number just because it appeared before: a changed ingredient or weight must change the nutrition (e.g. cauliflower rice has far fewer carbs than white rice).
+        - If the user gave a weight in grams, compute nutrition for exactly that weight using per-100 g values for that food (e.g. USDA FoodData Central).
+        - Items marked REMOVED are not eaten. Items with no user changes may still be adjusted if the corrections make them inconsistent.
+        - Return the complete analysis in the same JSON format as before, with revised totals, confidence, and absorption time. In your notes, say briefly what changed because of the user's corrections.
 
-        Previous analysis with the user's confirmed information:
+        Previous analysis and user corrections:
         \(lines.joined(separator: "\n"))
         """
     }
@@ -201,6 +221,7 @@ class FoodSearchRouter {
                 result.foodItemsDetailed[i].weightGrams = match.weightGrams
                 result.foodItemsDetailed[i].userDescription = match.userDescription
                 result.foodItemsDetailed[i].userEdited = true
+                result.foodItemsDetailed[i].editedFields = match.editedFields
             }
         }
         return result

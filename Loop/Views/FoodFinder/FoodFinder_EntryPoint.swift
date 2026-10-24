@@ -2576,17 +2576,53 @@ struct FoodFinder_ItemEditSheet: View {
 
     private func buildEditedItem() -> FoodItemAnalysis {
         var edited = item
-        edited.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        var changed: [String] = []
+        func differs(_ a: Double?, _ b: Double?) -> Bool {
+            switch (a, b) {
+            case (nil, nil): return false
+            case let (x?, y?): return abs(x - y) > 0.0001
+            default: return true
+            }
+        }
+
+        let newName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if newName != item.name { changed.append("name") }
+        edited.name = newName
+
         let desc = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let originalDesc = (item.userDescription ?? item.preparationMethod ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if desc != originalDesc { changed.append("description") }
         edited.userDescription = desc.isEmpty ? nil : desc
+
         let portionTrimmed = portion.trimmingCharacters(in: .whitespacesAndNewlines)
-        edited.portionEstimate = portionTrimmed.isEmpty ? item.portionEstimate : portionTrimmed
-        edited.weightGrams = parse(weight)
-        edited.carbohydrates = parse(carbs) ?? 0
-        edited.calories = parse(calories)
-        edited.fat = parse(fat)
-        edited.fiber = parse(fiber)
-        edited.protein = parse(protein)
+        let newPortion = portionTrimmed.isEmpty ? item.portionEstimate : portionTrimmed
+        if newPortion != item.portionEstimate { changed.append("portion") }
+        edited.portionEstimate = newPortion
+
+        let newWeight = parse(weight)
+        if differs(newWeight, item.weightGrams) { changed.append("weight") }
+        edited.weightGrams = newWeight
+
+        let newCarbs = parse(carbs) ?? 0
+        if differs(newCarbs, item.carbohydrates) { changed.append("carbs") }
+        edited.carbohydrates = newCarbs
+        let newCalories = parse(calories)
+        if differs(newCalories, item.calories) { changed.append("calories") }
+        edited.calories = newCalories
+        let newFat = parse(fat)
+        if differs(newFat, item.fat) { changed.append("fat") }
+        edited.fat = newFat
+        let newFiber = parse(fiber)
+        if differs(newFiber, item.fiber) { changed.append("fiber") }
+        edited.fiber = newFiber
+        let newProtein = parse(protein)
+        if differs(newProtein, item.protein) { changed.append("protein") }
+        edited.protein = newProtein
+
+        // Merge with fields edited in earlier rounds so earlier corrections stay authoritative.
+        let all = Array(Set((item.editedFields ?? []) + changed))
+        edited.editedFields = all.isEmpty ? nil : all.sorted()
+        edited.userEdited = all.isEmpty ? item.userEdited : true
         return edited
     }
 

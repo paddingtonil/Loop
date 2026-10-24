@@ -427,6 +427,9 @@ struct FoodItemAnalysis: Codable, Equatable {
     var userDescription: String? = nil
     /// True once the user has manually edited this item in Food Details.
     var userEdited: Bool? = nil
+    /// Which fields the user actually changed ("name", "description", "portion", "weight",
+    /// "carbs", "calories", "fat", "fiber", "protein"). Only these are authoritative on re-evaluation.
+    var editedFields: [String]? = nil
 }
 
 /// Type of image being analyzed
