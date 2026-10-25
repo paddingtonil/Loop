@@ -1816,6 +1816,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func presentSettings() {
+        deviceManager.analyticsServicesManager.didDisplaySettingsScreen()
         let deletePumpDataFunc: () -> PumpManagerViewModel.DeleteTestingDataFunc? = { [weak self] in
             (self?.deviceManager.pumpManager is TestingPumpManager) ? {
                 [weak self] in self?.deviceManager.deleteTestingPumpData()
@@ -1862,7 +1863,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
                                           servicesViewModel: servicesViewModel,
-                                          criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: deviceManager.criticalEventLogExportManager),
                                           therapySettings: { [weak self] in self?.deviceManager.loopManager.therapySettings ?? TherapySettings() },
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
@@ -2644,16 +2644,6 @@ extension StatusTableViewController: SettingsViewModelDelegate {
     func dosingStrategyChanged(_ strategy: AutomaticDosingStrategy) {
         self.deviceManager.loopManager.mutateSettings { settings in
             settings.automaticDosingStrategy = strategy
-        }
-    }
-
-    func didTapIssueReport() {
-        // TODO: this dismiss here is temporary, until we know exactly where
-        // we want this screen to belong in the navigation flow
-        dismiss(animated: true) {
-            let vc = CommandResponseViewController.generateDiagnosticReport(deviceManager: self.deviceManager)
-            vc.title = NSLocalizedString("Issue Report", comment: "The view controller title for the issue report screen")
-            self.show(vc, sender: nil)
         }
     }
 }

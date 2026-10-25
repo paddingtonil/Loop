@@ -52,7 +52,6 @@ public typealias PumpManagerViewModel = DeviceViewModel<PumpManagerDescriptor>
 public protocol SettingsViewModelDelegate: AnyObject {
     func dosingEnabledChanged(_: Bool)
     func dosingStrategyChanged(_: AutomaticDosingStrategy)
-    func didTapIssueReport()
     var closedLoopDescriptiveText: String? { get }
 }
 
@@ -66,15 +65,10 @@ public class SettingsViewModel: ObservableObject {
     
     private weak var delegate: SettingsViewModelDelegate?
 
-    func didTapIssueReport() {
-        delegate?.didTapIssueReport()
-    }
-    
     var availableSupports: [SupportUI]
     let pumpManagerSettingsViewModel: PumpManagerViewModel
     let cgmManagerSettingsViewModel: CGMManagerViewModel
     let servicesViewModel: ServicesViewModel
-    let criticalEventLogExportViewModel: CriticalEventLogExportViewModel
     let therapySettings: () -> TherapySettings
     let sensitivityOverridesEnabled: Bool
     let isOnboardingComplete: Bool
@@ -112,7 +106,6 @@ public class SettingsViewModel: ObservableObject {
                 pumpManagerSettingsViewModel: PumpManagerViewModel,
                 cgmManagerSettingsViewModel: CGMManagerViewModel,
                 servicesViewModel: ServicesViewModel,
-                criticalEventLogExportViewModel: CriticalEventLogExportViewModel,
                 therapySettings: @escaping () -> TherapySettings,
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
@@ -130,7 +123,6 @@ public class SettingsViewModel: ObservableObject {
         self.pumpManagerSettingsViewModel = pumpManagerSettingsViewModel
         self.cgmManagerSettingsViewModel = cgmManagerSettingsViewModel
         self.servicesViewModel = servicesViewModel
-        self.criticalEventLogExportViewModel = criticalEventLogExportViewModel
         self.therapySettings = therapySettings
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
@@ -179,7 +171,6 @@ extension SettingsViewModel {
                                  pumpManagerSettingsViewModel: DeviceViewModel<PumpManagerDescriptor>(),
                                  cgmManagerSettingsViewModel: DeviceViewModel<CGMManagerDescriptor>(),
                                  servicesViewModel: ServicesViewModel.preview,
-                                 criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()),
                                  therapySettings: { TherapySettings() },
                                  sensitivityOverridesEnabled: false,
                                  initialDosingEnabled: true,

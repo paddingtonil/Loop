@@ -585,18 +585,8 @@ extension SettingsView {
     
     private var supportSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Support", comment: "The title of the support section in settings"))) {
-            Button(action: {
-                self.viewModel.didTapIssueReport()
-            }) {
-                Text("Issue Report", comment: "The title text for the issue report menu item")
-            }
-
             ForEach(pluginMenuItems.filter( { $0.section == .support })) {
                 $0.view
-            }
-
-            NavigationLink(destination: CriticalEventLogExportView(viewModel: viewModel.criticalEventLogExportViewModel)) {
-                Text(NSLocalizedString("Export Critical Event Logs", comment: "The title of the export critical event logs in support"))
             }
         }
     }

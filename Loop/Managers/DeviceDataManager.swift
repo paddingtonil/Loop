@@ -43,6 +43,8 @@ final class DeviceDataManager {
     
     @Published var cgmHasValidSensorSession: Bool
 
+    private var cgmDeviceModel: String?
+
     @Published var pumpIsAllowingAutomation: Bool
 
     private var lastCGMLoopTrigger: Date = .distantPast
@@ -582,6 +584,9 @@ final class DeviceDataManager {
         case .newData(let values):
             LoopInsights_BackfillDetector.shared.evaluateSamples(values)
             loopManager.addGlucoseSamples(values) { result in
+                if case .success(let samples) = result {
+                    self.analyticsServicesManager.didStoreGlucose(samples)
+                }
                 if !values.isEmpty {
                     DispatchQueue.main.async {
                         self.cgmStalenessMonitor.cgmGlucoseSamplesAvailable(values)
@@ -734,6 +739,8 @@ private extension DeviceDataManager {
             cgmHasValidSensorSession = cgmManager.cgmManagerStatus.hasValidSensorSession
 
             analyticsServicesManager.identifyCGMType(cgmManager.pluginIdentifier)
+            cgmDeviceModel = cgmManager.cgmManagerStatus.device?.model
+            analyticsServicesManager.identifyCGMModel(cgmDeviceModel)
         }
 
         if let cgmManagerUI = cgmManager as? CGMManagerUI {
@@ -764,6 +771,7 @@ private extension DeviceDataManager {
             deliveryUncertaintyAlertManager = DeliveryUncertaintyAlertManager(pumpManager: pumpManager, alertPresenter: alertPresenter)
 
             analyticsServicesManager.identifyPumpType(pumpManager.pluginIdentifier)
+            analyticsServicesManager.identifyPumpModel(pumpManager.status.device.model)
 
             updatePumpManagerBLEHeartbeatPreference()
         }
@@ -1061,6 +1069,10 @@ extension DeviceDataManager: CGMManagerDelegate {
                     NotificationCenter.default.post(name: .cgmSensorSessionStarted, object: nil)
                 }
             }
+            if self.cgmDeviceModel != status.device?.model {
+                self.cgmDeviceModel = status.device?.model
+                self.analyticsServicesManager.identifyCGMModel(self.cgmDeviceModel)
+            }
         }
     }
 }
@@ -1118,10 +1130,6 @@ extension DeviceDataManager: PumpManagerDelegate {
         }
 
         cgmManager.fetchNewDataIfNeeded { (result) in
-            if case .newData = result {
-                self.analyticsServicesManager.didFetchNewCGMData()
-            }
-
             self.queue.async {
                 self.processCGMReadingResult(cgmManager, readingResult: result) {
                     if self.loopManager.lastLoopCompleted == nil || self.loopManager.lastLoopCompleted!.timeIntervalSinceNow < -.minutes(4.2) {
@@ -1163,6 +1171,10 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.default("PumpManager:%{public}@ did update status: %{public}@", String(describing: type(of: pumpManager)), String(describing: status))
 
         doseStore.device = status.device
+
+        if status.device.model != oldStatus.device.model {
+            analyticsServicesManager.identifyPumpModel(status.device.model)
+        }
         
         if let newBatteryValue = status.pumpBatteryChargeRemaining,
            let oldBatteryValue = oldStatus.pumpBatteryChargeRemaining,
@@ -1760,6 +1772,7 @@ extension DeviceDataManager: DeviceSupportDelegate {
                         "* xcodeVersion: \(BuildDetails.default.xcodeVersion ?? "N/A")",
                         "* Workspace branch: \(BuildDetails.default.workspaceGitBranch ?? "N/A")",
                         "* Workspace SHA: \(BuildDetails.default.workspaceGitRevision ?? "N/A")",
+                        "* Customizations: \(BuildDetails.default.customizations.isEmpty ? "None" : BuildDetails.default.customizations.joined(separator: ", "))",
                         "* Submodule name: branch, SHA",
                         "\(submodulesInfo)",
                         "",

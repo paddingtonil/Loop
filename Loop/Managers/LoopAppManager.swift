@@ -230,7 +230,8 @@ class LoopAppManager: NSObject {
         supportManager = SupportManager(pluginManager: pluginManager,
                                         deviceSupportDelegate: deviceDataManager,
                                         servicesManager: deviceDataManager.servicesManager,
-                                        alertIssuer: alertManager)
+                                        alertIssuer: alertManager,
+                                        criticalEventLogExporterFactory: deviceDataManager.criticalEventLogExportManager)
         
         setWhitelistedDevices()
 
@@ -262,7 +263,23 @@ class LoopAppManager: NSObject {
             analyticsServicesManager.identifyWorkspaceGitRevision(workspaceGitRevision)
         }
 
-        analyticsServicesManager.identify("Dosing Strategy", value: settingsManager.loopSettings.automaticDosingStrategy.analyticsValue)
+        analyticsServicesManager.stateProvider = { [settingsManager = settingsManager!] in
+            AnalyticsState(
+                closedLoop: settingsManager.loopSettings.dosingEnabled,
+                dosingStrategy: settingsManager.loopSettings.automaticDosingStrategy.analyticsValue,
+                integralRetrospectiveCorrection: UserDefaults.standard.integralRetrospectiveCorrectionEnabled,
+                glucoseBasedPartialApplication: UserDefaults.standard.glucoseBasedApplicationFactorEnabled
+            )
+        }
+        analyticsServicesManager.identifyState()
+        if let pumpManager = deviceDataManager.pumpManager {
+            analyticsServicesManager.identifyPumpType(pumpManager.pluginIdentifier)
+            analyticsServicesManager.identifyPumpModel(pumpManager.status.device.model)
+        }
+        if let cgmManager = deviceDataManager.cgmManager {
+            analyticsServicesManager.identifyCGMType(cgmManager.pluginIdentifier)
+            analyticsServicesManager.identifyCGMModel(cgmManager.cgmManagerStatus.device?.model)
+        }
         let serviceNames = deviceDataManager.servicesManager.activeServices.map { $0.pluginIdentifier }
         analyticsServicesManager.identify("Services", array: serviceNames)
 

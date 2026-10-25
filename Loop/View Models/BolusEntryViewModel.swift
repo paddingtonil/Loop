@@ -426,7 +426,7 @@ final class BolusEntryViewModel: ObservableObject {
             }
             if let storedCarbEntry = await saveCarbEntry(carbEntry, replacingEntry: originalCarbEntry) {
                 self.dosingDecision.carbEntry = storedCarbEntry
-                self.analyticsServicesManager?.didAddCarbs(source: "Phone", amount: storedCarbEntry.quantity.doubleValue(for: .gram()))
+                self.analyticsServicesManager?.didAddCarbs(source: "Phone")
 
                 // FoodFinder/MealInsights archive only fires on actual carb
                 // persistence — tapping Continue and then cancelling the
@@ -438,8 +438,8 @@ final class BolusEntryViewModel: ObservableObject {
                 // (the user already committed to that bolus); we log and
                 // alert through AlertManager so they know the tail isn't covered.
                 if let secondary = bolusProSecondaryEntry {
-                    if let storedSecondary = await saveCarbEntry(secondary, replacingEntry: nil) {
-                        self.analyticsServicesManager?.didAddCarbs(source: "BolusPro", amount: storedSecondary.quantity.doubleValue(for: .gram()))
+                    if await saveCarbEntry(secondary, replacingEntry: nil) != nil {
+                        self.analyticsServicesManager?.didAddCarbs(source: "BolusPro")
                     } else {
                         log.error("BolusPro secondary entry save failed — primary already saved.")
                         BolusPro_SaveFailureAlert.issue(for: secondary)
@@ -466,7 +466,7 @@ final class BolusEntryViewModel: ObservableObject {
         if amountToDeliver > 0 {
             savedPreMealOverride = nil
             delegate.enactBolus(units: amountToDeliver, activationType: activationType, completion: { _ in
-                self.analyticsServicesManager?.didBolus(source: "Phone", units: amountToDeliver)
+                self.analyticsServicesManager?.didBolus(source: "Phone")
             })
         }
         return true
