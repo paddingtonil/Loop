@@ -12943,6 +12943,9 @@
         }
       }
     },
+    "CBI %@ U" : {
+      "comment" : "The subtitle format describing circulating basal insulin in units. (1: localized insulin amount)"
+    },
     "CGM glucose readings and trends" : {
       "comment" : "DataLayer glucose description"
     },
