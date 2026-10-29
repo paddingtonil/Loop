@@ -12,6 +12,8 @@ import LoopKit
 
 class MockDoseStore: DoseStoreProtocol {
     var doseHistory: [DoseEntry]?
+    var insulinOnBoardValue: Double = 9.5
+    var glucoseEffectsOverride: [GlucoseEffect]?
     var sensitivitySchedule: InsulinSensitivitySchedule?
     
     init(for scenario: DosingTestScenario = .flatAndStable) {
@@ -63,7 +65,7 @@ class MockDoseStore: DoseStoreProtocol {
     }
     
     func insulinOnBoard(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
-        completion(.success(.init(startDate: scenario.currentDate, value: 9.5)))
+        completion(.success(.init(startDate: scenario.currentDate, value: insulinOnBoardValue)))
     }
     
     func circulatingBasalInsulin(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
@@ -95,6 +97,9 @@ class MockDoseStore: DoseStoreProtocol {
     }
     
     func getGlucoseEffects(start: Date, end: Date? = nil, doseEnd: Date? = nil, basalDosingEnd: Date? = Date(), completion: @escaping (_ result: DoseStoreResult<[GlucoseEffect]>) -> Void) {
+        if let glucoseEffectsOverride {
+            return completion(.success(glucoseEffectsOverride))
+        }
         if let doseHistory, let sensitivitySchedule, let basalProfile = basalProfileApplyingOverrideHistory {
             // To properly know glucose effects at startDate, we need to go back another DIA hours
             let doseStart = start.addingTimeInterval(-longestEffectDuration)

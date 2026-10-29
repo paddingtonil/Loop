@@ -122,6 +122,8 @@ class LoopDataManagerTests: XCTestCase {
     var dosingDecisionStore: MockDosingDecisionStore!
     var automaticDosingStatus: AutomaticDosingStatus!
     var loopDataManager: LoopDataManager!
+    var doseStore: MockDoseStore!
+    var settingsProvider: MockLatestStoredSettingsProvider!
     
     func setUp(for test: DosingTestScenario,
                basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil,
@@ -158,7 +160,7 @@ class LoopDataManagerTests: XCTestCase {
             automaticDosingStrategy: dosingStrategy
         )
         
-        let doseStore = MockDoseStore(for: test)
+        doseStore = MockDoseStore(for: test)
         doseStore.basalProfile = basalRateSchedule
         doseStore.basalProfileApplyingOverrideHistory = doseStore.basalProfile
         doseStore.sensitivitySchedule = insulinSensitivitySchedule
@@ -172,6 +174,7 @@ class LoopDataManagerTests: XCTestCase {
         
         dosingDecisionStore = MockDosingDecisionStore()
         automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
+        settingsProvider = MockLatestStoredSettingsProvider()
         loopDataManager = LoopDataManager(
             lastLoopCompleted: currentDate,
             basalDeliveryState: basalDeliveryState ?? .active(currentDate),
@@ -183,7 +186,7 @@ class LoopDataManagerTests: XCTestCase {
             glucoseStore: glucoseStore,
             carbStore: carbStore,
             dosingDecisionStore: dosingDecisionStore,
-            latestStoredSettingsProvider: MockLatestStoredSettingsProvider(),
+            latestStoredSettingsProvider: settingsProvider,
             now: { currentDate },
             pumpInsulinType: .novolog,
             automaticDosingStatus: automaticDosingStatus,
@@ -193,6 +196,8 @@ class LoopDataManagerTests: XCTestCase {
     
     override func tearDownWithError() throws {
         loopDataManager = nil
+        doseStore = nil
+        settingsProvider = nil
     }
 }
 

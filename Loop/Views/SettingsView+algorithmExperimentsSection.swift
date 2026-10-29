@@ -42,8 +42,30 @@ public struct ExperimentsSettingsView: View {
     @AppStorage(UserDefaults.Key.GlucoseBasedApplicationFactorEnabled.rawValue) private var isGlucoseBasedApplicationFactorEnabled = false
     @AppStorage(UserDefaults.Key.IntegralRetrospectiveCorrectionEnabled.rawValue) private var isIntegralRetrospectiveCorrectionEnabled = false
     @AppStorage(UserDefaults.Key.NegativeInsulinDamperEnabled.rawValue) private var isNegativeInsulinDamperEnabled = false
+    @AppStorage(UserDefaults.Key.NegativeInsulinClampEnabled.rawValue) private var isNegativeInsulinClampEnabled = false
 
     var automaticDosingStrategy: AutomaticDosingStrategy
+
+    // The damper and the clamp both address negative insulin, so enabling one disables the other.
+    private var exclusiveDamperBinding: Binding<Bool> {
+        Binding(
+            get: { isNegativeInsulinDamperEnabled },
+            set: { newValue in
+                isNegativeInsulinDamperEnabled = newValue
+                if newValue { isNegativeInsulinClampEnabled = false }
+            }
+        )
+    }
+
+    private var exclusiveClampBinding: Binding<Bool> {
+        Binding(
+            get: { isNegativeInsulinClampEnabled },
+            set: { newValue in
+                isNegativeInsulinClampEnabled = newValue
+                if newValue { isNegativeInsulinDamperEnabled = false }
+            }
+        )
+    }
 
     public var body: some View {
         ScrollView {
@@ -72,11 +94,15 @@ public struct ExperimentsSettingsView: View {
                         name: NSLocalizedString("Integral Retrospective Correction", comment: "Title of integral retrospective correction experiment"),
                         enabled: isIntegralRetrospectiveCorrectionEnabled)
                 }
-                NavigationLink(destination: NegativeInsulinDamperSelectionView(isNegativeInsulinDamperEnabled: $isNegativeInsulinDamperEnabled)) {
+                NavigationLink(destination: NegativeInsulinDamperSelectionView(isNegativeInsulinDamperEnabled: exclusiveDamperBinding)) {
                     ExperimentRow(
                         name: NSLocalizedString("Negative Insulin Damper", comment: "Title of negative insulin damper experiment"),
                         enabled: isNegativeInsulinDamperEnabled)
                 }
+                Toggle(NSLocalizedString("Negative Insulin Clamp", comment: "Title of negative insulin clamp experiment"), isOn: exclusiveClampBinding)
+                Text(NSLocalizedString("While insulin on board is negative, glucose rises caused by the negative insulin are removed from the prediction, so Loop does not dose to make up for reduced basal. Insulin on board still shows the negative value. Only one of the Negative Insulin Damper and the Negative Insulin Clamp can be enabled at a time.", comment: "Description of negative insulin clamp experiment"))
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
                 Spacer()
             }
             .padding()
@@ -91,6 +117,16 @@ extension UserDefaults {
         case GlucoseBasedApplicationFactorEnabled = "com.loopkit.algorithmExperiments.glucoseBasedApplicationFactorEnabled"
         case IntegralRetrospectiveCorrectionEnabled = "com.loopkit.algorithmExperiments.integralRetrospectiveCorrectionEnabled"
         case NegativeInsulinDamperEnabled = "com.loopkit.algorithmExperiments.negativeInsulinDamperEnabled"
+        case NegativeInsulinClampEnabled = "com.loopkit.algorithmExperiments.negativeInsulinClampEnabled"
+    }
+
+    var negativeInsulinClampEnabled: Bool {
+        get {
+            bool(forKey: Key.NegativeInsulinClampEnabled.rawValue) as Bool
+        }
+        set {
+            set(newValue, forKey: Key.NegativeInsulinClampEnabled.rawValue)
+        }
     }
 
     var glucoseBasedApplicationFactorEnabled: Bool {

@@ -15,9 +15,14 @@ extension LoopSettings {
         if !LoopConstants.retrospectiveCorrectionEnabled {
             inputs.remove(.retrospection)
         }
-        if !UserDefaults.standard.negativeInsulinDamperEnabled {
+        if !LoopSettings.negativeInsulinDamperActive {
             inputs.remove(.damper)
         }
         return inputs
-    }    
+    }
+
+    /// The damper and the negative insulin clamp are mutually exclusive; the clamp takes precedence.
+    static var negativeInsulinDamperActive: Bool {
+        UserDefaults.standard.negativeInsulinDamperEnabled && !UserDefaults.standard.negativeInsulinClampEnabled
+    }
 }

@@ -1287,6 +1287,25 @@ extension LoopDataManager {
         }
     }
 
+    /// Removes the rising steps (caused by negative net insulin) from a cumulative insulin glucose effect series.
+    static func clampNegativeInsulinEffect(_ effects: [GlucoseEffect]) -> [GlucoseEffect] {
+        guard let first = effects.first else { return [] }
+
+        let unit = HKUnit.milligramsPerDeciliter
+        var previous = first.quantity.doubleValue(for: unit)
+        var running = previous
+        var clamped = [first]
+
+        for effect in effects.dropFirst() {
+            let value = effect.quantity.doubleValue(for: unit)
+            running += min(0, value - previous)
+            previous = value
+            clamped.append(GlucoseEffect(startDate: effect.startDate, quantity: HKQuantity(unit: unit, doubleValue: running)))
+        }
+
+        return clamped
+    }
+
     private func notify(forChange context: LoopUpdateContext) {
         NotificationCenter.default.post(name: .LoopDataUpdated,
             object: self,
@@ -1441,7 +1460,12 @@ extension LoopDataManager {
                 computationInsulinEffect = includingPendingInsulin ? self.insulinEffectIncludingPendingInsulin : self.insulinEffect
             }
 
-            if let insulinEffect = computationInsulinEffect {
+            if var insulinEffect = computationInsulinEffect {
+                // Negative insulin clamp: only the forecast is clamped. insulinEffect itself stays raw
+                // because counteraction effects (carb absorption) are computed from it.
+                if UserDefaults.standard.negativeInsulinClampEnabled, let iob = self.insulinOnBoard, iob.value < 0 {
+                    insulinEffect = LoopDataManager.clampNegativeInsulinEffect(insulinEffect)
+                }
                 effects.append(insulinEffect)
             }
 
@@ -1660,7 +1684,11 @@ extension LoopDataManager {
 
         let pendingInsulin = try getPendingInsulin()
         let shouldIncludePendingInsulin = pendingInsulin > 0
-        let prediction = try predictGlucose(using: .all, potentialBolus: nil, potentialCarbEntry: potentialCarbEntry, replacingCarbEntry: replacedCarbEntry, includingPendingInsulin: shouldIncludePendingInsulin, includingPositiveVelocityAndRC: considerPositiveVelocityAndRC, excludingFPUCarbEntries: true)
+        var bolusInputs = PredictionInputEffect.all
+        if !LoopSettings.negativeInsulinDamperActive {
+            bolusInputs.remove(.damper)
+        }
+        let prediction = try predictGlucose(using: bolusInputs, potentialBolus: nil, potentialCarbEntry: potentialCarbEntry, replacingCarbEntry: replacedCarbEntry, includingPendingInsulin: shouldIncludePendingInsulin, includingPositiveVelocityAndRC: considerPositiveVelocityAndRC, excludingFPUCarbEntries: true)
         return try recommendBolusValidatingDataRecency(forPrediction: prediction, consideringPotentialCarbEntry: potentialCarbEntry)
     }
 

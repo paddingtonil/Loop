@@ -85,6 +85,112 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         }
     }
 
+
+    // MARK: Negative insulin clamp
+
+    func testClampNegativeInsulinEffectRemovesRisesOnly() {
+        let start = Date()
+        func effect(_ minutes: Int, _ value: Double) -> GlucoseEffect {
+            GlucoseEffect(startDate: start.addingTimeInterval(.minutes(Double(minutes))), quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: value))
+        }
+        // Falls 10, rises 20, flat, falls 5.
+        let clamped = LoopDataManager.clampNegativeInsulinEffect([effect(0, 0), effect(5, -10), effect(10, 10), effect(15, 10), effect(20, 5)])
+
+        XCTAssertEqual(clamped.map { $0.quantity.doubleValue(for: .milligramsPerDeciliter) }, [0, -10, -10, -10, -15])
+        XCTAssertEqual(clamped.map { $0.startDate }, [0, 5, 10, 15, 20].map { start.addingTimeInterval(.minutes(Double($0))) })
+        XCTAssertTrue(LoopDataManager.clampNegativeInsulinEffect([]).isEmpty)
+    }
+
+    /// Final predicted glucose for a scenario whose insulin effect rises steadily, as it does when net insulin is negative.
+    private func finalPredictedGlucose(insulinOnBoard: Double, clampEnabled: Bool) -> Double {
+        UserDefaults.standard.negativeInsulinClampEnabled = clampEnabled
+        addTeardownBlock { UserDefaults.standard.negativeInsulinClampEnabled = false }
+
+        setUp(for: .flatAndStable)
+        doseStore.insulinOnBoardValue = insulinOnBoard
+        doseStore.glucoseEffectsOverride = doseStore.getCannedGlucoseEffects().enumerated().map { index, effect in
+            GlucoseEffect(startDate: effect.startDate, quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: Double(index) * 0.5))
+        }
+
+        let updateGroup = DispatchGroup()
+        updateGroup.enter()
+        var predictedGlucose: [PredictedGlucoseValue]?
+        loopDataManager.getLoopState { _, state in
+            predictedGlucose = state.predictedGlucose
+            updateGroup.leave()
+        }
+        updateGroup.wait()
+
+        return predictedGlucose!.last!.quantity.doubleValue(for: .milligramsPerDeciliter)
+    }
+
+    func testNegativeInsulinClampLowersPredictionWhenIOBNegative() {
+        let off = finalPredictedGlucose(insulinOnBoard: -1.0, clampEnabled: false)
+        let on = finalPredictedGlucose(insulinOnBoard: -1.0, clampEnabled: true)
+        XCTAssertLessThan(on, off - 10, "clamp should remove the insulin-driven rise from the prediction")
+    }
+
+    private enum NegativeInsulinMode: String {
+        case none, damper, clamp
+    }
+
+    /// Manual bolus recommended for a 20 g meal when net insulin on board is -1 U and the insulin effect is rising.
+    private func mealBolus(insulinOnBoard: Double, mode: NegativeInsulinMode) -> Double {
+        UserDefaults.standard.negativeInsulinDamperEnabled = mode == .damper
+        UserDefaults.standard.negativeInsulinClampEnabled = mode == .clamp
+        addTeardownBlock {
+            UserDefaults.standard.negativeInsulinDamperEnabled = false
+            UserDefaults.standard.negativeInsulinClampEnabled = false
+        }
+
+        setUp(for: .flatAndStable)
+        doseStore.insulinOnBoardValue = insulinOnBoard
+        doseStore.glucoseEffectsOverride = doseStore.getCannedGlucoseEffects().enumerated().map { index, effect in
+            GlucoseEffect(startDate: effect.startDate, quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: Double(index) * 0.5))
+        }
+
+        // The damper reads ISF and basal from the stored settings, which are empty in the default mock.
+        settingsProvider.storedSettings = StoredSettings(
+            basalRateSchedule: loadBasalRateScheduleFixture("basal_profile"),
+            insulinSensitivitySchedule: InsulinSensitivitySchedule(
+                unit: .milligramsPerDeciliter,
+                dailyItems: [RepeatingScheduleValue(startTime: 0, value: 45), RepeatingScheduleValue(startTime: 32400, value: 55)],
+                timeZone: .utcTimeZone
+            )
+        )
+
+        let meal = NewCarbEntry(quantity: HKQuantity(unit: .gram(), doubleValue: 20), startDate: now, foodType: nil, absorptionTime: nil)
+        let exp = expectation(description: "meal bolus \(mode.rawValue)")
+        var amount: Double?
+        loopDataManager.getLoopState { _, state in
+            amount = (try? state.recommendBolus(consideringPotentialCarbEntry: meal, replacingCarbEntry: nil, considerPositiveVelocityAndRC: true))?.amount
+            XCTAssertNotNil(state.negativeInsulinDamper, "the damper must be computed, otherwise the comparison is meaningless")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 30)
+
+        return amount ?? .nan
+    }
+
+    func testMealBolusWithNegativeIOBComparedAcrossNegativeInsulinModes() {
+        let none = mealBolus(insulinOnBoard: -1.0, mode: .none)
+        let damper = mealBolus(insulinOnBoard: -1.0, mode: .damper)
+        let clamp = mealBolus(insulinOnBoard: -1.0, mode: .clamp)
+        print("MEAL_BOLUS iob=-1 carbs=20g none=\(none) damper=\(damper) clamp=\(clamp)")
+
+        XCTAssertFalse(none.isNaN || damper.isNaN || clamp.isNaN)
+        // The damper also scales down the meal's own rise, the clamp only removes the insulin-driven rise.
+        XCTAssertLessThan(damper, none, "damper should reduce the meal bolus")
+        XCTAssertLessThan(clamp, none, "clamp should reduce the meal bolus")
+        XCTAssertLessThan(clamp, damper, "clamp should reduce the meal bolus more than the damper at this setting")
+    }
+
+    func testNegativeInsulinClampIgnoredWhenIOBPositive() {
+        let off = finalPredictedGlucose(insulinOnBoard: 1.0, clampEnabled: false)
+        let on = finalPredictedGlucose(insulinOnBoard: 1.0, clampEnabled: true)
+        XCTAssertEqual(on, off, accuracy: 1E-6)
+    }
+
     // MARK: Tests
     // MARK: BolusPro FPU exclusion
 
