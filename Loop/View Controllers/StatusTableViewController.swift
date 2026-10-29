@@ -1358,15 +1358,16 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 }
                 cell.doesNavigate = automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
             case .iob:
+                // CBI is shown even when there is no IOB (e.g. no recent doses), since it is derived from the scheduled basal rate
+                let subtitle = NSMutableAttributedString()
                 if let currentIOB = currentIOBDescription {
-                    let subtitle = NSMutableAttributedString(attributedString: chartValueSubtitle(prefix: nil, value: currentIOB, color: .insulinTintColor))
-                    if let currentCBI = currentCBIDescription {
-                        subtitle.append(NSAttributedString(string: "  ·  \(currentCBI)", attributes: [.font: UIFont.systemFont(ofSize: 16, weight: .regular), .foregroundColor: UIColor.secondaryLabel]))
-                    }
-                    cell.setSubtitleAttributedText(subtitle)
-                } else {
-                    cell.setSubtitleAttributedText(nil)
+                    subtitle.append(chartValueSubtitle(prefix: nil, value: currentIOB, color: .insulinTintColor))
                 }
+                if let currentCBI = currentCBIDescription {
+                    let separator = subtitle.length > 0 ? "  ·  " : ""
+                    subtitle.append(NSAttributedString(string: "\(separator)\(currentCBI)", attributes: [.font: UIFont.systemFont(ofSize: 16, weight: .regular), .foregroundColor: UIColor.secondaryLabel]))
+                }
+                cell.setSubtitleAttributedText(subtitle.length > 0 ? subtitle : nil)
             case .dose:
                 let integerFormatter = NumberFormatter()
                 integerFormatter.maximumFractionDigits = 0
