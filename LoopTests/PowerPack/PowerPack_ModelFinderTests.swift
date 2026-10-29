@@ -129,6 +129,20 @@ final class PowerPack_ModelFinderTests: XCTestCase {
         XCTAssertEqual(messages?.first?["role"] as? String, "system")
     }
 
+    func testBodiesLeaveOutRefusedParameters() throws {
+        let quirks = PowerPack_ModelQuirks(omitsTemperature: true, usesMaxCompletionTokens: true)
+        let openAI = try PowerPack_ModelFinder.testBody(provider: .openAI, model: "gpt-5.2", purpose: .vision, imageBase64: "AAAA", quirks: quirks)
+        XCTAssertNil(openAI["temperature"])
+        XCTAssertNil(openAI["max_tokens"])
+        XCTAssertNotNil(openAI["max_completion_tokens"])
+        let claude = try PowerPack_ModelFinder.testBody(provider: .claude, model: "claude-x", purpose: .vision, imageBase64: "AAAA", quirks: quirks)
+        XCTAssertNil(claude["temperature"])
+        XCTAssertNotNil(claude["max_tokens"])
+        XCTAssertEqual(claude["model"] as? String, "claude-x")
+        let gemini = try PowerPack_ModelFinder.testBody(provider: .gemini, model: "gemini-x", purpose: .vision, imageBase64: "AAAA", quirks: quirks)
+        XCTAssertNil((gemini["generationConfig"] as? [String: Any])?["temperature"])
+    }
+
     func testOpenAIVisionBodyIncludesImage() throws {
         let body = try PowerPack_ModelFinder.testBody(provider: .openAI, model: "gpt-4.1", purpose: .vision, imageBase64: "AAAA")
         let content = ((body["messages"] as? [[String: Any]])?.first?["content"]) as? [[String: Any]]

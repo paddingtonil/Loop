@@ -2,8 +2,9 @@
 //  PowerPack_ModelFinder.swift
 //  Loop (AID) PowerPack — based on LoopKit/Loop.
 //  PowerPack — Finds the current models from OpenAI, Claude, Gemini and Grok that accept the
-//  request format PowerPack's AI features send (temperature, max_tokens, and image input for
-//  FoodFinder), by listing the provider's models and sending each a tiny test request.
+//  requests PowerPack's AI features send (image input for FoodFinder), by listing the provider's
+//  models and sending each a tiny test request. Temperature and the token-limit name are adapted
+//  per model by PowerPack_AIRequestOptions, so refusing either does not make a model incompatible.
 //  Shared by FoodFinder, LoopInsights and AutoPresets.
 //  Idea by Taylor Patterson. Coded by Claude Code.
 //  Copyright © 2026 LoopKit Authors and Taylor Patterson.
@@ -48,11 +49,20 @@ enum PowerPack_AIProvider: String, CaseIterable, Codable, Identifiable {
         }
     }
 
-    /// Google search for this provider's current models that accept a temperature setting
-    /// (and photos, for FoodFinder). Needs no API key, so it works before the user has one.
+    /// The request body format this provider's chat endpoint uses.
+    var requestFormat: PowerPack_AIRequestFormat {
+        switch self {
+        case .openAI, .grok: return .openAI
+        case .claude: return .anthropic
+        case .gemini: return .gemini
+        }
+    }
+
+    /// Google search for this provider's current models (that accept photos, for FoodFinder).
+    /// Needs no API key, so it works before the user has one.
     func searchURL(purpose: PowerPack_ModelPurpose) -> URL {
-        let vision = purpose == .vision ? " and image input" : ""
-        let query = "list current \(displayName) API model IDs that support the temperature parameter\(vision) \(Calendar.current.component(.year, from: Date()))"
+        let vision = purpose == .vision ? " that support image input" : ""
+        let query = "list current \(displayName) API model IDs\(vision) \(Calendar.current.component(.year, from: Date()))"
         var components = URLComponents(string: "https://www.google.com/search")!
         components.queryItems = [URLQueryItem(name: "q", value: query)]
         return components.url!
@@ -150,8 +160,7 @@ enum PowerPack_ModelFinderError: LocalizedError, Equatable {
 // MARK: - Finder
 
 enum PowerPack_ModelFinder {
-    /// Most test requests per check. Testing walks from newest to oldest because the newest
-    /// models of some providers refuse temperature while slightly older ones accept it.
+    /// Most test requests per check. Testing walks from newest to oldest.
     static let maxModelsToTest = 24
     /// Testing stops early once this many compatible models are found.
     static let targetCompatible = 3
@@ -159,8 +168,8 @@ enum PowerPack_ModelFinder {
     static let parallelTests = 3
     static let cacheLifetime: TimeInterval = 24 * 3600
 
-    // Values used in the test request. Temperature and max_tokens are present because PowerPack's
-    // real requests send them; a model that refuses either would fail in FoodFinder/LoopInsights.
+    // Values used in the test request. Temperature is sent first, as in PowerPack's real requests;
+    // a model that refuses it is tested again without it and remembered (PowerPack_AIRequestOptions).
     static let testTemperature = 0.2
     static let testMaxTokens = 64
 
@@ -370,14 +379,21 @@ enum PowerPack_ModelFinder {
             let escaped = model.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? model
             url = URL(string: provider.defaultBaseURL + "/models/\(escaped):generateContent")!
         }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 30
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        authorize(&request, provider: provider, apiKey: apiKey)
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: testBody(provider: provider, model: model, purpose: purpose, imageBase64: imageBase64))
-            let (data, response) = try await session.data(for: request)
+            let (data, response) = try await PowerPack_AIRequestOptions.send(
+                model: model,
+                provider: provider,
+                format: provider.requestFormat,
+                build: { quirks in
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "POST"
+                    request.timeoutInterval = 30
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    authorize(&request, provider: provider, apiKey: apiKey)
+                    request.httpBody = try JSONSerialization.data(withJSONObject: testBody(provider: provider, model: model, purpose: purpose, imageBase64: imageBase64, quirks: quirks))
+                    return request
+                },
+                execute: { request in try await session.data(for: request) })
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             return (200..<300).contains(status) ? .compatible : .failed(failureReason(status: status, body: data))
         } catch {
@@ -386,9 +402,11 @@ enum PowerPack_ModelFinder {
     }
 
     /// The same body shape FoodFinder (vision) and LoopInsights (text, with system prompt) send.
-    static func testBody(provider: PowerPack_AIProvider, model: String, purpose: PowerPack_ModelPurpose, imageBase64: String?) throws -> [String: Any] {
+    static func testBody(provider: PowerPack_AIProvider, model: String, purpose: PowerPack_ModelPurpose, imageBase64: String?, quirks: PowerPack_ModelQuirks = PowerPack_ModelQuirks()) throws -> [String: Any] {
         let system = "You are a test assistant."
         let prompt = "Reply with the single word OK."
+        // No thinking-model minimum here: a cut-off reply still proves the request is accepted.
+        let parameters = PowerPack_AIRequestOptions.parameters(format: provider.requestFormat, quirks: quirks, temperature: testTemperature, maxTokens: testMaxTokens)
         switch provider {
         case .openAI, .grok:
             var messages: [[String: Any]] = []
@@ -400,10 +418,12 @@ enum PowerPack_ModelFinder {
             } else {
                 messages = [["role": "system", "content": system], ["role": "user", "content": prompt]]
             }
-            return ["model": model, "messages": messages, "temperature": testTemperature, "max_tokens": testMaxTokens]
+            let body: [String: Any] = ["model": model, "messages": messages]
+            return body.merging(parameters) { $1 }
 
         case .claude:
-            var body: [String: Any] = ["model": model, "temperature": testTemperature, "max_tokens": testMaxTokens]
+            var body = parameters
+            body["model"] = model
             if purpose == .vision, let image = imageBase64 {
                 body["messages"] = [["role": "user", "content": [
                     ["type": "image", "source": ["type": "base64", "media_type": "image/jpeg", "data": image]],
@@ -417,9 +437,7 @@ enum PowerPack_ModelFinder {
 
         case .gemini:
             var parts: [[String: Any]] = [["text": prompt]]
-            var body: [String: Any] = [
-                "generationConfig": ["temperature": testTemperature, "maxOutputTokens": testMaxTokens],
-            ]
+            var body = parameters
             if purpose == .vision, let image = imageBase64 {
                 parts.append(["inline_data": ["mime_type": "image/jpeg", "data": image]])
             } else {

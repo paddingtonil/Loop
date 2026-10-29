@@ -786,6 +786,8 @@
 		3B1B3FA09AF95FB52D9D1355 /* DirectConnect_ConnectionHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E965C504809BB1C4D50919 /* DirectConnect_ConnectionHealth.swift */; };
 		E499CFEE6C2BB2873306326C /* DirectConnect_RecoveryPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699AC1C5B4F4908523522E78 /* DirectConnect_RecoveryPolicyTests.swift */; };
 		EA78340342C2CA685AEC6D14 /* DirectConnect_ConnectionHealthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E9A1AE34FC4C65A419D336 /* DirectConnect_ConnectionHealthTests.swift */; };
+		9D1307F1720ECF41E332D240 /* PowerPack_AIRequestOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AC9ECD6ADD9BB2DCFC042D3 /* PowerPack_AIRequestOptions.swift */; };
+		28C2416CB56B3E97580705D5 /* PowerPack_AIRequestOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7123616351481431FB43BA1C /* PowerPack_AIRequestOptionsTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1821,6 +1823,8 @@
 		B1E965C504809BB1C4D50919 /* DirectConnect_ConnectionHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_ConnectionHealth.swift"; sourceTree = "<group>"; };
 		699AC1C5B4F4908523522E78 /* DirectConnect_RecoveryPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_RecoveryPolicyTests.swift"; sourceTree = "<group>"; };
 		26E9A1AE34FC4C65A419D336 /* DirectConnect_ConnectionHealthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DirectConnect_ConnectionHealthTests.swift"; sourceTree = "<group>"; };
+		2AC9ECD6ADD9BB2DCFC042D3 /* PowerPack_AIRequestOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PowerPack_AIRequestOptions.swift"; sourceTree = "<group>"; };
+		7123616351481431FB43BA1C /* PowerPack_AIRequestOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PowerPack_AIRequestOptionsTests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3812,6 +3816,7 @@
 			isa = PBXGroup;
 			children = (
 				ECD885CE92AF94E65A4495D2 /* PowerPack_ModelFinder.swift */,
+				2AC9ECD6ADD9BB2DCFC042D3 /* PowerPack_AIRequestOptions.swift */,
 			);
 			path = "PowerPack";
 			sourceTree = "<group>";
@@ -3828,6 +3833,7 @@
 			isa = PBXGroup;
 			children = (
 				B3914844F3B46275DADCD356 /* PowerPack_ModelFinderTests.swift */,
+				7123616351481431FB43BA1C /* PowerPack_AIRequestOptionsTests.swift */,
 			);
 			path = "PowerPack";
 			sourceTree = "<group>";
@@ -4921,6 +4927,7 @@
 				3F0FB11A9A04B197B00C8717 /* DirectConnect_SetupView.swift in Sources */,
 				18A2E05EC0ACD57DD8DABD56 /* DirectConnect_UICoordinator.swift in Sources */,
 				330001C7F46F82CC54985DBA /* PowerPack_ModelFinder.swift in Sources */,
+				9D1307F1720ECF41E332D240 /* PowerPack_AIRequestOptions.swift in Sources */,
 				FEBD22F20417AF37389238A1 /* PowerPack_ModelFinderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5127,6 +5134,7 @@
 				A70D5B32B7276093C9991BF5 /* DirectConnect_SensorModelTests.swift in Sources */,
 				B941AD9E2FFEA482A0063432 /* DirectConnect_StateTests.swift in Sources */,
 				6E3638F47CFE70F23DF31FA3 /* PowerPack_ModelFinderTests.swift in Sources */,
+				28C2416CB56B3E97580705D5 /* PowerPack_AIRequestOptionsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

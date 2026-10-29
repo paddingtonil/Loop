@@ -50,14 +50,11 @@ final class AIServiceManager {
         var adjustedConfig = configuration
         adjustedConfig.maxTokens = max(configuration.maxTokens, 4096)
 
-        var request = try buildRequest(config: adjustedConfig, prompt: query, imageBase64: imageBase64)
-
         // Vision requests take longer — Anthropic/Gemini can take 30-45s for the API call alone
         let isAdvanced = UserDefaults.standard.advancedDosingRecommendationsEnabled
-        request.timeoutInterval = isAdvanced ? 150 : 90
 
         let requestStart = Date()
-        let (data, response) = try await executeRequest(request)
+        let (data, response) = try await send(config: adjustedConfig, prompt: query, imageBase64: imageBase64, timeout: isAdvanced ? 150 : 90)
         let requestDuration = Date().timeIntervalSince(requestStart)
 
         log.default("AI request completed in %.1f seconds (%d bytes)", requestDuration, data.count)
@@ -86,13 +83,10 @@ final class AIServiceManager {
         var adjustedConfig = configuration
         adjustedConfig.maxTokens = max(configuration.maxTokens, 4096)
 
-        var request = try buildRequest(config: adjustedConfig, prompt: query, imageBase64: base64)
-
         let isAdvanced = UserDefaults.standard.advancedDosingRecommendationsEnabled
-        request.timeoutInterval = isAdvanced ? 150 : 90
 
         let requestStart = Date()
-        let (data, response) = try await executeRequest(request)
+        let (data, response) = try await send(config: adjustedConfig, prompt: query, imageBase64: base64, timeout: isAdvanced ? 150 : 90)
         let requestDuration = Date().timeIntervalSince(requestStart)
 
         log.default("AI request (preencoded) completed in %.1f seconds (%d bytes)", requestDuration, data.count)
@@ -119,13 +113,10 @@ final class AIServiceManager {
         var adjustedConfig = configuration
         adjustedConfig.maxTokens = max(configuration.maxTokens, 4096)
 
-        var request = try buildRequest(config: adjustedConfig, prompt: query, imageBase64: nil)
-
         let isAdvanced = UserDefaults.standard.advancedDosingRecommendationsEnabled
-        request.timeoutInterval = isAdvanced ? 120 : 60
 
         let requestStart = Date()
-        let (data, response) = try await executeRequest(request)
+        let (data, response) = try await send(config: adjustedConfig, prompt: query, imageBase64: nil, timeout: isAdvanced ? 120 : 60)
         let requestDuration = Date().timeIntervalSince(requestStart)
 
         log.default("AI text-only request completed in %.1f seconds (%d bytes)", requestDuration, data.count)
@@ -156,12 +147,10 @@ final class AIServiceManager {
             testConfig.temperature = 0
 
             let testPrompt = "Say hi"
-            let request = try buildRequest(config: testConfig, prompt: testPrompt, imageBase64: nil)
 
-            log.debug("Test connection URL: %{public}@", request.url?.absoluteString ?? "nil")
             log.debug("Test connection format: %{public}@, endpoint: %{public}@", configuration.requestFormat.displayName, configuration.endpointPath)
 
-            let (data, response) = try await executeRequest(request)
+            let (data, response) = try await send(config: testConfig, prompt: testPrompt, imageBase64: nil)
 
             guard let http = response as? HTTPURLResponse else {
                 return TestConnectionResult(success: false, statusCode: nil, message: "Invalid response", supportsVision: nil)
@@ -220,13 +209,11 @@ final class AIServiceManager {
     /// Returns `true` if confirmed, `false` if rejected, `nil` if inconclusive.
     private func testVisionSupport(config: AIProviderConfiguration) async -> Bool? {
         do {
-            let request = try buildRequest(
+            let (data, response) = try await send(
                 config: config,
                 prompt: "Describe this image",
                 imageBase64: Self.minimalTestImageBase64
             )
-
-            let (data, response) = try await executeRequest(request)
 
             guard let http = response as? HTTPURLResponse else { return nil }
 
@@ -248,10 +235,31 @@ final class AIServiceManager {
 
     // MARK: - Request Building
 
+    /// Sends the request, leaving out parameters the model refused before and resending once
+    /// per newly refused parameter (see PowerPack_AIRequestOptions).
+    private func send(
+        config: AIProviderConfiguration,
+        prompt: String,
+        imageBase64: String?,
+        timeout: TimeInterval? = nil
+    ) async throws -> (Data, URLResponse) {
+        try await PowerPack_AIRequestOptions.send(
+            model: config.model,
+            provider: PowerPack_AIProvider.detect(baseURL: config.baseURL),
+            format: config.requestFormat.powerPackFormat,
+            build: { quirks in
+                var request = try buildRequest(config: config, prompt: prompt, imageBase64: imageBase64, quirks: quirks)
+                if let timeout { request.timeoutInterval = timeout }
+                return request
+            },
+            execute: executeRequest)
+    }
+
     private func buildRequest(
         config: AIProviderConfiguration,
         prompt: String,
-        imageBase64: String?
+        imageBase64: String?,
+        quirks: PowerPack_ModelQuirks
     ) throws -> URLRequest {
         let url = try buildURL(config: config)
 
@@ -274,14 +282,19 @@ final class AIServiceManager {
         }
 
         // Build body
+        let parameters = PowerPack_AIRequestOptions.parameters(
+            format: config.requestFormat.powerPackFormat,
+            quirks: quirks,
+            temperature: config.temperature,
+            maxTokens: PowerPack_AIRequestOptions.outputTokens(config.maxTokens, quirks: quirks))
         let body: Data
         switch config.requestFormat {
         case .openAICompatible:
-            body = try buildOpenAIBody(config: config, prompt: prompt, imageBase64: imageBase64)
+            body = try buildOpenAIBody(config: config, prompt: prompt, imageBase64: imageBase64, parameters: parameters)
         case .anthropicMessages:
-            body = try buildAnthropicBody(config: config, prompt: prompt, imageBase64: imageBase64)
+            body = try buildAnthropicBody(config: config, prompt: prompt, imageBase64: imageBase64, parameters: parameters)
         case .googleGenerativeAI:
-            body = try buildGoogleBody(config: config, prompt: prompt, imageBase64: imageBase64)
+            body = try buildGoogleBody(config: config, prompt: prompt, imageBase64: imageBase64, parameters: parameters)
         }
 
         request.httpBody = body
@@ -324,7 +337,8 @@ final class AIServiceManager {
     private func buildOpenAIBody(
         config: AIProviderConfiguration,
         prompt: String,
-        imageBase64: String?
+        imageBase64: String?,
+        parameters: [String: Any]
     ) throws -> Data {
         var contentParts: [[String: Any]] = [
             ["type": "text", "text": prompt]
@@ -337,14 +351,13 @@ final class AIServiceManager {
             ])
         }
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": config.model,
             "messages": [
                 ["role": "user", "content": contentParts]
-            ],
-            "max_tokens": config.maxTokens,
-            "temperature": config.temperature
+            ]
         ]
+        body.merge(parameters) { $1 }
 
         return try JSONSerialization.data(withJSONObject: body)
     }
@@ -352,7 +365,8 @@ final class AIServiceManager {
     private func buildAnthropicBody(
         config: AIProviderConfiguration,
         prompt: String,
-        imageBase64: String?
+        imageBase64: String?,
+        parameters: [String: Any]
     ) throws -> Data {
         var contentParts: [[String: Any]] = []
 
@@ -369,14 +383,13 @@ final class AIServiceManager {
 
         contentParts.append(["type": "text", "text": prompt])
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": config.model,
-            "max_tokens": config.maxTokens,
-            "temperature": config.temperature,
             "messages": [
                 ["role": "user", "content": contentParts]
             ]
         ]
+        body.merge(parameters) { $1 }
 
         return try JSONSerialization.data(withJSONObject: body)
     }
@@ -384,7 +397,8 @@ final class AIServiceManager {
     private func buildGoogleBody(
         config: AIProviderConfiguration,
         prompt: String,
-        imageBase64: String?
+        imageBase64: String?,
+        parameters: [String: Any]
     ) throws -> Data {
         var parts: [[String: Any]] = [
             ["text": prompt]
@@ -399,17 +413,12 @@ final class AIServiceManager {
             ])
         }
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "contents": [
                 ["parts": parts]
-            ],
-            "generationConfig": [
-                "maxOutputTokens": config.maxTokens,
-                "temperature": config.temperature,
-                "topP": 0.95,
-                "topK": 8
             ]
         ]
+        body.merge(parameters) { $1 }
 
         return try JSONSerialization.data(withJSONObject: body)
     }
@@ -517,6 +526,12 @@ final class AIServiceManager {
     }
 
     private func extractTextContent(from json: [String: Any], keyPath: String) throws -> String {
+        // Claude models that think return thinking blocks before the text block, so the
+        // default key path (content.0.text) would land on a thinking block.
+        if keyPath.hasPrefix("content."), let text = PowerPack_AIRequestOptions.anthropicText(from: json) {
+            return text
+        }
+
         // Gemini thinking models return thinking in parts[0] and the actual response
         // in subsequent parts. Handle this before the generic key path traversal.
         if keyPath.contains("candidates") && keyPath.contains("parts") {
@@ -727,5 +742,15 @@ extension UIImage {
 
         guard let cg = cgImage?.cropping(to: rect) else { return self }
         return UIImage(cgImage: cg, scale: scale, orientation: imageOrientation)
+    }
+}
+
+private extension RequestFormat {
+    var powerPackFormat: PowerPack_AIRequestFormat {
+        switch self {
+        case .openAICompatible: return .openAI
+        case .anthropicMessages: return .anthropic
+        case .googleGenerativeAI: return .gemini
+        }
     }
 }

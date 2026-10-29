@@ -115,24 +115,24 @@ enum DirectConnect_Tips {
                 return DirectConnect_Tip(
                     systemImage: "calendar.badge.clock",
                     title: NSLocalizedString("Sensor ends soon", comment: "DirectConnect tip expiring title"),
-                    body: String(format: NSLocalizedString("This sensor ends %@, followed by a 12-hour grace period. Have a new sensor ready. After you insert it, tap Pair New Sensor and enter the new sensor's code.", comment: "DirectConnect tip expiring body (1: time)"), time(expiresAt)))
+                    body: String(format: NSLocalizedString("This sensor ends %@, followed by a 12-hour grace period. Have a new sensor ready. After you insert it, delete this CGM (Settings → CGM → Delete CGM), add Dexcom G7/ONE+ using DirectConnect, and enter the new sensor's code.", comment: "DirectConnect tip expiring body (1: time)"), time(expiresAt)))
             }
             return nil
         case .gracePeriod:
             return DirectConnect_Tip(
                 systemImage: "exclamationmark.arrow.circlepath",
                 title: NSLocalizedString("Replace your sensor now", comment: "DirectConnect tip grace title"),
-                body: String(format: NSLocalizedString("The sensor session is over. Readings continue only until %@. Insert a new sensor, then tap Pair New Sensor and enter its code.", comment: "DirectConnect tip grace body (1: time)"), time(endsAt)))
+                body: String(format: NSLocalizedString("The sensor session is over. Readings continue only until %@. Insert a new sensor, then delete this CGM (Settings → CGM → Delete CGM), add Dexcom G7/ONE+ using DirectConnect, and enter the new sensor's code.", comment: "DirectConnect tip grace body (1: time)"), time(endsAt)))
         case .expired:
             return DirectConnect_Tip(
                 systemImage: "arrow.triangle.2.circlepath",
                 title: NSLocalizedString("Sensor ended — pair a new one", comment: "DirectConnect tip expired title"),
-                body: NSLocalizedString("Loop is no longer receiving glucose from this sensor. Insert a new sensor, tap Pair New Sensor, and enter the code from its applicator.", comment: "DirectConnect tip expired body"))
+                body: NSLocalizedString("Loop is no longer receiving glucose from this sensor. Insert a new sensor, then delete this CGM (Settings → CGM → Delete CGM), add Dexcom G7/ONE+ using DirectConnect, and enter the new sensor's code.", comment: "DirectConnect tip expired body"))
         case .failed:
             return DirectConnect_Tip(
                 systemImage: "xmark.octagon",
                 title: NSLocalizedString("Sensor failed — replace it", comment: "DirectConnect tip failed title"),
-                body: NSLocalizedString("The sensor reported a failure and will not send glucose again. Remove it, insert a new sensor, then tap Pair New Sensor. Dexcom replaces failed sensors; contact Dexcom support.", comment: "DirectConnect tip failed body"))
+                body: NSLocalizedString("The sensor reported a failure and will not send glucose again. Remove it, insert a new sensor, then delete this CGM (Settings → CGM → Delete CGM), add Dexcom G7/ONE+ using DirectConnect, and enter the new sensor's code. Dexcom replaces failed sensors; contact Dexcom support.", comment: "DirectConnect tip failed body"))
         }
     }
 
@@ -151,7 +151,9 @@ enum DirectConnect_Tips {
     static let sensorChangeSteps: [String] = [
         NSLocalizedString("Insert the new sensor with its applicator, as Dexcom's instructions describe. You can do this during the old sensor's 12-hour grace period.", comment: "DirectConnect change step insert"),
         NSLocalizedString("Before you throw the applicator away, note the 4-digit pairing code printed on it. Each sensor has its own code. A photo works.", comment: "DirectConnect change step code"),
-        NSLocalizedString("In Loop: Settings → CGM → DirectConnect → Pair New Sensor. Choose the sensor type and enter the new code. Loop stops using the old sensor when you tap the button.", comment: "DirectConnect change step pair"),
+        NSLocalizedString("Delete the old CGM: in Loop, Settings → CGM → Delete CGM. Loop stops using the old sensor.", comment: "DirectConnect change step delete"),
+        NSLocalizedString("Add the new CGM: Settings → Add CGM → Dexcom G7/ONE+ using DirectConnect.", comment: "DirectConnect change step add"),
+        NSLocalizedString("Pair: choose the sensor type and enter the new sensor's 4-digit pairing code.", comment: "DirectConnect change step pair"),
         NSLocalizedString("Keep your phone near the new sensor. Pairing finishes within about 5 minutes.", comment: "DirectConnect change step wait"),
         NSLocalizedString("Wait for warmup. The sensor screen shows when readings will start. Loop has no glucose during warmup, so check with a fingerstick if you need to.", comment: "DirectConnect change step warmup"),
         NSLocalizedString("Remove the old sensor once the new one shows readings.", comment: "DirectConnect change step remove"),
@@ -169,6 +171,6 @@ enum DirectConnect_Tips {
     static let newSensorChecklist: [String] = [
         NSLocalizedString("Insert the new sensor before pairing it.", comment: "DirectConnect new checklist insert"),
         NSLocalizedString("Enter the code from the NEW sensor's applicator. The old sensor's code does not work.", comment: "DirectConnect new checklist code"),
-        NSLocalizedString("Loop stops using the old sensor as soon as you tap Pair New Sensor.", comment: "DirectConnect new checklist switch"),
+        NSLocalizedString("To change sensors, delete the old CGM (Settings → CGM → Delete CGM), then add Dexcom G7/ONE+ using DirectConnect and enter the new code.", comment: "DirectConnect new checklist switch"),
     ]
 }

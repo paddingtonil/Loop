@@ -38,7 +38,7 @@ struct PowerPack_ModelFinderBar: View {
                     .buttonStyle(.plain)
                 }
             }
-            Text(NSLocalizedString("Copy a model name from the results into the Model field, then tap Test Connection. Models that do not accept a temperature setting are not supported: PowerPack sets a low temperature so results stay consistent, and Test Connection fails for those models.", comment: "Model finder bar footer"))
+            Text(NSLocalizedString("Copy a model name from the results into the Model field, then tap Test Connection. PowerPack sets a low temperature for models that accept one, so results stay consistent, and leaves it out for models that do not.", comment: "Model finder bar footer"))
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }

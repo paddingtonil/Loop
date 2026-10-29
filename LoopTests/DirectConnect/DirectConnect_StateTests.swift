@@ -181,3 +181,29 @@ final class DirectConnect_HeartbeatTextTests: XCTestCase {
         XCTAssertEqual(DirectConnect_HeartbeatText.when(nil, now: date(10, 8, 0), calendar: calendar, locale: locale), "none yet")
     }
 }
+
+final class DirectConnect_RemainingTextTests: XCTestCase {
+    private func text(_ seconds: TimeInterval) -> String {
+        DirectConnect_SensorStatusViewModel.remainingText(seconds, suffix: "left")
+    }
+
+    func testWholeDaysAtOrAboveOneDay() {
+        XCTAssertEqual(text(86400), "1 day left")
+        XCTAssertEqual(text(86400 * 2.9), "2 days left")
+    }
+
+    // Rounding hours up overstated the time left (11 h 26 min showed as "12 hours").
+    func testHoursAndMinutesBelowOneDay() {
+        XCTAssertEqual(text(11 * 3600 + 26 * 60), "11 h 26 min left")
+        XCTAssertEqual(text(11 * 3600 + 26 * 60 + 59), "11 h 26 min left")
+    }
+
+    func testDropsZeroParts() {
+        XCTAssertEqual(text(5 * 3600), "5 h left")
+        XCTAssertEqual(text(45 * 60), "45 min left")
+    }
+
+    func testUnderOneMinuteShowsOneMinute() {
+        XCTAssertEqual(text(20), "1 min left")
+    }
+}

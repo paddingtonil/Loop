@@ -186,10 +186,10 @@ enum DirectConnect_GlucoseAlarms {
             body = NSLocalizedString("Loop has not received a glucose reading from the sensor.", comment: "DirectConnect signal loss alarm body")
         case .sensorExpiring:
             title = NSLocalizedString("Sensor Expiring Soon", comment: "DirectConnect expiring alarm title")
-            body = NSLocalizedString("Your sensor session is ending soon. After inserting a new sensor, open Loop → Settings → CGM → Pair New Sensor.", comment: "DirectConnect expiring alarm body")
+            body = NSLocalizedString("Your sensor session is ending soon. After inserting a new sensor, open Loop → Settings → CGM → Delete CGM, then add Dexcom G7/ONE+ using DirectConnect and enter the new sensor's code.", comment: "DirectConnect expiring alarm body")
         case .sensorEnded:
             title = NSLocalizedString("Sensor Session Ended", comment: "DirectConnect ended alarm title")
-            body = NSLocalizedString("The sensor stopped providing glucose readings. Insert a new sensor, then open Loop → Settings → CGM → Pair New Sensor and enter its code.", comment: "DirectConnect ended alarm body")
+            body = NSLocalizedString("The sensor stopped providing glucose readings. Insert a new sensor, then open Loop → Settings → CGM → Delete CGM, add Dexcom G7/ONE+ using DirectConnect, and enter the new sensor's code.", comment: "DirectConnect ended alarm body")
         }
         let content = Alert.Content(title: title, body: body, acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "DirectConnect alarm acknowledge button"))
         return Alert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: kind.rawValue),

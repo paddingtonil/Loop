@@ -40,9 +40,7 @@ final class LoopInsights_AIServiceAdapter {
             throw LoopInsightsError.noAPIKeyConfigured
         }
 
-        let request = try buildRequest(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt)
-
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await send(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LoopInsightsError.networkError(URLError(.badServerResponse))
@@ -77,9 +75,7 @@ final class LoopInsights_AIServiceAdapter {
         var testConfig = config
         testConfig.maxTokens = 128
 
-        let request = try buildRequest(config: testConfig, systemPrompt: "You are a test.", userPrompt: "Reply with exactly: OK")
-
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await send(config: testConfig, systemPrompt: "You are a test.", userPrompt: "Reply with exactly: OK")
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LoopInsightsError.networkError(URLError(.badServerResponse))
@@ -105,10 +101,28 @@ final class LoopInsights_AIServiceAdapter {
 
     // MARK: - Request Building
 
-    private func buildRequest(
+    /// Sends the request, leaving out parameters the model refused before and resending once
+    /// per newly refused parameter (see PowerPack_AIRequestOptions).
+    private func send(
         config: LoopInsightsAIProviderConfiguration,
         systemPrompt: String,
         userPrompt: String
+    ) async throws -> (Data, URLResponse) {
+        try await PowerPack_AIRequestOptions.send(
+            model: config.model,
+            provider: PowerPack_AIProvider.detect(baseURL: config.baseURL),
+            format: config.requestFormat.powerPackFormat,
+            build: { quirks in
+                try buildRequest(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt, quirks: quirks)
+            },
+            execute: { request in try await session.data(for: request) })
+    }
+
+    private func buildRequest(
+        config: LoopInsightsAIProviderConfiguration,
+        systemPrompt: String,
+        userPrompt: String,
+        quirks: PowerPack_ModelQuirks
     ) throws -> URLRequest {
         let url = try buildURL(config: config)
 
@@ -131,14 +145,19 @@ final class LoopInsights_AIServiceAdapter {
         }
 
         // Build body based on request format
+        let parameters = PowerPack_AIRequestOptions.parameters(
+            format: config.requestFormat.powerPackFormat,
+            quirks: quirks,
+            temperature: config.temperature,
+            maxTokens: PowerPack_AIRequestOptions.outputTokens(config.maxTokens, quirks: quirks))
         let body: Data
         switch config.requestFormat {
         case .openAICompatible:
-            body = try buildOpenAIBody(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt)
+            body = try buildOpenAIBody(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt, parameters: parameters)
         case .anthropicMessages:
-            body = try buildAnthropicBody(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt)
+            body = try buildAnthropicBody(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt, parameters: parameters)
         case .googleGenerativeAI:
-            body = try buildGoogleBody(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt)
+            body = try buildGoogleBody(config: config, systemPrompt: systemPrompt, userPrompt: userPrompt, parameters: parameters)
         }
 
         request.httpBody = body
@@ -181,50 +200,51 @@ final class LoopInsights_AIServiceAdapter {
     private func buildOpenAIBody(
         config: LoopInsightsAIProviderConfiguration,
         systemPrompt: String,
-        userPrompt: String
+        userPrompt: String,
+        parameters: [String: Any]
     ) throws -> Data {
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": config.model,
             "messages": [
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt]
-            ],
-            "temperature": config.temperature,
-            "max_tokens": config.maxTokens
+            ]
         ]
+        body.merge(parameters) { $1 }
         return try JSONSerialization.data(withJSONObject: body)
     }
 
     private func buildAnthropicBody(
         config: LoopInsightsAIProviderConfiguration,
         systemPrompt: String,
-        userPrompt: String
+        userPrompt: String,
+        parameters: [String: Any]
     ) throws -> Data {
         // Prompt caching: the system prompt is large and byte-identical across the
         // 3 setting-type calls in a run (and rapid Ask Loopy turns). Marking it
         // cacheable means repeat calls read it at ~0.1x input cost instead of full
         // price. GA — no beta header needed. Only the Anthropic format supports this;
         // OpenAI caches automatically and Gemini uses its own mechanism.
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": config.model,
             "system": [
                 ["type": "text", "text": systemPrompt, "cache_control": ["type": "ephemeral"]]
             ],
             "messages": [
                 ["role": "user", "content": userPrompt]
-            ],
-            "temperature": config.temperature,
-            "max_tokens": config.maxTokens
+            ]
         ]
+        body.merge(parameters) { $1 }
         return try JSONSerialization.data(withJSONObject: body)
     }
 
     private func buildGoogleBody(
         config: LoopInsightsAIProviderConfiguration,
         systemPrompt: String,
-        userPrompt: String
+        userPrompt: String,
+        parameters: [String: Any]
     ) throws -> Data {
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "system_instruction": [
                 "parts": [["text": systemPrompt]]
             ],
@@ -233,14 +253,9 @@ final class LoopInsights_AIServiceAdapter {
                     "role": "user",
                     "parts": [["text": userPrompt]]
                 ]
-            ],
-            "generationConfig": [
-                "temperature": config.temperature,
-                "maxOutputTokens": config.maxTokens,
-                "topP": 0.95,
-                "topK": 8
             ]
         ]
+        body.merge(parameters) { $1 }
         return try JSONSerialization.data(withJSONObject: body)
     }
 
@@ -266,6 +281,12 @@ final class LoopInsights_AIServiceAdapter {
             if hasThinkingTokens(json) {
                 throw LoopInsightsError.emptyThinkingResponse
             }
+        }
+
+        // Claude models that think return thinking blocks before the text block, so the
+        // default key path (content.0.text) would land on a thinking block.
+        if config.requestFormat == .anthropicMessages, let text = PowerPack_AIRequestOptions.anthropicText(from: json) {
+            return text
         }
 
         // Strategy 1: Try the configured key path (works for most standard models)
@@ -380,6 +401,16 @@ final class LoopInsights_AIServiceAdapter {
             for item in array {
                 collectTextStrings(from: item, into: &results)
             }
+        }
+    }
+}
+
+private extension LoopInsightsRequestFormat {
+    var powerPackFormat: PowerPack_AIRequestFormat {
+        switch self {
+        case .openAICompatible: return .openAI
+        case .anthropicMessages: return .anthropic
+        case .googleGenerativeAI: return .gemini
         }
     }
 }

@@ -96,16 +96,25 @@ final class DirectConnect_SensorStatusViewModel: ObservableObject {
         return nil
     }
 
-    /// Whole days while a day or more remains, so the number counts down once a day; hours below that.
-    private static func remainingText(_ interval: TimeInterval, suffix: String) -> String {
+    /// Whole days while a day or more remains, so the number counts down once a day; hours and minutes below that.
+    static func remainingText(_ interval: TimeInterval, suffix: String) -> String {
         if interval >= 86400 {
             let days = Int(interval / 86400)
             let unit = days == 1 ? NSLocalizedString("day", comment: "DirectConnect one day") : NSLocalizedString("days", comment: "DirectConnect days")
             return "\(days) \(unit) \(suffix)"
         }
-        let hours = max(1, Int((interval / 3600).rounded(.up)))
-        let unit = hours == 1 ? NSLocalizedString("hour", comment: "DirectConnect one hour") : NSLocalizedString("hours", comment: "DirectConnect hours")
-        return "\(hours) \(unit) \(suffix)"
+        // Truncate, never round up: overstating the time left near expiry could delay a sensor change.
+        let totalMinutes = max(1, Int(interval / 60))
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        var parts: [String] = []
+        if hours > 0 {
+            parts.append(String(format: NSLocalizedString("%d h", comment: "DirectConnect hours left (1: hours)"), hours))
+        }
+        if minutes > 0 {
+            parts.append(String(format: NSLocalizedString("%d min", comment: "DirectConnect minutes left (1: minutes)"), minutes))
+        }
+        return "\(parts.joined(separator: " ")) \(suffix)"
     }
 
     var glucoseText: String {
