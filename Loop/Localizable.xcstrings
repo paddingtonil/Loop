@@ -31104,6 +31104,9 @@
         }
       }
     },
+    "Negative Insulin Clamp" : {
+      "comment" : "Title of negative insulin clamp experiment"
+    },
     "Negative Insulin Damper" : {
       "comment" : "Title for negative insulin damper experiment description\nTitle of negative insulin damper experiment\nTitle of the prediction input effect for negative insulin damper"
     },
@@ -46715,6 +46718,9 @@
     },
     "Where did you place your %@?" : {
 
+    },
+    "While insulin on board is negative, glucose rises caused by the negative insulin are removed from the prediction, so Loop does not dose to make up for reduced basal. Insulin on board still shows the negative value. Only one of the Negative Insulin Damper and the Negative Insulin Clamp can be enabled at a time." : {
+      "comment" : "Description of negative insulin clamp experiment"
     },
     "While mute alerts is on, all alerts from your %1$@ app including Critical and Time Sensitive alerts will temporarily display without sounds and will vibrate only." : {
       "comment" : "App sounds descriptive text (1: app name)",

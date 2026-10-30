@@ -74,6 +74,10 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
     
     private var negativeInsulinDamper: Double?
 
+    /// Net insulin on board (U) and the change the clamp makes to eventual glucose, for the clamp row.
+    private var clampInsulinOnBoard: Double?
+    private var clampEventualEffect: HKQuantity?
+
     private var refreshContext = RefreshContext.all
 
     private var chartStartDate: Date {
@@ -136,6 +140,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
             self.retrospectiveGlucoseDiscrepancies = state.retrospectiveGlucoseDiscrepancies
             totalRetrospectiveCorrection = state.totalRetrospectiveCorrection
             negativeInsulinDamper = state.negativeInsulinDamper
+            self.updateClampSummary(from: state)
             self.glucoseChart.setPredictedGlucoseValues(state.predictedGlucoseIncludingPendingInsulin ?? [])
 
             do {
@@ -209,10 +214,32 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
     private var selectedInputs = PredictionInputEffect.all
     
     private static func getAvailableInputs() -> [PredictionInputEffect] {
-        if UserDefaults.standard.negativeInsulinDamperEnabled {
-            return [.carbs, .insulin, .damper, .momentum, .retrospection, .suspend]
+        var inputs: [PredictionInputEffect] = [.carbs, .insulin]
+        if LoopSettings.negativeInsulinDamperActive {
+            inputs.append(.damper)
         }
-        return [.carbs, .insulin, .momentum, .retrospection, .suspend]
+        if UserDefaults.standard.negativeInsulinClampEnabled {
+            inputs.append(.clamp)
+        }
+        return inputs + [.momentum, .retrospection, .suspend]
+    }
+
+    /// Records the insulin on board and how much the clamp lowers eventual glucose, so the clamp row can show its effect.
+    private func updateClampSummary(from state: LoopState) {
+        clampInsulinOnBoard = nil
+        clampEventualEffect = nil
+
+        guard UserDefaults.standard.negativeInsulinClampEnabled, let iob = state.insulinOnBoard else { return }
+        clampInsulinOnBoard = iob.value
+        guard iob.value < 0 else { return }
+
+        let unit = HKUnit.milligramsPerDeciliter
+        let inputs = selectedInputs.subtracting(.damper)
+        guard let clamped = try? state.predictGlucose(using: inputs.union(.clamp), includingPendingInsulin: true).last,
+              let unclamped = try? state.predictGlucose(using: inputs.subtracting(.clamp), includingPendingInsulin: true).last
+        else { return }
+
+        clampEventualEffect = HKQuantity(unit: unit, doubleValue: clamped.quantity.doubleValue(for: unit) - unclamped.quantity.doubleValue(for: unit))
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -288,6 +315,31 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
             
             subtitleText = String(format: "%@\n%@", subtitleText, damper)
             
+        }
+        if input == .clamp, let iob = clampInsulinOnBoard {
+            let iobFormatter = NumberFormatter()
+            iobFormatter.minimumFractionDigits = 2
+            iobFormatter.maximumFractionDigits = 2
+            iobFormatter.positivePrefix = iobFormatter.plusSign
+            let iobText = iobFormatter.string(from: NSNumber(value: iob)) ?? "?"
+
+            let status: String
+            if iob >= 0 {
+                status = String(
+                    format: NSLocalizedString("Inactive: insulin on board is %1$@ U", comment: "Format string for the clamp row when insulin on board is not negative. (1: insulin on board)"),
+                    iobText)
+            } else if let effect = clampEventualEffect {
+                let formatter = QuantityFormatter(for: glucoseChart.glucoseUnit)
+                let reduction = HKQuantity(unit: glucoseChart.glucoseUnit, doubleValue: abs(effect.doubleValue(for: glucoseChart.glucoseUnit)))
+                status = String(
+                    format: NSLocalizedString("Active: insulin on board is %1$@ U\nLowers eventual glucose by %2$@", comment: "Format string for the clamp row when active. (1: insulin on board)(2: reduction in eventual glucose)"),
+                    iobText, formatter.string(from: reduction) ?? "?")
+            } else {
+                status = String(
+                    format: NSLocalizedString("Active: insulin on board is %1$@ U", comment: "Format string for the clamp row when active but the effect is unavailable. (1: insulin on board)"),
+                    iobText)
+            }
+            subtitleText = String(format: "%@\n%@", subtitleText, status)
         }
         if input == .retrospection,
             let lastDiscrepancy = retrospectiveGlucoseDiscrepancies?.last,

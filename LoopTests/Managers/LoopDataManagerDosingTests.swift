@@ -185,6 +185,34 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         XCTAssertLessThan(clamp, damper, "clamp should reduce the meal bolus more than the damper at this setting")
     }
 
+    /// The Predicted Glucose screen toggles the clamp through the `.clamp` input, so it must change the prediction.
+    func testClampInputTogglesClampInPrediction() {
+        UserDefaults.standard.negativeInsulinClampEnabled = true
+        addTeardownBlock { UserDefaults.standard.negativeInsulinClampEnabled = false }
+
+        setUp(for: .flatAndStable)
+        doseStore.insulinOnBoardValue = -1.0
+        doseStore.glucoseEffectsOverride = doseStore.getCannedGlucoseEffects().enumerated().map { index, effect in
+            GlucoseEffect(startDate: effect.startDate, quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: Double(index) * 0.5))
+        }
+
+        let updateGroup = DispatchGroup()
+        updateGroup.enter()
+        var withClamp: Double?
+        var withoutClamp: Double?
+        loopDataManager.getLoopState { _, state in
+            let inputs: PredictionInputEffect = [.carbs, .insulin]
+            withClamp = try? state.predictGlucose(using: inputs.union(.clamp), includingPendingInsulin: true).last?.quantity.doubleValue(for: .milligramsPerDeciliter)
+            withoutClamp = try? state.predictGlucose(using: inputs, includingPendingInsulin: true).last?.quantity.doubleValue(for: .milligramsPerDeciliter)
+            updateGroup.leave()
+        }
+        updateGroup.wait()
+
+        XCTAssertNotNil(withClamp)
+        XCTAssertNotNil(withoutClamp)
+        XCTAssertLessThan(withClamp!, withoutClamp! - 10)
+    }
+
     func testNegativeInsulinClampIgnoredWhenIOBPositive() {
         let off = finalPredictedGlucose(insulinOnBoard: 1.0, clampEnabled: false)
         let on = finalPredictedGlucose(insulinOnBoard: 1.0, clampEnabled: true)

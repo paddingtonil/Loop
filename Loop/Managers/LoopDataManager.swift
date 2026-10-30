@@ -1463,7 +1463,7 @@ extension LoopDataManager {
             if var insulinEffect = computationInsulinEffect {
                 // Negative insulin clamp: only the forecast is clamped. insulinEffect itself stays raw
                 // because counteraction effects (carb absorption) are computed from it.
-                if UserDefaults.standard.negativeInsulinClampEnabled, let iob = self.insulinOnBoard, iob.value < 0 {
+                if inputs.contains(.clamp), UserDefaults.standard.negativeInsulinClampEnabled, let iob = self.insulinOnBoard, iob.value < 0 {
                     insulinEffect = LoopDataManager.clampNegativeInsulinEffect(insulinEffect)
                 }
                 effects.append(insulinEffect)
@@ -1646,7 +1646,7 @@ extension LoopDataManager {
 
         return try predictGlucose(
             startingAt: glucose.quantitySample,
-            using: [.insulin, .carbs],
+            using: [.insulin, .carbs, .clamp],
             historicalInsulinEffect: insulinEffect,
             insulinCounteractionEffects: insulinCounteractionEffects,
             historicalCarbEffect: carbEffect,

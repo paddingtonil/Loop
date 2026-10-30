@@ -18,6 +18,9 @@ extension LoopSettings {
         if !LoopSettings.negativeInsulinDamperActive {
             inputs.remove(.damper)
         }
+        if !UserDefaults.standard.negativeInsulinClampEnabled {
+            inputs.remove(.clamp)
+        }
         return inputs
     }
 
