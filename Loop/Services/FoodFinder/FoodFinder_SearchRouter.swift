@@ -140,7 +140,7 @@ class FoodSearchRouter {
             throw AIFoodAnalysisError.noApiKey
         }
 
-        let prompt = getAnalysisPrompt()
+        let prompt = getAnalysisPrompt(includeMenuExample: previous.imageType == .menuItem)
             + FoodFinder_LocationService.shared.locationContextForPrompt()
             + FoodSearchRouter.correctionsContext(previous: previous, excludedIndices: excludedIndices, hasPhoto: image != nil)
 

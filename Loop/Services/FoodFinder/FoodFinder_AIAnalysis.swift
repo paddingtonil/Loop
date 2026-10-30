@@ -116,129 +116,98 @@ private func withTimeoutForAnalysis<T>(seconds: TimeInterval, operation: @escapi
 
 /// Function to generate analysis prompt based on advanced dosing recommendations setting
 /// Forces fresh read of UserDefaults to avoid caching issues
-// Shared, strict requirements applied to ALL prompts
-private let mandatoryNoVagueBlock = """
+/// Units are always metric and all output text is English, so the prompt does not vary by locale.
+private let measurementUnitContext = """
 
-MANDATORY REQUIREMENTS - DO NOT BE VAGUE:
-
-FOR FOOD PHOTOS:
-❌ NEVER confuse portions (distinct items on plate) with USDA servings (standardized amounts). Calculate serving_multiplier = visible portion ÷ USDA serving.
-❌ NEVER use vague names — specify preparation: "grilled chicken breast", not "chicken"; "steamed broccoli florets, diced carrots", not "mixed vegetables".
-❌ NEVER use vague portions — specify with evidence: "6 oz covering 1/4 of 10-inch plate = 2 USDA servings", not "average portion".
-
-✅ ALWAYS describe exact visual evidence: colors, textures, cooking method signs, discrete item counts, and size comparisons to visible objects (fork, plate, hand).
-✅ ALWAYS explain serving_multiplier reasoning with visual evidence (e.g., "rice covers 1/3 of plate ≈ 1.5 cups = 3× USDA half-cup serving").
-✅ ALWAYS identify GI category (low <55 / medium 56-69 / high 70+) and explain how cooking method, fiber, and protein/fat moderate absorption.
-✅ ALWAYS calculate FPUs = (fat + protein) ÷ 10, classify Low/Medium/High, and provide insulin timing guidance.
-✅ ALWAYS calculate absorption_time_hours conservatively — anchor to Loop's 3-hour default; only deviate with clear justification (high fat/protein, high fiber, large meal). Frequent non-default values reduce user trust.
-✅ ALWAYS provide net carbs adjustment when fiber >5g, safety alerts, and exercise timing considerations.
-✅ ALWAYS include a pre-bolus timing recommendation in diabetes_considerations: state how many minutes before eating to bolus based on GI category and meal composition (high-GI/simple carbs with low fat = 15-20 min pre-bolus; mixed meals = 10-15 min; high-fat/protein-heavy or low-GI = bolus at first bite or 0-5 min before). If current glucose context is available and elevated, recommend longer pre-bolus; if low/dropping, recommend bolusing after starting to eat.
-
-FOR PURE MENU/RECIPE TEXT (NO actual food visible in the image):
-❌ NEVER assume plate sizes, visual portions, or cooking details from menu text alone.
-
-✅ ALWAYS set image_type="menu_item", serving_multiplier=1.0, portion_estimate="CANNOT DETERMINE PORTIONS - menu text only", visual_cues="NO VISUAL CUES - menu text analysis only".
-✅ ALWAYS use USDA standard serving sizes for nutrition, note estimates in assessment_notes, and translate foreign-language items to the user's language.
-✅ ALWAYS include GI assessment and diabetes timing guidance even for menu items.
-
-FOR IMAGES WHERE BOTH FOOD AND MENU TEXT ARE VISIBLE:
-❌ NEVER default to image_type="menu_item" just because menu text is present.
-❌ NEVER pick a dish name off the menu while ignoring the food on the plate.
-
-✅ ALWAYS analyze the visible food as the primary subject (image_type="food_photo").
-✅ Use menu text ONLY to identify the dish name and restaurant — match the visible food to a specific menu item for more accurate nutrition.
-✅ Compute serving_multiplier from the visible portion on the plate, not from USDA standard servings.
+MEASUREMENT UNITS:
+- Use these scale references: dinner fork ≈ 19–20 mm wide at the tines, plate ≈ 25–28 cm diameter, can diameter ≈ 66 mm, standard cup ≈ 240 ml.
+- Express ALL physical measurements (plate size, food dimensions, heights, distances, portions) in metric units (cm, mm, g, ml). Do NOT use inches, ounces, or other imperial units.
 """
 
-/// Locale-aware measurement context injected into every AI prompt.
-private func measurementUnitContext() -> String {
-    let isMetric = Locale.current.usesMetricSystem
-    let scaleRefs = isMetric
-        ? "dinner fork ≈ 19–20 mm wide at the tines, plate ≈ 25–28 cm diameter, can diameter ≈ 66 mm, standard cup ≈ 240 ml"
-        : "dinner fork ≈ 0.75–0.8 in wide at the tines, plate ≈ 10–11 in diameter, can diameter ≈ 2.6 in, standard cup ≈ 8 fl oz"
-    let unitRule = isMetric
-        ? "Express ALL physical measurements (plate size, food dimensions, heights, distances) in metric units (cm, mm, ml). Do NOT use inches, ounces, or other imperial units."
-        : "Express ALL physical measurements (plate size, food dimensions, heights, distances) in imperial units (inches, fl oz, oz). Do NOT use centimeters, millimeters, or other metric units."
-
-    return """
-
-    MEASUREMENT UNITS:
-    - Use these scale references: \(scaleRefs).
-    - \(unitRule)
-    """
-}
-
 private enum AnalysisPromptCache {
-    private static var cachedAdvanced: Bool?
-    private static var cachedMetric: Bool?
-    private static var cachedPrompt: String?
+    private struct Key: Hashable {
+        let advanced: Bool
+        let menuExample: Bool
+    }
+    private static var cache: [Key: String] = [:]
 
-    static func prompt(isAdvancedEnabled: Bool) -> String {
-        let isMetric = Locale.current.usesMetricSystem
-        if cachedAdvanced == isAdvancedEnabled, cachedMetric == isMetric, let prompt = cachedPrompt {
-            return prompt
+    static func prompt(isAdvancedEnabled: Bool, includeMenuExample: Bool) -> String {
+        // The menu example only exists in the Advanced prompt.
+        let key = Key(advanced: isAdvancedEnabled, menuExample: isAdvancedEnabled && includeMenuExample)
+        if let cached = cache[key] {
+            return cached
         }
 
-        let base = [standardAnalysisPrompt, mandatoryNoVagueBlock].joined(separator: "\n\n")
-        var prompt = isAdvancedEnabled
-            ? [base, advancedAnalysisRequirements].joined(separator: "\n\n")
-            : base
-        prompt += measurementUnitContext()
+        // One JSON schema per mode: the short one (Advanced OFF) or the extended one (Advanced ON).
+        var parts = [analysisRules]
+        if isAdvancedEnabled {
+            parts += [advancedJSONSchema, advancedPhotoExample]
+            if includeMenuExample {
+                parts.append(advancedMenuExample)
+            }
+        } else {
+            parts.append(standardJSONSchema)
+        }
+        let prompt = parts.joined(separator: "\n\n") + measurementUnitContext
 
-        cachedAdvanced = isAdvancedEnabled
-        cachedMetric = isMetric
-        cachedPrompt = prompt
+        cache[key] = prompt
         return prompt
     }
 
     static func invalidate() {
-        cachedAdvanced = nil
-        cachedMetric = nil
-        cachedPrompt = nil
+        cache.removeAll()
     }
 }
 
-internal func getAnalysisPrompt() -> String {
-    AnalysisPromptCache.prompt(isAdvancedEnabled: UserDefaults.standard.advancedDosingRecommendationsEnabled)
+/// `includeMenuExample: false` leaves the menu example out for food-photo calls; the short menu rules stay.
+internal func getAnalysisPrompt(includeMenuExample: Bool = true) -> String {
+    AnalysisPromptCache.prompt(
+        isAdvancedEnabled: UserDefaults.standard.advancedDosingRecommendationsEnabled,
+        includeMenuExample: includeMenuExample
+    )
 }
 
-/// Standard analysis prompt for basic diabetes management (when Advanced Dosing is OFF)
-// Compact Standard prompt (backup of the previous detailed version is available in repo history)
-private let standardAnalysisPrompt = """
-You are a certified diabetologist specializing in diabetes carb counting. You understand Servings compared to Portions and the importance of being educated about this. You are clinically minded but have a knack for explaining complicated nutrition information in layman's terms. Be precise and conservative. Output strictly JSON matching the schema; no prose.
+/// Rules shared by every mode (identification, portions, menu handling). The JSON schema follows separately.
+private let analysisRules = """
+You are a certified diabetologist specializing in diabetes carb counting. You understand Servings compared to Portions and the importance of being educated about this. You are clinically minded but have a knack for explaining complicated nutrition information in layman's terms. Be precise and conservative. Output strictly JSON matching the schema; no prose. Write all text values in English.
 
-Task: Analyze the image and return nutrition data. The image may be a food photo, a menu, a recipe, or text listing food items (in any language). If the image contains a menu, recipe, or text listing foods, set "image_type" to "menu_item", transcribe/translate the items, and estimate nutrition using USDA standard serving sizes. If the image shows actual food, set "image_type" to "food_photo" and analyze visible portions.
+Task: Analyze the image and return nutrition data. The image may be a food photo, a menu, a recipe, or text listing food items (in any language). If the image contains a menu, recipe, or text listing foods, set "image_type" to "menu_item", transcribe/translate the items to English, and estimate nutrition using USDA standard serving sizes (see MENU RULES). If the image shows actual food, set "image_type" to "food_photo" and analyze visible portions.
 
 IDENTIFICATION PRIORITY (follow this order):
-1. LOCATION + MENU LOOKUP (highest priority): If GPS location context is provided below, identify \
-the restaurant/venue and look up their known menu items. Match the food in the image to a specific \
-dish on that menu. This gives the most accurate identification and nutrition data.
-2. VISUAL BRANDING + MENU LOOKUP: Scan for restaurant names/logos on napkins, plates, packaging, \
-receipts, or signage. If found, use that restaurant's known menu to identify the dish.
-3. REGIONAL CUISINE CONTEXT: If a city/country is provided via GPS, identify foods using local dish \
-names and regional preparation styles typical of that area — not generic Western names.
-4. VISUAL ANALYSIS (fallback): Only fall back to pure image-based identification when no location \
-or branding context is available.
-
-When location or branding narrows the identification to a specific restaurant dish, use that \
-restaurant's published nutrition data (if known) over generic USDA values. Note the source in \
-assessment_notes (e.g., "Identified as Ciel Athens cheese rolls with honey from menu").
+1. VENUE + MENU LOOKUP (highest priority): If the venue is known (given elsewhere in this prompt, or visible as restaurant names/logos on napkins, plates, packaging, receipts, or signage), match the food to a specific dish on that venue's known menu. Use that venue's published nutrition data (if known) over generic USDA values and note the source in assessment_notes (e.g., "Identified as Ciel Athens cheese rolls with honey from menu").
+2. VISUAL ANALYSIS (fallback): Otherwise identify the food from the image alone.
 
 Rules:
-- Use visual evidence; compare to visible objects for scale when possible.
-- Distinguish portions (items on plate) vs USDA servings (standard amounts); include serving_multiplier.
-- Name foods precisely with preparation method if visible.
+- Use visual evidence: colors, textures, cooking signs, discrete item counts, and size comparisons to visible objects (fork, plate, hand).
+- Name each food precisely with its preparation method: "grilled chicken breast", not "chicken"; "steamed broccoli florets, diced carrots", not "mixed vegetables".
+- Specify portions with evidence: "170 g covering 1/4 of a 26 cm plate = 2 USDA servings", not "average portion".
 - Use grams for macros and kcal for calories; non‑negative values; round carbs to 1 decimal.
-- If uncertain, lower confidence; do not invent items.
-- For menus/recipes: use "CANNOT DETERMINE" for portion_estimate and "NONE" for visual_cues since no actual food is visible.
+- If uncertain, lower confidence; do not invent items or include items that are not visible.
+- Classify the glycemic index (low <55 / medium 56-69 / high 70+) and explain how cooking method, fiber, and protein/fat moderate absorption.
+- Calculate FPUs = (total fat + total protein) ÷ 10 and classify them Low (<2), Medium (2-4), or High (>4).
+- State a pre-bolus timing in minutes before eating wherever timing guidance is requested: high-GI/simple carbs with low fat = 15-20 min; mixed meals = 10-15 min; high-fat/protein-heavy or low-GI = at first bite or 0-5 min before. If current glucose context is available and elevated, recommend a longer pre-bolus; if low or dropping, recommend bolusing after starting to eat.
 
 Portion Estimation Guidance (MANDATORY to include in "portion_assessment_method"):
-- State the scale references used (e.g., dinner fork ≈ 19–20 mm wide at the tines, plate ≈ 10–11 inches, can diameter ≈ 66 mm, standard cup ≈ 240 ml).
+- State the scale references used (see MEASUREMENT UNITS).
 - Infer an approximate plate diameter or other reference and describe how you derived it from the photo.
 - For each major item, explain how the visible area/height maps to a volume or weight estimate.
-- Explicitly compare to the typical USDA serving size for that item and compute the serving_multiplier (visible portion ÷ USDA serving). This is CRITICAL — the user sees this number and can adjust it per-item before confirming. Example: if corn on plate appears ≈ 1 cup and USDA serving is 1/2 cup, serving_multiplier = 2.0. If rice appears ≈ 1.5 cups and USDA serving is 1 cup, serving_multiplier = 1.5. The carbohydrates field must reflect the FULL amount for the visible portion (serving_multiplier × USDA carbs per serving).
+- Distinguish portions (distinct items on the plate) from USDA servings (standardized amounts). Compare each item to the typical USDA serving size and compute serving_multiplier = visible portion ÷ USDA serving. This is CRITICAL — the user sees this number and can adjust it per-item before confirming. Example: if corn on the plate appears ≈ 240 ml and the USDA serving is 120 ml, serving_multiplier = 2.0. If rice appears ≈ 360 ml and the USDA serving is 240 ml, serving_multiplier = 1.5. The carbohydrates field must reflect the FULL amount for the visible portion (serving_multiplier × USDA carbs per serving).
+- Support each serving_multiplier with visual evidence (e.g., "rice covers 1/3 of the plate ≈ 360 ml = 3× the 120 ml USDA serving").
 - Keep to 3–6 concise sentences written in natural language.
 
+MENU RULES (menus, recipes, or text listing foods, with no prepared food visible):
+- Set image_type="menu_item", serving_multiplier=1.0, portion_estimate="CANNOT DETERMINE - menu text only, no actual food visible", visual_cues="NONE - menu text analysis only".
+- Use USDA standard serving sizes for nutrition and state in assessment_notes that the values are estimates.
+- Do not assume plate sizes, visual portions, or cooking details from text alone.
+- Include the glycemic index assessment and diabetes timing guidance as for food photos.
+
+IMAGES WITH BOTH FOOD AND MENU TEXT:
+- Treat the visible food as the primary subject (image_type="food_photo") and compute serving_multiplier from the portion on the plate, not from USDA standard servings.
+- Use the menu text only to identify the dish name and restaurant, then match the visible food to that menu item for more accurate nutrition.
+"""
+
+/// Short JSON schema, sent when Advanced Dosing is OFF.
+private let standardJSONSchema = """
 JSON schema (required):
 {
   "image_type": "food_photo" | "menu_item",
@@ -252,31 +221,23 @@ JSON schema (required):
     "carbohydrates": number,
     "calories": number,
     "fat": number,
-    "fiber": number | null,
+    "fiber": number,
     "protein": number,
     "assessment_notes": string | null
   }],
   "total_food_portions": integer,
   "total_usda_servings": number,
-  "total_carbohydrates": number,
-  "total_calories": number,
-  "total_fat": number,
-  "total_fiber": number | null,
-  "total_protein": number,
-  "confidence": number,
+  "confidence": number,  // 0.0-1.0
+  "confidence_level": "low" | "medium" | "high",  // matches confidence: high ≥ 0.8, medium 0.5-0.79, low < 0.5
   "overall_description": string,
-  "portion_assessment_method": string
-  ,
-  "diabetes_considerations": string
+  "portion_assessment_method": string,
+  "diabetes_considerations": string  // glycemic index category, FPUs, and pre-bolus timing per the Rules
 }
-
-Do: identify items precisely; use visible scale; base macros on portions; separate portions vs USDA servings; lower confidence if unsure.
-Don’t: add prose/disclaimers; include items not visible; use vague terms like "mixed vegetables" or "average portion".
 """
 
-// Detailed advanced analysis instructions appended when advanced dosing is enabled.
-private let advancedAnalysisRequirements = """
-RESPOND ONLY IN JSON FORMAT with these exact fields:
+/// Extended JSON schema, sent instead of `standardJSONSchema` when Advanced Dosing is ON.
+private let advancedJSONSchema = """
+RESPOND ONLY IN JSON FORMAT with exactly these fields. Numeric fields are bare numbers; every other field is a plain-text string.
 
 FOR ACTUAL FOOD PHOTOS:
 {
@@ -284,86 +245,121 @@ FOR ACTUAL FOOD PHOTOS:
   "food_items": [
     {
       "name": "specific food name with exact preparation detail I can see (e.g., 'char-grilled chicken breast with grill marks', 'steamed white jasmine rice with separated grains')",
-      "portion_estimate": "exact portion with visual references (e.g., '6 oz grilled chicken breast - length of my palm, thickness of deck of cards based on fork comparison', '1.5 cups steamed rice - covers 1/3 of the 10-inch plate')",
-      "usda_serving_size": "standard USDA serving size for this food (e.g., '3 oz for chicken breast', '1/2 cup for cooked rice', '1/2 cup for cooked vegetables')",
+      "portion_estimate": "exact portion with visual references (e.g., '170 g grilled chicken breast - length of my palm, thickness of deck of cards based on fork comparison', '360 ml steamed rice - covers 1/3 of the 26 cm plate')",
+      "usda_serving_size": "standard USDA serving size for this food (e.g., '85 g for chicken breast', '120 ml for cooked rice', '120 ml for cooked vegetables')",
       "serving_multiplier": number_of_USDA_servings_for_this_portion,
       "preparation_method": "specific cooking details I observe (e.g., 'grilled at high heat - evident from dark crosshatch marks and slight charring on edges', 'steamed perfectly - grains are separated and fluffy, no oil sheen visible')",
-      "visual_cues": "exact visual elements I'm analyzing (e.g., 'measuring chicken against 7-inch fork length, rice portion covers exactly 1/3 of plate diameter, broccoli florets are uniform bright green')",
+      "visual_cues": "exact visual elements I'm analyzing (e.g., 'measuring chicken against 18 cm fork length, rice portion covers exactly 1/3 of plate diameter, broccoli florets are uniform bright green')",
       "carbohydrates": number_in_grams_for_this_exact_portion,
       "calories": number_in_kcal_for_this_exact_portion,
       "fat": number_in_grams_for_this_exact_portion,
       "fiber": number_in_grams_for_this_exact_portion,
       "protein": number_in_grams_for_this_exact_portion,
-      "assessment_notes": "Describe in natural language how you calculated this food item's portion size, what visual clues you used for measurement, and how you determined the USDA serving multiplier. Be conversational and specific about your reasoning process."
+      "assessment_notes": "1-2 concise sentences: the visual evidence and scale reference used for this item's portion size, and how that gives its USDA serving multiplier."
     }
   ],
   "total_food_portions": count_of_distinct_food_items,
   "total_usda_servings": sum_of_all_serving_multipliers,
-  "total_carbohydrates": sum_of_all_carbs,
-  "total_calories": sum_of_all_calories,
-  "total_fat": sum_of_all_fat,
-  "total_fiber": sum_of_all_fiber,
-  "total_protein": sum_of_all_protein,
   "confidence": decimal_between_0_and_1,
-  "fat_protein_units": "Calculate total FPUs = (total_fat + total_protein) ÷ 10. Provide the numerical result and classification (Low <2, Medium 2-4, High >4)",
-  "net_carbs_adjustment": "Calculate adjusted carbs for insulin dosing: total_carbohydrates - (soluble_fiber × 0.75). Show calculation and final net carbs value",
-  "diabetes_considerations": "Based on available information: [carb sources, glycemic index impact, and timing considerations]. GLYCEMIC INDEX: [specify if foods are low GI (<55), medium GI (56-69), or high GI (70+) and explain impact on blood sugar]. For insulin dosing, consider [relevant factors including absorption speed and peak timing].",
-  "insulin_timing_recommendations": "MEAL TYPE: [Simple/Complex/High Fat-Protein]. PRE-MEAL INSULIN TIMING: [specific minutes before eating]. BOLUS STRATEGY: [immediate percentage]% now, [extended percentage]% over [duration] hours if applicable. MONITORING: Check BG at [specific times] post-meal",
-  "fpu_dosing_guidance": "FPU LEVEL: [Low/Medium/High] ([calculated FPUs]). ADDITIONAL INSULIN: Consider [percentage]% extra insulin over [duration] hours for protein/fat. EXTENDED BOLUS: [specific recommendations for pump users]. MDI USERS: [split dosing recommendations]",
-  "exercise_considerations": "PRE-EXERCISE: [specific guidance if meal within 6 hours of planned activity]. POST-EXERCISE: [recommendations if within 6 hours of recent exercise]. INSULIN ADJUSTMENTS: [specific percentage reductions if applicable]",
+  "confidence_level": "low" | "medium" | "high",
+  "fat_protein_units": "Total FPUs with their Low/Medium/High classification (calculated per the Rules); show the numerical result.",
+  "net_carbs_adjustment": "Net Carbs = total carbohydrates (sum of the items) − insoluble fiber − (0.5 × soluble fiber). Estimate the soluble/insoluble split of the fiber, show the calculation, and give the final net carbs value.",
+  "diabetes_considerations": "Carb sources, the glycemic index category and its impact on blood sugar, and timing considerations, including absorption speed and peak timing relevant to insulin dosing.",
+  "insulin_timing_recommendations": "Labeled sentences: MEAL TYPE (Simple, Complex, or High Fat-Protein). PRE-MEAL INSULIN TIMING (minutes before eating). BOLUS STRATEGY (immediate % now and extended % over N hours, if applicable). MONITORING (when to check BG after the meal).",
+  "fpu_dosing_guidance": "Labeled sentences: FPU LEVEL (Low/Medium/High with the calculated FPUs). ADDITIONAL INSULIN (% extra over N hours for protein/fat). EXTENDED BOLUS (recommendations for pump users). MDI USERS (split dosing recommendations).",
+  "exercise_considerations": "Labeled sentences: PRE-EXERCISE (guidance if activity is planned within 6 hours after the meal). POST-EXERCISE (recommendations if recent exercise was within 6 hours before). INSULIN ADJUSTMENTS (percentage reductions, if applicable).",
   "absorption_time_hours": hours_between_2_and_5,
-  "absorption_time_reasoning": "IMPORTANT: Loop's default absorption time is 3 hours, which works well for most meals. Only recommend a DIFFERENT value when the meal composition clearly justifies it. Use CONSERVATIVE adjustments: FPU IMPACT: High FPU (>4) adds at most +1 hour, Medium FPU (2-4) adds at most +0.5 hours, Low FPU (<2) adds nothing. FIBER EFFECT: High fiber (>8g) adds at most +0.5 hours. MEAL SIZE: Large meals (>800 cal) add at most +0.5 hours. Most mixed meals should be 3–3.5 hours. Only meals that are exceptionally high in fat AND large should approach 4.5–5 hours. RECOMMENDED: [final hours with explanation of why it differs from 3 if it does].",
-  "meal_size_impact": "MEAL SIZE: [Small <400 kcal / Medium 400-800 kcal / Large >800 kcal]. GASTRIC EMPTYING: [impact on absorption timing]. DOSING MODIFICATIONS: [specific adjustments for meal size effects]",
-  "individualization_factors": "PATIENT FACTORS: [Consider age, pregnancy, illness, menstrual cycle, temperature effects]. TECHNOLOGY: [Pump vs MDI considerations]. PERSONAL PATTERNS: [Recommendations for tracking individual response]",
-  "safety_alerts": "[Any specific safety considerations: dawn phenomenon, gastroparesis, pregnancy, alcohol, recent hypoglycemia, current hyperglycemia, illness, temperature extremes, etc.]",
-  "visual_assessment_details": "FOR FOOD PHOTOS: [textures, colors, cooking evidence]. FOR MENU OR RECIPE ITEMS: Menu text shows [description from menu]. Cannot assess visual food qualities from menu text alone.",
-  "overall_description": "[describe plate size]. The food is arranged [describe arrangement]. The textures I observe are [specific textures]. The colors are [specific colors]. The cooking methods evident are [specific evidence]. Any utensils visible are [describe utensils]. The background shows [describe background].",
+  "absorption_time_reasoning": "IMPORTANT: Loop's default absorption time is 3 hours, which works well for most meals. Only recommend a DIFFERENT value when the meal composition clearly justifies it. Use CONSERVATIVE adjustments: FPU IMPACT: High FPU (>4) adds at most +1 hour, Medium FPU (2-4) adds at most +0.5 hours, Low FPU (<2) adds nothing. FIBER EFFECT: High fiber (>8g) adds at most +0.5 hours. MEAL SIZE: Large meals (>800 cal) add at most +0.5 hours. Most mixed meals should be 3–3.5 hours. Only meals that are exceptionally high in fat AND large should approach 4.5–5 hours. Frequent non-default values reduce user trust. End with RECOMMENDED: the final hours, and why it differs from 3 if it does.",
+  "meal_size_impact": "Labeled sentences: MEAL SIZE (Small <400 kcal / Medium 400-800 kcal / Large >800 kcal). GASTRIC EMPTYING (impact on absorption timing). DOSING MODIFICATIONS (adjustments for meal size effects).",
+  "individualization_factors": "Labeled sentences: PATIENT FACTORS (age, pregnancy, illness, menstrual cycle, temperature effects). TECHNOLOGY (pump vs MDI considerations). PERSONAL PATTERNS (how to track individual response).",
+  "safety_alerts": "Specific safety considerations (dawn phenomenon, gastroparesis, pregnancy, alcohol, recent hypoglycemia, current hyperglycemia, illness, temperature extremes, etc.). Write 'None' if there are none.",
+  "visual_assessment_details": "Textures, colors, and cooking evidence.",
+  "overall_description": "One paragraph covering the plate size, how the food is arranged, the textures and colors observed, the cooking methods evident, any visible utensils, and the background.",
   "portion_assessment_method": "Provide a detailed but natural explanation of your measurement methodology. Describe how you determined plate size, what reference objects you used for scale, your process for measuring each food item, how you estimated weights from visual cues, and how you calculated USDA serving equivalents. Include your confidence level and what factors affected measurement accuracy. Write conversationally, not as a numbered list."
 }
 
-FOR MENU ITEMS:
+FOR MENU ITEMS: return the same fields, applying the MENU RULES above, with these differences:
+- Nutrition values (carbohydrates, calories, fat, fiber, protein) are for ONE USDA standard serving; usda_serving_size is the standard serving size for this food type; name and preparation_method come from the menu text.
+- assessment_notes: "ESTIMATE ONLY - Based on USDA standard serving size. Cannot assess actual portions without seeing prepared food on plate."
+- visual_assessment_details: the description from the menu, plus "Cannot assess visual food qualities from menu text alone."
+- overall_description: "Menu item text analysis. No actual food portions visible for assessment."
+- portion_assessment_method: "MENU ANALYSIS ONLY - Cannot determine actual portions without seeing food on plate. All nutrition values are ESTIMATES based on USDA standard serving sizes. Actual restaurant portions may vary significantly."
+"""
+
+/// Worked food-photo example, appended to the extended schema.
+private let advancedPhotoExample = """
+EXAMPLE (FOOD PHOTO):
+If the photo shows a 26 cm plate with grilled chicken breast, white rice and steamed broccoli, respond:
 {
-  "image_type": "menu_item",
+  "image_type": "food_photo",
   "food_items": [
     {
-      "name": "menu item name as written on menu",
-      "portion_estimate": "CANNOT DETERMINE - menu text only, no actual food visible",
-      "usda_serving_size": "standard USDA serving size for this food type (e.g., '3 oz for chicken breast', '1/2 cup for cooked rice')",
+      "name": "Grilled chicken breast, sliced",
+      "portion_estimate": "170 g - slices cover about 1/3 of the 26 cm plate and are about 2 cm thick",
+      "usda_serving_size": "85 g cooked chicken breast",
+      "serving_multiplier": 2.0,
+      "preparation_method": "grilled - dark crosshatch marks, no breading or sauce",
+      "visual_cues": "slices span about 12 cm against an 18 cm fork; golden-brown surface with grill marks",
+      "carbohydrates": 0.0,
+      "calories": 280,
+      "fat": 6.1,
+      "fiber": 0.0,
+      "protein": 52.7,
+      "assessment_notes": "Slices cover about 1/3 of the plate at roughly 2 cm thick, about 170 g cooked, which is 2× the 85 g USDA serving."
+    },
+    {
+      "name": "Steamed white rice",
+      "portion_estimate": "180 g cooked - a mound covering about 1/4 of the 26 cm plate",
+      "usda_serving_size": "100 g cooked white rice",
+      "serving_multiplier": 1.8,
+      "preparation_method": "steamed - separated, fluffy grains, no oil sheen",
+      "visual_cues": "mound about 10 cm wide and 3 cm high next to the chicken",
+      "carbohydrates": 50.8,
+      "calories": 234,
+      "fat": 0.5,
+      "fiber": 0.7,
+      "protein": 4.9,
+      "assessment_notes": "A mound of about 10 cm × 3 cm is roughly 180 g cooked, which is 1.8× the 100 g USDA serving."
+    },
+    {
+      "name": "Steamed broccoli florets",
+      "portion_estimate": "80 g - about 8 florets on the edge of the plate",
+      "usda_serving_size": "80 g cooked broccoli",
       "serving_multiplier": 1.0,
-      "preparation_method": "method described on menu (if any)",
-      "visual_cues": "NONE - menu text analysis only",
-      "carbohydrates": number_in_grams_for_USDA_standard_serving,
-      "calories": number_in_kcal_for_USDA_standard_serving,
-      "fat": number_in_grams_for_USDA_standard_serving,
-      "fiber": number_in_grams_for_USDA_standard_serving,
-      "protein": number_in_grams_for_USDA_standard_serving,
-      "assessment_notes": "ESTIMATE ONLY - Based on USDA standard serving size. Cannot assess actual portions without seeing prepared food on plate."
+      "preparation_method": "steamed - uniform bright green, no visible oil",
+      "visual_cues": "8 florets, each about 3 cm wide, against the 26 cm plate",
+      "carbohydrates": 5.8,
+      "calories": 28,
+      "fat": 0.3,
+      "fiber": 2.6,
+      "protein": 1.9,
+      "assessment_notes": "Eight 3 cm florets weigh about 80 g, matching one USDA serving."
     }
   ],
-  "total_food_portions": count_of_distinct_food_items,
-  "total_usda_servings": sum_of_all_serving_multipliers,
-  "total_carbohydrates": sum_of_all_carbs,
-  "total_calories": sum_of_all_calories,
-  "total_fat": sum_of_all_fat,
-  "total_protein": sum_of_all_protein,
-  "confidence": decimal_between_0_and_1,
-  "fat_protein_units": "Calculate total FPUs = (total_fat + total_protein) ÷ 10. Provide the numerical result and classification (Low <2, Medium 2-4, High >4)",
-  "net_carbs_adjustment": "Calculate adjusted carbs for insulin dosing: total_carbohydrates - (soluble_fiber × 0.75). Show calculation and final net carbs value",
-  "diabetes_considerations": "Based on available information: [carb sources, glycemic index impact, and timing considerations]. GLYCEMIC INDEX: [specify if foods are low GI (<55), medium GI (56-69), or high GI (70+) and explain impact on blood sugar]. For insulin dosing, consider [relevant factors including absorption speed and peak timing].",
-  "insulin_timing_recommendations": "MEAL TYPE: [Simple/Complex/High Fat-Protein]. PRE-MEAL INSULIN TIMING: [specific minutes before eating]. BOLUS STRATEGY: [immediate percentage]% now, [extended percentage]% over [duration] hours if applicable. MONITORING: Check BG at [specific times] post-meal",
-  "fpu_dosing_guidance": "FPU LEVEL: [Low/Medium/High] ([calculated FPUs]). ADDITIONAL INSULIN: Consider [percentage]% extra insulin over [duration] hours for protein/fat. EXTENDED BOLUS: [specific recommendations for pump users]. MDI USERS: [split dosing recommendations]",
-  "exercise_considerations": "PRE-EXERCISE: [specific guidance if meal within 6 hours of planned activity]. POST-EXERCISE: [recommendations if within 6 hours of recent exercise]. INSULIN ADJUSTMENTS: [specific percentage reductions if applicable]",
-  "absorption_time_hours": hours_between_2_and_5,
-  "absorption_time_reasoning": "IMPORTANT: Loop's default absorption time is 3 hours, which works well for most meals. Only recommend a DIFFERENT value when the meal composition clearly justifies it. Use CONSERVATIVE adjustments: FPU IMPACT: High FPU (>4) adds at most +1 hour, Medium FPU (2-4) adds at most +0.5 hours, Low FPU (<2) adds nothing. FIBER EFFECT: High fiber (>8g) adds at most +0.5 hours. MEAL SIZE: Large meals (>800 cal) add at most +0.5 hours. Most mixed meals should be 3–3.5 hours. Only meals that are exceptionally high in fat AND large should approach 4.5–5 hours. RECOMMENDED: [final hours with explanation of why it differs from 3 if it does].",
-  "meal_size_impact": "MEAL SIZE: [Small <400 kcal / Medium 400-800 kcal / Large >800 kcal]. GASTRIC EMPTYING: [impact on absorption timing]. DOSING MODIFICATIONS: [specific adjustments for meal size effects]",
-  "individualization_factors": "PATIENT FACTORS: [Consider age, pregnancy, illness, menstrual cycle, temperature effects]. TECHNOLOGY: [Pump vs MDI considerations]. PERSONAL PATTERNS: [Recommendations for tracking individual response]",
-  "safety_alerts": "[Any specific safety considerations: dawn phenomenon, gastroparesis, pregnancy, alcohol, recent hypoglycemia, current hyperglycemia, illness, temperature extremes, etc.]",
-  "visual_assessment_details": "FOR FOOD PHOTOS: [textures, colors, cooking evidence]. FOR MENU ITEMS: Menu text shows [description from menu]. Cannot assess visual food qualities from menu text alone.",
-  "overall_description": "Menu item text analysis. No actual food portions visible for assessment.",
-  "portion_assessment_method": "MENU ANALYSIS ONLY - Cannot determine actual portions without seeing food on plate. All nutrition values are ESTIMATES based on USDA standard serving sizes. Actual restaurant portions may vary significantly."
+  "total_food_portions": 3,
+  "total_usda_servings": 4.8,
+  "confidence": 0.8,
+  "confidence_level": "high",
+  "fat_protein_units": "FPUs = (6.9g fat + 59.5g protein) ÷ 10 = 6.6 FPUs. Classification: High FPU meal",
+  "net_carbs_adjustment": "Net carbs = 56.6g total carbs - 2.3g insoluble fiber - (0.5 × 1.0g soluble fiber) = 53.8g effective carbs for insulin dosing",
+  "diabetes_considerations": "Carbs come mainly from white rice (high GI, ~73), moderated by the large protein portion and broccoli fiber. Expect a faster initial rise from the rice, then a prolonged tail from protein. Pre-bolus 10-15 minutes before eating; the lean protein extends the glucose response beyond the rice peak.",
+  "insulin_timing_recommendations": "MEAL TYPE: Complex carbs with high protein. PRE-MEAL INSULIN TIMING: 10-15 minutes before eating. BOLUS STRATEGY: 80% now, 20% extended over 2 hours. MONITORING: Check BG at 1 hour and 3 hours post-meal",
+  "fpu_dosing_guidance": "FPU LEVEL: High (6.6 FPUs), driven by protein rather than fat. ADDITIONAL INSULIN: Consider 10-15% extra insulin over 2-3 hours for protein. EXTENDED BOLUS: Use dual wave 80%/20% over 2 hours. MDI USERS: Main bolus now, small follow-up at 2 hours if needed",
+  "exercise_considerations": "PRE-EXERCISE: Light activity within 1-2 hours is fine; avoid intense exercise right after the rice peak. POST-EXERCISE: Good recovery meal. INSULIN ADJUSTMENTS: Reduce total insulin by 20-25% if recent exercise",
+  "absorption_time_hours": 3.5,
+  "absorption_time_reasoning": "Starting from Loop's 3-hour default. FPU IMPACT: 6.6 FPUs (High), but fat is only 6.9g and the FPUs come from lean protein, so add +0.5 hours instead of +1. FIBER EFFECT: 3.3g fiber - no meaningful impact. MEAL SIZE: Medium (542 kcal) - no impact. RECOMMENDED: 3.5 hours — a modest increase from the default for the protein load.",
+  "meal_size_impact": "MEAL SIZE: Medium (542 kcal). GASTRIC EMPTYING: Typical emptying; protein slows it slightly. DOSING MODIFICATIONS: None beyond the extended portion above.",
+  "individualization_factors": "PATIENT FACTORS: Adjust if ill or if insulin sensitivity is currently altered. TECHNOLOGY: Pump users can use a dual-wave bolus; MDI users may split the dose. PERSONAL PATTERNS: Compare the 3-hour post-meal glucose with this estimate to refine future meals.",
+  "safety_alerts": "High GI rice may cause an early BG spike - monitor at 1 hour. Protein may extend the glucose response beyond 3 hours.",
+  "visual_assessment_details": "Chicken has golden-brown color with dark grill marks and a dry surface; rice is white with separated grains; broccoli is uniformly bright green with no browning.",
+  "overall_description": "A 26 cm white plate. The chicken slices are fanned on the left third, the rice is mounded on the right, and the broccoli florets sit along the bottom edge. The textures are firm and grilled for the chicken, soft and fluffy for the rice, and tender-crisp for the broccoli. A stainless steel fork lies at the side on a plain wooden table.",
+  "portion_assessment_method": "I used the 26 cm plate and the 18 cm fork as scale references. The plate diameter follows from the fork-to-plate ratio in the photo. The chicken slices cover about 1/3 of the plate at roughly 2 cm thick, which I estimate at 170 g. The rice mound is about 10 cm wide and 3 cm high, roughly 180 g cooked. The broccoli is eight 3 cm florets, about 80 g. I divided each weight by its USDA serving size to get the multipliers. Rice height is the least certain factor, so confidence is high but not maximal."
 }
+"""
 
-EXAMPLE (HIGH GLYCEMIC INDEX):
+/// Worked menu example; omitted for food-photo calls (`includeMenuExample: false`).
+private let advancedMenuExample = """
+EXAMPLE (MENU ITEM, HIGH GLYCEMIC INDEX):
 If menu shows "Teriyaki Chicken Bowl with White Rice", respond:
 {
   "image_type": "menu_item",
@@ -371,7 +367,7 @@ If menu shows "Teriyaki Chicken Bowl with White Rice", respond:
     {
       "name": "Teriyaki Chicken with White Rice",
       "portion_estimate": "CANNOT DETERMINE - menu text only, no actual food visible",
-      "usda_serving_size": "3 oz chicken breast + 1/2 cup cooked white rice",
+      "usda_serving_size": "85 g chicken breast + 120 ml cooked white rice",
       "serving_multiplier": 1.0,
       "preparation_method": "teriyaki glazed chicken with steamed white rice as described on menu",
       "visual_cues": "NONE - menu text analysis only",
@@ -383,14 +379,12 @@ If menu shows "Teriyaki Chicken Bowl with White Rice", respond:
       "assessment_notes": "ESTIMATE ONLY - Based on USDA standard serving size. Cannot assess actual portions without seeing prepared food on plate."
     }
   ],
-  "total_carbohydrates": 35.0,
-  "total_calories": 320,
-  "total_fat": 6.0,
-  "total_fiber": 1.5,
-  "total_protein": 28.0,
+  "total_food_portions": 1,
+  "total_usda_servings": 1.0,
   "confidence": 0.7,
+  "confidence_level": "medium",
   "fat_protein_units": "FPUs = (6g fat + 28g protein) ÷ 10 = 3.4 FPUs. Classification: Medium FPU meal",
-  "net_carbs_adjustment": "Net carbs = 35g total carbs - (1.5g fiber × 0.5) = 34.3g effective carbs for insulin dosing",
+  "net_carbs_adjustment": "Net carbs = 35g total carbs - 0.9g insoluble fiber - (0.5 × 0.6g soluble fiber) = 33.8g effective carbs for insulin dosing",
   "diabetes_considerations": "Based on menu analysis: HIGH GLYCEMIC INDEX meal due to white rice (GI ~73). The 35g carbs will cause rapid blood sugar spike within 15-30 minutes. However, protein (28g) and moderate fat (6g) provide significant moderation - mixed meal effect reduces overall glycemic impact compared to eating rice alone. For insulin dosing: Consider pre-meal rapid-acting insulin 10-15 minutes before eating (shorter timing due to protein/fat). Monitor for peak blood sugar at 45-75 minutes post-meal (delayed peak due to mixed meal). Teriyaki sauce adds sugars but protein helps buffer the response.",
   "insulin_timing_recommendations": "MEAL TYPE: Complex carbs with moderate protein. PRE-MEAL INSULIN TIMING: 10-15 minutes before eating. BOLUS STRATEGY: 70% now, 30% extended over 2-3 hours. MONITORING: Check BG at 1 hour and 3 hours post-meal",
   "fpu_dosing_guidance": "FPU LEVEL: Medium (3.4 FPUs). ADDITIONAL INSULIN: Consider 10-15% extra insulin over 2-3 hours for protein. EXTENDED BOLUS: Use dual wave 70%/30% over 2-3 hours. MDI USERS: Main bolus now, small follow-up at 2 hours if needed",
@@ -1012,7 +1006,7 @@ class ConfigurableAIService: ObservableObject {
         // Location context goes BEFORE the base prompt so the AI reads venue
         // info first — keeps title/📍-prefix rules active even if the AI later
         // commits to a specific image_type template.
-        var prompt = FoodFinder_LocationService.shared.locationContextForPrompt() + getAnalysisPrompt()
+        var prompt = FoodFinder_LocationService.shared.locationContextForPrompt() + getAnalysisPrompt(includeMenuExample: false)
         if FoodFinder_FeatureFlags.carbTrackingEnabled,
            let snap = FoodFinder_CarbTrackingService.shared.snapshot {
             prompt += "\n\n[User Context: Today so far \(Int(snap.todayCarbs))g from \(snap.todayMealCount) meals"
