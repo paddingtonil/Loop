@@ -686,7 +686,7 @@ final class AIServiceManager {
             numericConfidence: json["confidence"] as? Double,
             totalFoodPortions: totalPortions,
             totalUsdaServings: totalServings,
-            totalCarbohydrates: json["total_carbohydrates"] as? Double ?? itemCarbs,
+            totalCarbohydrates: itemCarbs > 0 ? itemCarbs : (json["total_carbohydrates"] as? Double ?? 0),
             totalProtein: itemProtein > 0 ? itemProtein : (json["total_protein"] as? Double),
             totalFat: itemFat > 0 ? itemFat : (json["total_fat"] as? Double),
             totalFiber: itemFiber > 0 ? itemFiber : (json["total_fiber"] as? Double),
