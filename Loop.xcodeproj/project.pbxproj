@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B01B05A0A1B2C3D4E5F60003 /* BolusPro in Frameworks */ = {isa = PBXBuildFile; productRef = B01B05A0A1B2C3D4E5F60002 /* BolusPro */; };
+		B01B05A0A1B2C3D4E5F60013 /* FoodFinder in Frameworks */ = {isa = PBXBuildFile; productRef = B01B05A0A1B2C3D4E5F60012 /* FoodFinder */; };
 		1419606428D9550400BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
 		1419606928D9554E00BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
 		1419606A28D955BC00BA86E0 /* MockKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C101947127DD473C004E7EB8 /* MockKitUI.framework */; };
@@ -1454,6 +1455,7 @@
 				C1735B1E2A0809830082BB8A /* ZIPFoundation in Frameworks */,
 				C19C8BCE28651F520056D5E4 /* LoopKitUI.framework in Frameworks */,
 				B01B05A0A1B2C3D4E5F60003 /* BolusPro in Frameworks */,
+				B01B05A0A1B2C3D4E5F60013 /* FoodFinder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2747,6 +2749,7 @@
 				C1D6EE9F2A06C7270047DE5C /* MKRingProgressView */,
 				C1735B1D2A0809830082BB8A /* ZIPFoundation */,
 				B01B05A0A1B2C3D4E5F60002 /* BolusPro */,
+				B01B05A0A1B2C3D4E5F60012 /* FoodFinder */,
 			);
 			productName = Loop;
 			productReference = 43776F8C1B8022E90074EA36 /* Loop.app */;
@@ -3051,6 +3054,7 @@
 				C1D6EE9E2A06C7270047DE5C /* XCRemoteSwiftPackageReference "MKRingProgressView" */,
 				C1735B1C2A0809830082BB8A /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				B01B05A0A1B2C3D4E5F60001 /* XCLocalSwiftPackageReference "../FoodFinder/BolusPro" */,
+				B01B05A0A1B2C3D4E5F60011 /* XCLocalSwiftPackageReference "../FoodFinder/FoodFinder" */,
 			);
 			productRefGroup = 43776F8D1B8022E90074EA36 /* Products */;
 			projectDirPath = "";
@@ -4430,6 +4434,7 @@
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = Loop/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Loop-Dev";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4459,6 +4464,7 @@
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = Loop/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Loop-Dev";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4485,6 +4491,7 @@
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Loop-Dev";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4513,6 +4520,7 @@
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Loop-Dev";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4542,6 +4550,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Loop-Dev";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4567,6 +4576,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Loop-Dev";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4737,6 +4747,7 @@
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = "Loop Status Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Loop-Dev";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4763,6 +4774,7 @@
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = "Loop Status Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Loop-Dev";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4993,6 +5005,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../FoodFinder/BolusPro;
 		};
+		B01B05A0A1B2C3D4E5F60011 /* XCLocalSwiftPackageReference "../FoodFinder/FoodFinder" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../FoodFinder/FoodFinder;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -5027,6 +5043,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B01B05A0A1B2C3D4E5F60001 /* XCLocalSwiftPackageReference "../FoodFinder/BolusPro" */;
 			productName = BolusPro;
+		};
+		B01B05A0A1B2C3D4E5F60012 /* FoodFinder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B01B05A0A1B2C3D4E5F60011 /* XCLocalSwiftPackageReference "../FoodFinder/FoodFinder" */;
+			productName = FoodFinder;
 		};
 		C11B9D5A286778A800500CF8 /* SwiftCharts */ = {
 			isa = XCSwiftPackageProductDependency;
