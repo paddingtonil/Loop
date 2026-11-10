@@ -10,6 +10,7 @@ import SwiftUI
 import LoopKit
 import HealthKit
 import Combine
+import BolusPro
 
 protocol CarbEntryViewModelDelegate: AnyObject, BolusEntryViewModelDelegate {
     var analyticsServicesManager: AnalyticsServicesManager { get }
@@ -118,6 +119,34 @@ final class CarbEntryViewModel: ObservableObject {
     
     var originalCarbEntry: StoredCarbEntry? = nil
     private var favoriteFood: FavoriteFood? = nil
+
+    // MARK: - BolusPro
+    /// Opt-in, per-meal fat/protein input. Off by default.
+    let bolusPro = BolusProEntryState()
+
+    /// Delayed carbohydrate entry for the fat/protein of this meal. Never written to Apple Health.
+    private func makeBolusProFPUEntry() -> NewCarbEntry? {
+        guard originalCarbEntry == nil, let result = bolusPro.result else { return nil }
+        return NewCarbEntry(
+            date: date,
+            quantity: HKQuantity(unit: .gram(), doubleValue: result.carbEquivalentGrams.rounded()),
+            startDate: time.addingTimeInterval(result.startDelay),
+            foodType: BolusProFPU.entryMarker,
+            absorptionTime: min(result.absorptionTime, maxAbsorptionTime),
+            savesToHealthKit: false
+        )
+    }
+
+    private func makeBolusProMealSnapshot() -> BolusProMealSnapshot? {
+        guard originalCarbEntry == nil, bolusPro.hasNutrients, let carbsQuantity else { return nil }
+        return BolusProMealSnapshot(
+            macros: bolusPro.macros,
+            fiberGrams: bolusPro.fiberGrams,
+            carbsGrams: HKQuantity(unit: preferredCarbUnit, doubleValue: carbsQuantity).doubleValue(for: .gram()),
+            date: time,
+            foodType: usesCustomFoodType ? foodType : selectedDefaultAbsorptionTimeEmoji
+        )
+    }
     
     private var updatedCarbEntry: NewCarbEntry? {
         if let quantity = carbsQuantity, quantity != 0 {
@@ -194,6 +223,8 @@ final class CarbEntryViewModel: ObservableObject {
         }
         
         viewModel.analyticsServicesManager = delegate?.analyticsServicesManager
+        viewModel.bolusProSecondaryEntry = makeBolusProFPUEntry()
+        viewModel.bolusProMeal = makeBolusProMealSnapshot()
         bolusViewModel = viewModel
         
         delegate?.analyticsServicesManager.didDisplayBolusScreen()

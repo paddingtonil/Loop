@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B01B05A0A1B2C3D4E5F60003 /* BolusPro in Frameworks */ = {isa = PBXBuildFile; productRef = B01B05A0A1B2C3D4E5F60002 /* BolusPro */; };
 		1419606428D9550400BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
 		1419606928D9554E00BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
 		1419606A28D955BC00BA86E0 /* MockKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C101947127DD473C004E7EB8 /* MockKitUI.framework */; };
@@ -1452,6 +1453,7 @@
 				C19C8BC328651EAE0056D5E4 /* LoopTestingKit.framework in Frameworks */,
 				C1735B1E2A0809830082BB8A /* ZIPFoundation in Frameworks */,
 				C19C8BCE28651F520056D5E4 /* LoopKitUI.framework in Frameworks */,
+				B01B05A0A1B2C3D4E5F60003 /* BolusPro in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2744,6 +2746,7 @@
 				C1F00C5F285A802A006302C5 /* SwiftCharts */,
 				C1D6EE9F2A06C7270047DE5C /* MKRingProgressView */,
 				C1735B1D2A0809830082BB8A /* ZIPFoundation */,
+				B01B05A0A1B2C3D4E5F60002 /* BolusPro */,
 			);
 			productName = Loop;
 			productReference = 43776F8C1B8022E90074EA36 /* Loop.app */;
@@ -3047,6 +3050,7 @@
 				C1CCF10B2858F4F70035389C /* XCRemoteSwiftPackageReference "SwiftCharts" */,
 				C1D6EE9E2A06C7270047DE5C /* XCRemoteSwiftPackageReference "MKRingProgressView" */,
 				C1735B1C2A0809830082BB8A /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				B01B05A0A1B2C3D4E5F60001 /* XCLocalSwiftPackageReference "../FoodFinder/BolusPro" */,
 			);
 			productRefGroup = 43776F8D1B8022E90074EA36 /* Products */;
 			projectDirPath = "";
@@ -4984,6 +4988,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		B01B05A0A1B2C3D4E5F60001 /* XCLocalSwiftPackageReference "../FoodFinder/BolusPro" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../FoodFinder/BolusPro;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		C1735B1C2A0809830082BB8A /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -5012,6 +5023,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B01B05A0A1B2C3D4E5F60002 /* BolusPro */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B01B05A0A1B2C3D4E5F60001 /* XCLocalSwiftPackageReference "../FoodFinder/BolusPro" */;
+			productName = BolusPro;
+		};
 		C11B9D5A286778A800500CF8 /* SwiftCharts */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C1CCF10B2858F4F70035389C /* XCRemoteSwiftPackageReference "SwiftCharts" */;

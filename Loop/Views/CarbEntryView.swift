@@ -10,6 +10,7 @@ import SwiftUI
 import LoopKit
 import LoopKitUI
 import HealthKit
+import BolusPro
 
 struct CarbEntryView: View, HorizontalSizeClassOverride {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
@@ -116,6 +117,13 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
                 .padding(.bottom, 2)
+
+            if viewModel.originalCarbEntry == nil {
+                CardSectionDivider()
+
+                BolusProSection(state: viewModel.bolusPro, onEnabled: { BolusProHealthWriter.requestAuthorization() })
+                    .padding(.bottom, 2)
+            }
         }
         .padding(.vertical, 12)
         .padding(.horizontal)

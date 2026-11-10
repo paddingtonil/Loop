@@ -17,6 +17,7 @@ import LoopKitUI
 import LoopUI
 import SwiftUI
 import SwiftCharts
+import BolusPro
 
 protocol BolusEntryViewModelDelegate: AnyObject {
     
@@ -111,6 +112,11 @@ final class BolusEntryViewModel: ObservableObject {
 
     let originalCarbEntry: StoredCarbEntry?
     let potentialCarbEntry: NewCarbEntry?
+
+    // BolusPro: delayed fat/protein carb entry and the nutrients to write to Apple Health.
+    // Both are saved only after the primary carb entry was saved by the user's confirmation.
+    var bolusProSecondaryEntry: NewCarbEntry?
+    var bolusProMeal: BolusProMealSnapshot?
     let selectedCarbAbsorptionTimeEmoji: String?
 
     @Published var recommendedBolus: HKQuantity?
@@ -408,6 +414,14 @@ final class BolusEntryViewModel: ObservableObject {
             if let storedCarbEntry = await saveCarbEntry(carbEntry, replacingEntry: originalCarbEntry) {
                 self.dosingDecision.carbEntry = storedCarbEntry
                 self.analyticsServicesManager?.didAddCarbs(source: "Phone")
+
+                if let fpuEntry = bolusProSecondaryEntry,
+                   await saveCarbEntry(fpuEntry, replacingEntry: nil) == nil {
+                    log.error("BolusPro: failed to save the fat/protein carb entry")
+                }
+                if let meal = bolusProMeal {
+                    BolusProHealthWriter.save(meal)
+                }
             } else {
                 self.presentAlert(.carbEntryPersistenceFailure)
                 return false
