@@ -695,6 +695,16 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual("234 g 😀", bolusEntryViewModel.carbEntryAmountAndEmojiString)
     }
     
+    /// The example start time as the view model shows it: short time style in GMT, in the device's locale.
+    /// A literal "12:00 PM" only holds on a 12-hour locale (en_US), so the expectation follows the locale.
+    private var expectedExampleStartTimeString: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        formatter.timeZone = TimeZone(abbreviation: "GMT")!
+        return formatter.string(from: Self.exampleStartDate)
+    }
+
     func testCarbEntryDateAndAbsorptionTimeStringNil() throws {
         XCTAssertNil(bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
     }
@@ -702,14 +712,14 @@ class BolusEntryViewModelTests: XCTestCase {
     func testCarbEntryDateAndAbsorptionTimeString() async throws {
         await setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
 
-        XCTAssertEqual("12:00 PM + 0m", bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
+        XCTAssertEqual("\(expectedExampleStartTimeString) + 0m", bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
     }
     
     func testCarbEntryDateAndAbsorptionTimeString2() async throws {
         let potentialCarbEntry = NewCarbEntry(quantity: BolusEntryViewModelTests.exampleCarbQuantity, startDate: Self.exampleStartDate, foodType: nil, absorptionTime: nil)
         await setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: potentialCarbEntry)
 
-        XCTAssertEqual("12:00 PM", bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
+        XCTAssertEqual(expectedExampleStartTimeString, bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
     }
 
     func testIsManualGlucosePromptVisible() throws {
