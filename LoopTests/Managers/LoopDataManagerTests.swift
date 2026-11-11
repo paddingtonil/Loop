@@ -191,6 +191,21 @@ class LoopDataManagerTests: XCTestCase {
         )
     }
     
+    override func setUpWithError() throws {
+        // LoopDataManager reads these experiment flags from UserDefaults.standard, which on a simulator
+        // (or a device) that has run Loop persists the user's own settings. Pin them to the defaults the
+        // fixtures were recorded with, and put the user's values back afterwards.
+        let defaults = UserDefaults.standard
+        let integralRetrospectiveCorrection = defaults.integralRetrospectiveCorrectionEnabled
+        let glucoseBasedApplicationFactor = defaults.glucoseBasedApplicationFactorEnabled
+        addTeardownBlock {
+            defaults.integralRetrospectiveCorrectionEnabled = integralRetrospectiveCorrection
+            defaults.glucoseBasedApplicationFactorEnabled = glucoseBasedApplicationFactor
+        }
+        defaults.integralRetrospectiveCorrectionEnabled = false
+        defaults.glucoseBasedApplicationFactorEnabled = false
+    }
+
     override func tearDownWithError() throws {
         loopDataManager = nil
     }
