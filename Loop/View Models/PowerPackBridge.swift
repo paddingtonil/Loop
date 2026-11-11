@@ -35,7 +35,7 @@ enum PowerPackBridge {
     /// Does nothing when editing an existing entry.
     @MainActor
     static func apply(_ result: FoodAnalysisResult, to viewModel: CarbEntryViewModel) {
-        guard viewModel.originalCarbEntry == nil else { return }
+        guard PowerPackFlags.isActive(.foodFinder), viewModel.originalCarbEntry == nil else { return }
 
         let prefill = MealPrefill(
             result,

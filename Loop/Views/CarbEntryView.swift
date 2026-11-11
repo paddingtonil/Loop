@@ -118,7 +118,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
                 .padding(.bottom, 2)
 
-            if viewModel.originalCarbEntry == nil {
+            if viewModel.originalCarbEntry == nil && PowerPackFlags.isActive(.bolusPro) {
                 CardSectionDivider()
 
                 BolusProSection(state: viewModel.bolusPro)

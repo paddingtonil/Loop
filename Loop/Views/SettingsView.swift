@@ -286,6 +286,8 @@ extension SettingsView {
             if FeatureFlags.allowAlgorithmExperiments {
                 algorithmExperimentsSection
             }
+
+            powerPackSection
         }
     }
 
