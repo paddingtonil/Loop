@@ -87,6 +87,12 @@ struct PowerPackSettingsView: View {
             Section(header: Text(NSLocalizedString("FoodFinder options", comment: "PowerPack settings section"))) {
                 toggle(.foodFinderReferenceCheck, $referenceCheck)
                 toggle(.foodFinderRulebook, $rulebook)
+                if foodFinder && rulebook {
+                    NavigationLink(NSLocalizedString("Personal rulebook", comment: "")) { RulebookView() }
+                }
+            }
+            if foodFinder && referenceCheck {
+                USDAKeySection()
             }
         }
         .navigationTitle(NSLocalizedString("PowerPack", comment: "PowerPack settings title"))

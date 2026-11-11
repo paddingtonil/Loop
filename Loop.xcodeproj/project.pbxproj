@@ -24,6 +24,7 @@
 		149A28BB2A853E5100052EDF /* CarbEntryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149A28BA2A853E5100052EDF /* CarbEntryViewModel.swift */; };
 		B01B05A0A1B2C3D4E5F60022 /* PowerPackBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01B05A0A1B2C3D4E5F60021 /* PowerPackBridge.swift */; };
 		B01B05A0A1B2C3D4E5F60032 /* PowerPackSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01B05A0A1B2C3D4E5F60031 /* PowerPackSettings.swift */; };
+		B01B05A0A1B2C3D4E5F60042 /* PowerPackScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01B05A0A1B2C3D4E5F60041 /* PowerPackScreens.swift */; };
 		149A28BD2A853E6C00052EDF /* CarbEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149A28BC2A853E6C00052EDF /* CarbEntryView.swift */; };
 		149A28E42A8A63A700052EDF /* FavoriteFoodDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149A28E32A8A63A700052EDF /* FavoriteFoodDetailView.swift */; };
 		14B1735E28AED9EC006CCD7C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14B1735D28AED9EC006CCD7C /* WidgetKit.framework */; };
@@ -774,6 +775,7 @@
 		149A28BA2A853E5100052EDF /* CarbEntryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbEntryViewModel.swift; sourceTree = "<group>"; };
 		B01B05A0A1B2C3D4E5F60021 /* PowerPackBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPackBridge.swift; sourceTree = "<group>"; };
 		B01B05A0A1B2C3D4E5F60031 /* PowerPackSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPackSettings.swift; sourceTree = "<group>"; };
+		B01B05A0A1B2C3D4E5F60041 /* PowerPackScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerPackScreens.swift; sourceTree = "<group>"; };
 		149A28BC2A853E6C00052EDF /* CarbEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbEntryView.swift; sourceTree = "<group>"; };
 		149A28E32A8A63A700052EDF /* FavoriteFoodDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FavoriteFoodDetailView.swift; sourceTree = "<group>"; };
 		14B1735C28AED9EC006CCD7C /* Loop Widget Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Loop Widget Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2357,6 +2359,7 @@
 				149A28BA2A853E5100052EDF /* CarbEntryViewModel.swift */,
 				B01B05A0A1B2C3D4E5F60021 /* PowerPackBridge.swift */,
 				B01B05A0A1B2C3D4E5F60031 /* PowerPackSettings.swift */,
+				B01B05A0A1B2C3D4E5F60041 /* PowerPackScreens.swift */,
 				A9A056B424B94123007CF06D /* CriticalEventLogExportViewModel.swift */,
 				14D906F32A846510006EB79A /* FavoriteFoodsViewModel.swift */,
 				C11BD0542523CFED00236B08 /* SimpleBolusViewModel.swift */,
@@ -3433,6 +3436,7 @@
 				149A28BB2A853E5100052EDF /* CarbEntryViewModel.swift in Sources */,
 				B01B05A0A1B2C3D4E5F60022 /* PowerPackBridge.swift in Sources */,
 				B01B05A0A1B2C3D4E5F60032 /* PowerPackSettings.swift in Sources */,
+				B01B05A0A1B2C3D4E5F60042 /* PowerPackScreens.swift in Sources */,
 				C19008FE25225D3900721625 /* SimpleBolusCalculator.swift in Sources */,
 				C1F8B243223E73FD00DD66CF /* BolusProgressTableViewCell.swift in Sources */,
 				89D6953E23B6DF8A002B3066 /* PotentialCarbEntryTableViewCell.swift in Sources */,
