@@ -121,7 +121,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             if viewModel.originalCarbEntry == nil {
                 CardSectionDivider()
 
-                BolusProSection(state: viewModel.bolusPro, onEnabled: { BolusProHealthWriter.requestAuthorization() })
+                BolusProSection(state: viewModel.bolusPro)
                     .padding(.bottom, 2)
             }
         }

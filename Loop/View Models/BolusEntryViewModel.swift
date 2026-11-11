@@ -113,10 +113,10 @@ final class BolusEntryViewModel: ObservableObject {
     let originalCarbEntry: StoredCarbEntry?
     let potentialCarbEntry: NewCarbEntry?
 
-    // BolusPro: delayed fat/protein carb entry and the nutrients to write to Apple Health.
-    // Both are saved only after the primary carb entry was saved by the user's confirmation.
+    // BolusPro: delayed fat/protein carb entry. FoodFinder: the analysed meal whose calories and nutrients go to
+    // Apple Health. Both are saved only after the primary carb entry was saved by the user's confirmation.
     var bolusProSecondaryEntry: NewCarbEntry?
-    var bolusProMeal: BolusProMealSnapshot?
+    var foodFinderMeal: PowerPackBridge.FoodFinderMeal?
     let selectedCarbAbsorptionTimeEmoji: String?
 
     @Published var recommendedBolus: HKQuantity?
@@ -415,12 +415,16 @@ final class BolusEntryViewModel: ObservableObject {
                 self.dosingDecision.carbEntry = storedCarbEntry
                 self.analyticsServicesManager?.didAddCarbs(source: "Phone")
 
-                if let fpuEntry = bolusProSecondaryEntry,
-                   await saveCarbEntry(fpuEntry, replacingEntry: nil) == nil {
-                    log.error("BolusPro: failed to save the fat/protein carb entry")
+                if let fpuEntry = bolusProSecondaryEntry {
+                    if let storedFPUEntry = await saveCarbEntry(fpuEntry, replacingEntry: nil) {
+                        // Deleting the meal later deletes this entry too.
+                        PowerPackBridge.linkFPUEntry(primary: storedCarbEntry, fpu: storedFPUEntry)
+                    } else {
+                        log.error("BolusPro: failed to save the fat/protein carb entry")
+                    }
                 }
-                if let meal = bolusProMeal {
-                    BolusProHealthWriter.save(meal)
+                if let meal = foodFinderMeal {
+                    PowerPackBridge.mealSaved(meal, carbEntry: storedCarbEntry)
                 }
             } else {
                 self.presentAlert(.carbEntryPersistenceFailure)

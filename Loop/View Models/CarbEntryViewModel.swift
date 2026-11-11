@@ -137,16 +137,9 @@ final class CarbEntryViewModel: ObservableObject {
         )
     }
 
-    private func makeBolusProMealSnapshot() -> BolusProMealSnapshot? {
-        guard originalCarbEntry == nil, bolusPro.hasNutrients, let carbsQuantity else { return nil }
-        return BolusProMealSnapshot(
-            macros: bolusPro.macros,
-            fiberGrams: bolusPro.fiberGrams,
-            carbsGrams: HKQuantity(unit: preferredCarbUnit, doubleValue: carbsQuantity).doubleValue(for: .gram()),
-            date: time,
-            foodType: usesCustomFoodType ? foodType : selectedDefaultAbsorptionTimeEmoji
-        )
-    }
+    /// Set by PowerPackBridge when the screen was pre-filled from a FoodFinder analysis. Written to Apple Health
+    /// only after the user confirms (see PowerPackBridge.mealSaved).
+    var foodFinderMeal: PowerPackBridge.FoodFinderMeal?
     
     private var updatedCarbEntry: NewCarbEntry? {
         if let quantity = carbsQuantity, quantity != 0 {
@@ -224,7 +217,9 @@ final class CarbEntryViewModel: ObservableObject {
         
         viewModel.analyticsServicesManager = delegate?.analyticsServicesManager
         viewModel.bolusProSecondaryEntry = makeBolusProFPUEntry()
-        viewModel.bolusProMeal = makeBolusProMealSnapshot()
+        viewModel.foodFinderMeal = originalCarbEntry == nil
+            ? PowerPackBridge.confirmedMeal(foodFinderMeal, bolusPro: bolusPro)
+            : nil
         bolusViewModel = viewModel
         
         delegate?.analyticsServicesManager.didDisplayBolusScreen()

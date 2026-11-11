@@ -708,7 +708,30 @@ extension LoopDataManager {
 
     func deleteCarbEntry(_ oldEntry: StoredCarbEntry, completion: @escaping (_ result: CarbStoreResult<Bool>) -> Void) {
         carbStore.deleteCarbEntry(oldEntry) { result in
+            if case .success = result {
+                // Removes the Health samples FoodFinder wrote for this meal, and its delayed fat/protein entry.
+                PowerPackBridge.carbEntryDeleted(oldEntry)
+                self.deleteLinkedFPUEntry(of: oldEntry)
+            }
             completion(result)
+        }
+    }
+
+    /// The delayed fat/protein (🥩) entry is part of its meal: when the meal is deleted, so is the entry.
+    private func deleteLinkedFPUEntry(of mealEntry: StoredCarbEntry) {
+        guard let fpuSyncIdentifier = PowerPackBridge.linkedFPUSyncIdentifier(for: mealEntry) else { return }
+        // BolusPro starts the entry one hour after the meal; the window is generous.
+        carbStore.getCarbStatus(start: mealEntry.startDate, end: mealEntry.startDate.addingTimeInterval(.hours(12)), effectVelocities: nil) { [weak self] result in
+            // On a read error the link is kept so nothing is lost silently.
+            guard case .success(let statuses) = result else { return }
+            guard let fpuEntry = statuses.map({ $0.entry }).first(where: { $0.syncIdentifier == fpuSyncIdentifier }) else {
+                // Already gone: nothing left to delete, so the link is stale.
+                PowerPackBridge.forgetFPULink(for: mealEntry)
+                return
+            }
+            self?.carbStore.deleteCarbEntry(fpuEntry) { _ in
+                PowerPackBridge.forgetFPULink(for: mealEntry)
+            }
         }
     }
 
