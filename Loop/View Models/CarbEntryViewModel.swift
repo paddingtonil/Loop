@@ -126,13 +126,14 @@ final class CarbEntryViewModel: ObservableObject {
 
     /// Delayed carbohydrate entry for the fat/protein of this meal. Never written to Apple Health.
     private func makeBolusProFPUEntry() -> NewCarbEntry? {
-        guard originalCarbEntry == nil, let result = bolusPro.result else { return nil }
+        guard originalCarbEntry == nil,
+              let plan = bolusPro.entryPlan(mealStart: time, maxAbsorptionTime: maxAbsorptionTime) else { return nil }
         return NewCarbEntry(
             date: date,
-            quantity: HKQuantity(unit: .gram(), doubleValue: result.carbEquivalentGrams.rounded()),
-            startDate: time.addingTimeInterval(result.startDelay),
-            foodType: BolusProFPU.entryMarker,
-            absorptionTime: min(result.absorptionTime, maxAbsorptionTime),
+            quantity: HKQuantity(unit: .gram(), doubleValue: plan.grams),
+            startDate: plan.startDate,
+            foodType: plan.foodType,
+            absorptionTime: plan.absorptionTime,
             savesToHealthKit: false
         )
     }
