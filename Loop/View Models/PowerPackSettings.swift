@@ -15,6 +15,7 @@ enum PowerPackFeature: String, CaseIterable, Identifiable {
     case foodFinder
     case foodFinderReferenceCheck
     case foodFinderRulebook
+    case foodFinderEscalation
 
     var id: String { rawValue }
 
@@ -25,7 +26,7 @@ enum PowerPackFeature: String, CaseIterable, Identifiable {
     var requires: PowerPackFeature? {
         switch self {
         case .bolusPro, .foodFinder: return nil
-        case .foodFinderReferenceCheck, .foodFinderRulebook: return .foodFinder
+        case .foodFinderReferenceCheck, .foodFinderRulebook, .foodFinderEscalation: return .foodFinder
         }
     }
 
@@ -39,6 +40,8 @@ enum PowerPackFeature: String, CaseIterable, Identifiable {
             return NSLocalizedString("FoodFinder: reference check", comment: "PowerPack feature title")
         case .foodFinderRulebook:
             return NSLocalizedString("FoodFinder: personal rulebook", comment: "PowerPack feature title")
+        case .foodFinderEscalation:
+            return NSLocalizedString("FoodFinder: stronger model when unsure", comment: "PowerPack feature title")
         }
     }
 
@@ -52,6 +55,8 @@ enum PowerPackFeature: String, CaseIterable, Identifiable {
             return NSLocalizedString("Compares the analysis with Open Food Facts and USDA data. Only food names leave the device. Values change only if you approve.", comment: "PowerPack feature summary")
         case .foodFinderRulebook:
             return NSLocalizedString("Applies your own portion and naming rules to the analysis and suggests new rules from your corrections.", comment: "PowerPack feature summary")
+        case .foodFinderEscalation:
+            return NSLocalizedString("When the analysis looks unreliable, the same request is repeated on a stronger model of the same provider. Each repeat is another call charged to your key.", comment: "PowerPack feature summary")
         }
     }
 }
@@ -77,6 +82,7 @@ struct PowerPackSettingsView: View {
     @AppStorage(PowerPackFeature.foodFinder.defaultsKey) private var foodFinder = false
     @AppStorage(PowerPackFeature.foodFinderReferenceCheck.defaultsKey) private var referenceCheck = false
     @AppStorage(PowerPackFeature.foodFinderRulebook.defaultsKey) private var rulebook = false
+    @AppStorage(PowerPackFeature.foodFinderEscalation.defaultsKey) private var escalation = false
 
     var body: some View {
         List {
@@ -87,6 +93,7 @@ struct PowerPackSettingsView: View {
             Section(header: Text(NSLocalizedString("FoodFinder options", comment: "PowerPack settings section"))) {
                 toggle(.foodFinderReferenceCheck, $referenceCheck)
                 toggle(.foodFinderRulebook, $rulebook)
+                toggle(.foodFinderEscalation, $escalation)
                 if foodFinder && rulebook {
                     NavigationLink(NSLocalizedString("Personal rulebook", comment: "")) { RulebookView() }
                 }

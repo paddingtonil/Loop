@@ -277,6 +277,40 @@ enum AIProviderSettings {
 
     enum SetupError: Error, Equatable {
         case noModel(AIProviderID)
+        /// Escalation is on but the chosen provider has no model ladder (OpenAI).
+        case noLadder(AIProviderID)
+    }
+
+    static let fallbackKey = "org.powerpack.foodfinder.fallback"
+
+    /// With escalation the models come from the provider's ladder, so only providers with a ladder can be chosen.
+    static func choices(escalation: Bool) -> [AIProviderID] {
+        escalation ? choices.filter { ModelLadder.ladder(for: $0) != nil } : choices
+    }
+
+    /// The other provider tried once when the first one is unavailable. nil = never send the meal elsewhere.
+    static func fallback(defaults: UserDefaults = .standard) -> AIProviderID? {
+        guard let raw = defaults.string(forKey: fallbackKey), let id = AIProviderID(rawValue: raw),
+              id != selected(defaults: defaults), ModelLadder.ladder(for: id) != nil else { return nil }
+        return id
+    }
+
+    /// One analysis. With escalation on: the first model of the chosen provider's ladder, then stronger ones of
+    /// the same provider while the answer looks unreliable; the fallback provider only if the first is unavailable.
+    /// With escalation off: the single model the user chose (unchanged behaviour).
+    static func analyze(
+        _ request: FoodFinderRequest, keys: APIKeyStore, defaults: UserDefaults = .standard
+    ) async throws -> FoodAnalysisResult {
+        guard PowerPackFlags.isActive(.foodFinderEscalation, defaults: defaults) else {
+            return try await FoodFinderService(provider: makeProvider(keys: keys, defaults: defaults)).analyze(request)
+        }
+        let id = selected(defaults: defaults)
+        guard let ladder = ModelLadder.ladder(for: id) else { throw SetupError.noLadder(id) }
+        var fallbackTier: EscalationTier?
+        if let other = fallback(defaults: defaults), keys.key(for: other) != nil {
+            fallbackTier = ModelLadder.ladder(for: other)?.tiers(keys: keys).first
+        }
+        return try await EscalatingFoodFinder(ladder: ladder.tiers(keys: keys), fallback: fallbackTier).analyze(request)
     }
 
     static func makeProvider(keys: APIKeyStore, defaults: UserDefaults = .standard) throws -> FoodAnalysisProvider {
@@ -295,7 +329,9 @@ enum AIProviderSettings {
 /// Settings: provider, model and key. Shown in PowerPack settings while FoodFinder is on.
 struct AIProviderSection: View {
     private let keys = KeychainAPIKeyStore()
+    @AppStorage(PowerPackFeature.foodFinderEscalation.defaultsKey) private var escalation = false
     @State private var provider = AIProviderSettings.selected()
+    @State private var fallback: AIProviderID?
     @State private var model = ""
     @State private var entry = ""
     @State private var isSet = false
@@ -307,19 +343,33 @@ struct AIProviderSection: View {
             footer: Text(NSLocalizedString("Your meal photo or text is sent to the provider you choose, with your own key, and nowhere else. The key stays in the Keychain of this device. Provider charges apply to your account.", comment: "PowerPack AI provider footer"))
         ) {
             Picker(NSLocalizedString("Provider", comment: ""), selection: $provider) {
-                ForEach(AIProviderSettings.choices, id: \.self) { Text(AIProviderSettings.title($0)).tag($0) }
+                ForEach(AIProviderSettings.choices(escalation: escalation), id: \.self) { Text(AIProviderSettings.title($0)).tag($0) }
             }
             .onChange(of: provider) { newValue in
                 UserDefaults.standard.set(newValue.rawValue, forKey: AIProviderSettings.providerKey)
                 load()
             }
 
-            TextField(modelPlaceholder, text: $model)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .onChange(of: model) { newValue in
-                    UserDefaults.standard.set(newValue, forKey: AIProviderSettings.modelKey(provider))
+            if escalation {
+                Picker(NSLocalizedString("If unavailable, try", comment: ""), selection: $fallback) {
+                    Text(NSLocalizedString("Nothing", comment: "")).tag(AIProviderID?.none)
+                    ForEach(AIProviderSettings.choices(escalation: true).filter { $0 != provider }, id: \.self) {
+                        Text(AIProviderSettings.title($0)).tag(AIProviderID?.some($0))
+                    }
                 }
+                .onChange(of: fallback) { newValue in
+                    UserDefaults.standard.set(newValue?.rawValue, forKey: AIProviderSettings.fallbackKey)
+                }
+                Text(NSLocalizedString("The models are chosen automatically, weakest first. If the provider cannot be reached, the meal is sent once to the second provider, but only then.", comment: ""))
+                    .font(.footnote).foregroundColor(.secondary)
+            } else {
+                TextField(modelPlaceholder, text: $model)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .onChange(of: model) { newValue in
+                        UserDefaults.standard.set(newValue, forKey: AIProviderSettings.modelKey(provider))
+                    }
+            }
 
             HStack {
                 Text(NSLocalizedString("Key", comment: ""))
@@ -350,6 +400,11 @@ struct AIProviderSection: View {
     }
 
     private func load() {
+        if escalation && !AIProviderSettings.choices(escalation: true).contains(provider) {
+            provider = .anthropic
+            UserDefaults.standard.set(provider.rawValue, forKey: AIProviderSettings.providerKey)
+        }
+        fallback = AIProviderSettings.fallback()
         model = UserDefaults.standard.string(forKey: AIProviderSettings.modelKey(provider)) ?? ""
         isSet = keys.key(for: provider) != nil
         entry = ""
@@ -477,13 +532,12 @@ final class FoodFinderCoordinator: ObservableObject {
         task = Task { [weak self] in
             guard let self else { return }
             do {
-                let provider = try AIProviderSettings.makeProvider(keys: KeychainAPIKeyStore())
                 var request = FoodFinderRequest(
                     jpegImages: edited.imageJPEGData.map { [$0] } ?? [],
                     correction: MealCorrection.edits(from: base.items, to: edited.items)
                 )
                 request.rules = Self.currentRules()
-                let result = try await FoodFinderService(provider: provider).analyze(request)
+                let result = try await AIProviderSettings.analyze(request, keys: KeychainAPIKeyStore())
                 try Task.checkCancellation()
                 self.flow?.stage = .review(result)
                 self.flow?.revision += 1
@@ -504,10 +558,9 @@ final class FoodFinderCoordinator: ObservableObject {
         task = Task { [weak self, weak viewModel] in
             guard let self else { return }
             do {
-                let provider = try AIProviderSettings.makeProvider(keys: KeychainAPIKeyStore())
                 var request = try await makeRequest()
                 request.rules = Self.currentRules()
-                let result = try await FoodFinderService(provider: provider).analyze(request)
+                let result = try await AIProviderSettings.analyze(request, keys: KeychainAPIKeyStore())
                 try Task.checkCancellation()
 
                 let suggestions = await PowerPackBridge.referenceSuggestions(for: result)
@@ -537,6 +590,9 @@ final class FoodFinderCoordinator: ObservableObject {
 
     /// Plain wording for the user. Provider messages are not shown: they can echo request details.
     static func message(for error: Error) -> String {
+        if let setup = error as? AIProviderSettings.SetupError, case .noLadder(let id) = setup {
+            return String(format: NSLocalizedString("%@ has no model ladder for the stronger-model option. Choose another provider in Settings → PowerPack.", comment: ""), AIProviderSettings.title(id))
+        }
         if let setup = error as? AIProviderSettings.SetupError, case .noModel(let id) = setup {
             return String(format: NSLocalizedString("Choose a model for %@ in Settings → PowerPack.", comment: ""), AIProviderSettings.title(id))
         }
