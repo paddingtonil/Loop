@@ -91,6 +91,9 @@ struct PowerPackSettingsView: View {
                     NavigationLink(NSLocalizedString("Personal rulebook", comment: "")) { RulebookView() }
                 }
             }
+            if foodFinder {
+                AIProviderSection()
+            }
             if foodFinder && referenceCheck {
                 USDAKeySection()
             }

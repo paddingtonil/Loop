@@ -22,7 +22,13 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     
     @State private var showHowAbsorptionTimeWorks = false
     @State private var showAddFavoriteFood = false
-    
+    @State private var bolusProRefresh = 0
+
+    private var bolusProCard: BolusProSplitCardModel? {
+        _ = bolusProRefresh   // read so a change in the BolusPro fields re-evaluates the card
+        return viewModel.bolusProCard
+    }
+
     private let isNewEntry: Bool
 
     init(viewModel: CarbEntryViewModel) {
@@ -68,6 +74,11 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             
             ScrollView {
                 warningsCard
+
+                if isNewEntry && PowerPackFlags.isActive(.foodFinder) {
+                    FoodFinderEntrySection(viewModel: viewModel)
+                        .padding(.top, 8)
+                }
 
                 mainCard
                     .padding(.top, 8)
@@ -121,8 +132,10 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             if viewModel.originalCarbEntry == nil && PowerPackFlags.isActive(.bolusPro) {
                 CardSectionDivider()
 
-                BolusProSection(state: viewModel.bolusPro)
+                BolusProSection(state: viewModel.bolusPro, card: bolusProCard)
                     .padding(.bottom, 2)
+                    // The fat and protein fields live in `bolusPro`, which this view does not observe itself.
+                    .onReceive(viewModel.bolusPro.objectWillChange) { _ in bolusProRefresh += 1 }
             }
         }
         .padding(.vertical, 12)

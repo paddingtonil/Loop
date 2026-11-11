@@ -601,85 +601,85 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Kamera bruges til at scanne stregkoder på enheder."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Die Kamera wird verwendet, um Barcodes von Geräten zu scannen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Camera is used to scan barcodes of devices."
+            "value" : "Camera is used to scan barcodes of devices and of packaged food, and to photograph a meal when you choose FoodFinder."
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "La cámara se utiliza para escanear los códigos de barras de los dispositivos."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "La caméra est utilisée pour scanner les codes-barres des appareils."
           }
         },
         "he" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "המצלמה משמשת לסריקת ברקודים של מכשירים."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "La fotocamera è utilizzata per scansionare i codici a barre dei tuoi dispositivi."
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Kamera brukes til å skanne strekkoder på enheter."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Camera wordt gebruikt om barcodes van apparaten te scannen."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Aparat służy do skanowania kodów kreskowych urządzeń."
           }
         },
         "ro" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Camera este folosită pentru a scana codurile de bare ale dispozitivelor."
           }
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Камера используется для сканирования штрих-кодов устройств."
           }
         },
         "sk" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Fotoaparát sa používa na skenovanie čiarových kódov zariadení."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Kamera, cihazların barkodlarını taramak için kullanılır."
           }
         }

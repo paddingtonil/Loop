@@ -124,6 +124,13 @@ final class CarbEntryViewModel: ObservableObject {
     /// Opt-in, per-meal fat/protein input. Off by default.
     let bolusPro = BolusProEntryState()
 
+    /// The recommendation card for the amount and time currently on the screen. Carbs and times only.
+    var bolusProCard: BolusProSplitCardModel? {
+        guard originalCarbEntry == nil else { return nil }
+        let grams = HKQuantity(unit: preferredCarbUnit, doubleValue: carbsQuantity ?? 0).doubleValue(for: .gram())
+        return bolusPro.splitCard(directCarbsGrams: grams, mealStart: time, maxAbsorptionTime: maxAbsorptionTime)
+    }
+
     /// Delayed carbohydrate entry for the fat/protein of this meal. Never written to Apple Health.
     private func makeBolusProFPUEntry() -> NewCarbEntry? {
         guard originalCarbEntry == nil,

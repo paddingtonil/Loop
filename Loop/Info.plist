@@ -62,7 +62,7 @@
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>The app needs to use Bluetooth to send and receive data from your diabetes devices.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera is used to scan barcodes of devices.</string>
+	<string>Camera is used to scan barcodes of devices and of packaged food, and to photograph a meal when you choose FoodFinder.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Face ID is used to authenticate insulin bolus and to save changes to therapy settings.</string>
 	<key>NSHealthShareUsageDescription</key>
