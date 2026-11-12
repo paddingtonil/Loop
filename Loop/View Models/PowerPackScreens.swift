@@ -6,6 +6,7 @@
 //  Nothing here changes a value without the user's tap.
 //
 
+import HealthKit
 import Foundation
 import SwiftUI
 import FoodFinder
@@ -453,10 +454,37 @@ final class FoodFinderCoordinator: ObservableObject {
     @Published var flow: AnalysisFlow?
     @Published private(set) var isRechecking = false
     @Published private(set) var recheckError: String?
+    /// True while the next analysis is another dish of the meal already pre-filled: on approve its items are
+    /// merged into `lastResult` and the carb entry is pre-filled with the whole meal (one entry).
+    @Published private(set) var addsToMeal = false
+    /// The prepared photos of the approved meal (all its dishes). The meal image is a collage of these, rebuilt
+    /// from the originals each time so repeated merges do not re-compress a collage.
+    private var mealPhotos: [Data] = []
+    /// True when the last merge left hand-typed carbs untouched (shown as a note under the result).
+    @Published private(set) var keptTypedCarbs = false
+    /// Photos of the analysis in progress; they join `mealPhotos` only when the user approves.
+    private var pendingPhotos: [Data] = []
+
+    /// Photos the user can still add: 5 per meal, counted across dishes.
+    var photosRemaining: Int {
+        addsToMeal ? max(0, FoodImagePreparer.maxMealPhotos - mealPhotos.count) : FoodImagePreparer.maxMealPhotos
+    }
 
     private var task: Task<Void, Never>?
 
+    func beginAddingDish() {
+        guard phase == .idle, lastResult != nil else { return }
+        addsToMeal = true
+        errorText = nil
+    }
+
+    func cancelAddingDish() { addsToMeal = false }
+
     func analyzePhotos(_ raw: [Data], into viewModel: CarbEntryViewModel) {
+        guard raw.count <= photosRemaining else {
+            errorText = String(format: NSLocalizedString("A meal can have %d photos at most.", comment: ""), FoodImagePreparer.maxMealPhotos)
+            return
+        }
         run(into: viewModel) {
             let prepared = try await FoodPhotoPipeline().prepare(raw)
             return FoodFinderRequest(prepared: prepared)
@@ -475,7 +503,7 @@ final class FoodFinderCoordinator: ObservableObject {
         guard phase == .idle else { return }
         phase = .working
         errorText = nil
-        lastResult = nil
+        if !addsToMeal { lastResult = nil; keptTypedCarbs = false }
 
         task = Task { [weak self] in
             guard let self else { return }
@@ -498,6 +526,8 @@ final class FoodFinderCoordinator: ObservableObject {
         flow = nil
         isRechecking = false
         recheckError = nil
+        addsToMeal = false
+        pendingPhotos = []
         phase = .idle
     }
 
@@ -515,8 +545,23 @@ final class FoodFinderCoordinator: ObservableObject {
 
     /// The user approved the review (with their edits, if any): pre-fill the carb entry.
     func approve(_ result: FoodAnalysisResult, into viewModel: CarbEntryViewModel) {
-        PowerPackBridge.apply(result, to: viewModel)
-        lastResult = result
+        // Another dish: the carb entry gets the whole meal (items of both), not only the new dish.
+        let isAddingDish = addsToMeal
+        let previousMeal = lastResult
+        var meal = addsToMeal ? (lastResult?.adding(result) ?? result) : result
+        mealPhotos = (addsToMeal ? mealPhotos : []) + pendingPhotos
+        pendingPhotos = []
+        // Several photos: the meal record gets one collage of all of them (the first photo alone otherwise).
+        if mealPhotos.count > 1, let collage = try? FoodImagePreparer.collageJPEG(from: mealPhotos) {
+            meal = meal.replacingImage(collage)
+        }
+        addsToMeal = false
+        // Typed carbs: when adding a dish and the carb field no longer equals what the last analysis put there,
+        // the user typed it by hand, and it stands for the whole meal.
+        let typed = isAddingDish && Self.carbsWereTyped(in: viewModel, since: previousMeal)
+        keptTypedCarbs = typed
+        PowerPackBridge.apply(meal, to: viewModel, keepingTypedCarbs: typed)
+        lastResult = meal
         flow = nil
         recheckError = nil
         phase = .idle
@@ -553,7 +598,7 @@ final class FoodFinderCoordinator: ObservableObject {
         guard phase == .idle else { return }
         phase = .working
         errorText = nil
-        lastResult = nil
+        if !addsToMeal { lastResult = nil; keptTypedCarbs = false }
 
         task = Task { [weak self, weak viewModel] in
             guard let self else { return }
@@ -562,6 +607,7 @@ final class FoodFinderCoordinator: ObservableObject {
                 request.rules = Self.currentRules()
                 let result = try await AIProviderSettings.analyze(request, keys: KeychainAPIKeyStore())
                 try Task.checkCancellation()
+                self.pendingPhotos = request.jpegImages
 
                 let suggestions = await PowerPackBridge.referenceSuggestions(for: result)
                 try Task.checkCancellation()
@@ -578,6 +624,15 @@ final class FoodFinderCoordinator: ObservableObject {
                 self.errorText = Self.message(for: error)
             }
         }
+    }
+
+    private static func carbsWereTyped(in viewModel: CarbEntryViewModel, since previous: FoodAnalysisResult?) -> Bool {
+        guard let previous, let quantity = viewModel.carbsQuantity else { return false }
+        let range = (viewModel.minAbsorptionTime / 3600)...(viewModel.maxAbsorptionTime / 3600)
+        let prefilled = MealPrefill(previous, absorptionRangeHours: range).carbsGrams
+        let current = HKQuantity(unit: viewModel.preferredCarbUnit, doubleValue: quantity)
+            .doubleValue(for: .gram())
+        return abs(current - prefilled) > 0.5
     }
 
     /// The user's confirmed rules, only while the rulebook feature is in effect.
@@ -613,7 +668,7 @@ final class FoodFinderCoordinator: ObservableObject {
             }
         }
         if let image = error as? ImagePreparationError {
-            return String(format: NSLocalizedString("A photo could not be read, or too many photos were chosen (4 at most). [%@]", comment: ""), String(describing: image))
+            return String(format: NSLocalizedString("A photo could not be read, or too many photos were chosen (%d at most). [%@]", comment: ""), FoodPhotoPipeline.defaultMaxImages, String(describing: image))
         }
         if let food = error as? FoodFinderError {
             // The case name only: it says which part of the answer was missing, without echoing the answer.
@@ -718,7 +773,9 @@ struct FoodFinderEntrySection: View {
                 VStack(spacing: 8) {
                     HStack(spacing: 8) {
                         inputButton("Photo", "camera") { showCamera = true }
+                            .disabled(coordinator.photosRemaining == 0)
                         inputButton("Library", "photo.on.rectangle") { showLibrary = true }
+                            .disabled(coordinator.photosRemaining == 0)
                     }
                     HStack(spacing: 8) {
                         inputButton("Describe", "text.cursor") { showDescription = true }
@@ -754,7 +811,7 @@ struct FoodFinderEntrySection: View {
             )
         }
         .sheet(isPresented: $showLibrary) {
-            FoodLibraryPicker(limit: 4) { images in
+            FoodLibraryPicker(limit: max(1, coordinator.photosRemaining)) { images in
                 showLibrary = false
                 if !images.isEmpty { coordinator.analyzePhotos(images, into: viewModel) }
             }
@@ -808,11 +865,33 @@ struct FoodFinderEntrySection: View {
             Text(result.mealTitle).font(.subheadline.weight(.semibold))
             Text(NSLocalizedString("The carb entry screen was pre-filled. Check every value before you continue.", comment: ""))
                 .font(.footnote)
+            if coordinator.keptTypedCarbs {
+                Text(NSLocalizedString("The carbs you typed were kept as the total for the meal. The new dish was added to the list, not to the carbs.", comment: ""))
+                    .font(.footnote.weight(.semibold))
+            }
             if let headline = FoodFinderCaution.headline(for: result) {
                 Text(headline).font(.footnote.weight(.semibold)).foregroundColor(.orange)
             }
             ForEach(FoodFinderWarningText.lines(for: result), id: \.self) { line in
                 Text(line).font(.footnote).foregroundColor(.orange)
+            }
+            if coordinator.phase == .idle {
+                if coordinator.addsToMeal {
+                    HStack {
+                        Text(String(format: NSLocalizedString("Adding a dish (%d photos left for this meal): choose Photo, Library, Describe or Barcode above.", comment: ""), coordinator.photosRemaining))
+                            .font(.footnote.weight(.semibold))
+                        Spacer()
+                        Button(NSLocalizedString("Cancel", comment: "")) { coordinator.cancelAddingDish() }
+                            .font(.footnote)
+                    }
+                } else {
+                    Button {
+                        coordinator.beginAddingDish()
+                    } label: {
+                        Label(NSLocalizedString("Add another dish to this meal", comment: ""), systemImage: "plus.circle")
+                    }
+                    .font(.footnote)
+                }
             }
         }
     }

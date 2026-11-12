@@ -34,7 +34,7 @@ enum PowerPackBridge {
     /// Pre-fills `viewModel` from a FoodFinder analysis and remembers the meal for `mealSaved`.
     /// Does nothing when editing an existing entry.
     @MainActor
-    static func apply(_ result: FoodAnalysisResult, to viewModel: CarbEntryViewModel) {
+    static func apply(_ result: FoodAnalysisResult, to viewModel: CarbEntryViewModel, keepingTypedCarbs: Bool = false) {
         guard PowerPackFlags.isActive(.foodFinder), viewModel.originalCarbEntry == nil else { return }
 
         let prefill = MealPrefill(
@@ -42,7 +42,8 @@ enum PowerPackBridge {
             absorptionRangeHours: (viewModel.minAbsorptionTime / 3600)...(viewModel.maxAbsorptionTime / 3600)
         )
 
-        if prefill.carbsGrams > 0 {
+        // A carb value the user typed is the total for the whole meal: adding a dish must not change it.
+        if prefill.carbsGrams > 0, !keepingTypedCarbs {
             viewModel.carbsQuantity = HKQuantity(unit: .gram(), doubleValue: prefill.carbsGrams)
                 .doubleValue(for: viewModel.preferredCarbUnit)
         }
