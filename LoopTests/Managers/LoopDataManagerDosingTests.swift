@@ -644,4 +644,108 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         XCTAssertEqual(insulinOnBoard?.value, 9.5)
     }
 
+
+    // MARK: - Negative IOB clamp
+
+    /// A cumulative glucose effect timeline that ramps linearly from 0 at `start` to `total` mg/dL after `rampDuration`,
+    /// then stays flat. It begins 30 minutes before `start`, so the value at "now" is exactly 0.
+    private func rampingEffect(from start: Date, total: Double, rampDuration: TimeInterval) -> [GlucoseEffect] {
+        return stride(from: -TimeInterval(minutes: 30), through: TimeInterval(hours: 6), by: TimeInterval(minutes: 5)).map { offset in
+            let fraction = min(max(offset, 0) / rampDuration, 1)
+            return GlucoseEffect(
+                startDate: start.addingTimeInterval(offset),
+                quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: total * fraction)
+            )
+        }
+    }
+
+    /// Recommended manual bolus for a 30 g meal, given an IOB and the glucose effect that IOB implies.
+    ///
+    /// - Parameters:
+    ///   - iob: IOB reported by the dose store. Negative IOB implies a rising insulin effect.
+    ///   - insulinEffectTotal: Total insulin glucose effect over 4 hours, in mg/dL. Positive for negative IOB.
+    ///   - clampEnabled: State of the Negative IOB Clamp experiment.
+    private func manualBolusFor30gMeal(iob: Double, insulinEffectTotal: Double, clampEnabled: Bool) -> Double {
+        UserDefaults.standard.negativeIOBClampEnabled = clampEnabled
+
+        // 30 g at a 10 g/U carb ratio and 45 mg/dL/U sensitivity raises glucose by 135 mg/dL over 3 hours
+        setUp(for: .flatAndStable) { doseStore, carbStore in
+            doseStore.insulinOnBoardOverride = iob
+            doseStore.glucoseEffectsOverride = self.rampingEffect(from: self.currentScenarioDate, total: insulinEffectTotal, rampDuration: .hours(4))
+            carbStore.glucoseEffectsOverride = self.rampingEffect(from: self.currentScenarioDate, total: 135, rampDuration: .hours(3))
+        }
+
+        let carbEntry = NewCarbEntry(
+            quantity: HKQuantity(unit: .gram(), doubleValue: 30),
+            startDate: now.addingTimeInterval(.minutes(1)),
+            foodType: nil,
+            absorptionTime: .hours(3)
+        )
+
+        let exp = expectation(description: #function)
+        var recommendedBolus: ManualBolusRecommendation?
+        loopDataManager.getLoopState { (_, loopState) in
+            recommendedBolus = try? loopState.recommendBolus(consideringPotentialCarbEntry: carbEntry, replacingCarbEntry: nil, considerPositiveVelocityAndRC: true)
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 10.0)
+
+        return recommendedBolus!.amount
+    }
+
+    private var currentScenarioDate: Date {
+        DosingTestScenario.flatAndStable.currentDate
+    }
+
+    func testNegativeIOBWithoutClampIncreasesMealBolus() {
+        let noInsulinOnBoard = manualBolusFor30gMeal(iob: 0, insulinEffectTotal: 0, clampEnabled: false)
+        // -1 U of IOB at 45 mg/dL/U is a predicted rise of about 45-50 mg/dL
+        let negativeInsulinOnBoard = manualBolusFor30gMeal(iob: -1.0, insulinEffectTotal: 50, clampEnabled: false)
+
+        XCTAssertGreaterThan(noInsulinOnBoard, 1.0, "A 30 g meal should produce a meaningful bolus")
+        XCTAssertGreaterThan(negativeInsulinOnBoard, noInsulinOnBoard + 0.5, "Without the clamp, negative IOB should add insulin to the recommendation")
+    }
+
+    func testNegativeIOBClampMakesMealBolusMatchZeroIOB() {
+        let noInsulinOnBoard = manualBolusFor30gMeal(iob: 0, insulinEffectTotal: 0, clampEnabled: true)
+
+        for (iob, effect) in [(-0.44, 22.0), (-1.0, 50.0), (-3.0, 150.0)] {
+            let clamped = manualBolusFor30gMeal(iob: iob, insulinEffectTotal: effect, clampEnabled: true)
+            XCTAssertEqual(clamped, noInsulinOnBoard, accuracy: 0.01, "With the clamp on, \(iob) U of IOB should be treated as 0")
+        }
+    }
+
+    func testNegativeIOBClampDoesNotChangePositiveIOB() {
+        // +1 U of IOB lowers the forecast by about 50 mg/dL
+        let clampOff = manualBolusFor30gMeal(iob: 1.0, insulinEffectTotal: -50, clampEnabled: false)
+        let clampOn = manualBolusFor30gMeal(iob: 1.0, insulinEffectTotal: -50, clampEnabled: true)
+
+        XCTAssertEqual(clampOn, clampOff, accuracy: 0.001)
+    }
+
+    func testNegativeIOBInputRowControlsForecastClamp() {
+        UserDefaults.standard.negativeIOBClampEnabled = true
+        setUp(for: .flatAndStable) { doseStore, _ in
+            doseStore.insulinOnBoardOverride = -1.0
+            doseStore.glucoseEffectsOverride = self.rampingEffect(from: self.currentScenarioDate, total: 50, rampDuration: .hours(4))
+        }
+
+        let exp = expectation(description: #function)
+        var withClamp: [GlucoseValue]?
+        var withoutClampRow: [GlucoseValue]?
+        loopDataManager.getLoopState { (_, loopState) in
+            withClamp = try? loopState.predictGlucose(using: .all)
+            withoutClampRow = try? loopState.predictGlucose(using: PredictionInputEffect.all.subtracting(.negativeIOB))
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 10.0)
+
+        let unit = HKUnit.milligramsPerDeciliter
+        let clampedEnd = withClamp!.last!.quantity.doubleValue(for: unit)
+        let unclampedEnd = withoutClampRow!.last!.quantity.doubleValue(for: unit)
+
+        // Unticking the Negative IOB row restores the rise caused by the negative insulin effect
+        XCTAssertEqual(unclampedEnd - clampedEnd, 50, accuracy: 1.0)
+    }
+
 }

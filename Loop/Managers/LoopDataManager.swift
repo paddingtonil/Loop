@@ -1242,6 +1242,35 @@ extension LoopDataManager {
         return pendingTempBasalInsulin + pendingBolusAmount
     }
 
+    /// Prevents negative IOB from raising the glucose forecast.
+    ///
+    /// The insulin effect is cumulative: net-positive IOB makes it fall over time, net-negative IOB makes it rise.
+    /// When current IOB is negative, every point after `now` is capped at the effect's value at `now`, so the
+    /// forecast treats that IOB as 0. Any real insulin drop is kept. When IOB is zero or positive, the effect is unchanged.
+    /// Only the forecast copy is clamped; the stored effect still feeds insulin counteraction (ICE) unchanged.
+    private func clampingNegativeIOB(_ effects: [GlucoseEffect]) -> [GlucoseEffect] {
+        guard UserDefaults.standard.negativeIOBClampEnabled, let iob = insulinOnBoard?.value, iob < 0 else {
+            return effects
+        }
+
+        let date = now()
+        guard let baseline = effects.last(where: { $0.startDate <= date }) ?? effects.first else {
+            return effects
+        }
+
+        let unit = HKUnit.milligramsPerDeciliter
+        let baselineValue = baseline.quantity.doubleValue(for: unit)
+
+        return effects.map { effect in
+            guard effect.startDate > baseline.startDate,
+                  effect.quantity.doubleValue(for: unit) > baselineValue
+            else {
+                return effect
+            }
+            return GlucoseEffect(startDate: effect.startDate, quantity: baseline.quantity)
+        }
+    }
+
     /// - Throws:
     ///     - LoopError.missingDataError
     ///     - LoopError.configurationError
@@ -1336,7 +1365,9 @@ extension LoopDataManager {
             if insulinEffectOverride != nil {
                 computationInsulinEffect = insulinEffectOverride
             } else {
-                computationInsulinEffect = includingPendingInsulin ? self.insulinEffectIncludingPendingInsulin : self.insulinEffect
+                let rawInsulinEffect = includingPendingInsulin ? self.insulinEffectIncludingPendingInsulin : self.insulinEffect
+                // Negative IOB is treated as 0 in the forecast: it must not raise predicted glucose.
+                computationInsulinEffect = inputs.contains(.negativeIOB) ? rawInsulinEffect.map { clampingNegativeIOB($0) } : rawInsulinEffect
             }
 
             if let insulinEffect = computationInsulinEffect {
@@ -1836,7 +1867,9 @@ extension LoopDataManager {
 
             // automaticDosingIOBLimit calculated from the user entered maxBolus
             let automaticDosingIOBLimit = maxBolus! * 2.0
-            let iobHeadroom = automaticDosingIOBLimit - self.insulinOnBoard!.value
+            // Negative IOB counts as 0, so it never inflates the headroom above the limit
+            let currentIOB = UserDefaults.standard.negativeIOBClampEnabled ? max(0, self.insulinOnBoard!.value) : self.insulinOnBoard!.value
+            let iobHeadroom = automaticDosingIOBLimit - currentIOB
 
             switch settings.automaticDosingStrategy {
             case .automaticBolus:
@@ -2212,7 +2245,8 @@ extension LoopDataManager {
         let bolusAmount = SimpleBolusCalculator.recommendedInsulin(
             mealCarbs: mealCarbs,
             manualGlucose: manualGlucose,
-            activeInsulin: HKQuantity.init(unit: .internationalUnit(), doubleValue: iob),
+            // Negative IOB counts as 0 in the bolus calculation
+            activeInsulin: HKQuantity.init(unit: .internationalUnit(), doubleValue: UserDefaults.standard.negativeIOBClampEnabled ? max(0, iob) : iob),
             carbRatioSchedule: carbRatioSchedule,
             correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule,
@@ -2267,6 +2301,7 @@ extension LoopDataManager {
                 "]",
 
                 "integralRetrospectiveCorrectionEnabled: \(UserDefaults.standard.integralRetrospectiveCorrectionEnabled)",
+                "negativeIOBClampEnabled: \(UserDefaults.standard.negativeIOBClampEnabled)",
                 
                 "retrospectiveGlucoseDiscrepancies: [",
                 "* GlucoseEffect(start, mg/dL)",

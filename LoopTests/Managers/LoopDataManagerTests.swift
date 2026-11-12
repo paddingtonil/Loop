@@ -127,7 +127,8 @@ class LoopDataManagerTests: XCTestCase {
                basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil,
                maxBolus: Double = 10,
                maxBasalRate: Double = 5.0,
-               dosingStrategy: AutomaticDosingStrategy = .tempBasalOnly)
+               dosingStrategy: AutomaticDosingStrategy = .tempBasalOnly,
+               configureStores: ((MockDoseStore, MockCarbStore) -> Void)? = nil)
     {
         let basalRateSchedule = loadBasalRateScheduleFixture("basal_profile")
         let insulinSensitivitySchedule = InsulinSensitivitySchedule(
@@ -166,7 +167,8 @@ class LoopDataManagerTests: XCTestCase {
         let carbStore = MockCarbStore(for: test)
         carbStore.insulinSensitivityScheduleApplyingOverrideHistory = insulinSensitivitySchedule
         carbStore.carbRatioSchedule = carbRatioSchedule
-        
+        configureStores?(doseStore, carbStore)
+
         let currentDate = glucoseStore.latestGlucose!.startDate
         now = currentDate
         
@@ -198,12 +200,15 @@ class LoopDataManagerTests: XCTestCase {
         let defaults = UserDefaults.standard
         let integralRetrospectiveCorrection = defaults.integralRetrospectiveCorrectionEnabled
         let glucoseBasedApplicationFactor = defaults.glucoseBasedApplicationFactorEnabled
+        let negativeIOBClamp = defaults.negativeIOBClampEnabled
         addTeardownBlock {
             defaults.integralRetrospectiveCorrectionEnabled = integralRetrospectiveCorrection
             defaults.glucoseBasedApplicationFactorEnabled = glucoseBasedApplicationFactor
+            defaults.negativeIOBClampEnabled = negativeIOBClamp
         }
         defaults.integralRetrospectiveCorrectionEnabled = false
         defaults.glucoseBasedApplicationFactorEnabled = false
+        defaults.negativeIOBClampEnabled = false
     }
 
     override func tearDownWithError() throws {

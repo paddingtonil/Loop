@@ -13,6 +13,10 @@ import LoopKit
 class MockCarbStore: CarbStoreProtocol {
     var carbHistory: [StoredCarbEntry]?
 
+    /// When set, `glucoseEffects(of:startingAt:endingAt:effectVelocities:)` returns this timeline
+    /// (used for potential carb entries) instead of an empty one
+    var glucoseEffectsOverride: [GlucoseEffect]?
+
     init(for scenario: DosingTestScenario = .flatAndStable) {
         self.scenario = scenario // The store returns different effect values based on the scenario
         self.carbHistory = loadHistoricCarbEntries(scenario: scenario)
@@ -81,7 +85,7 @@ class MockCarbStore: CarbStoreProtocol {
     }
     
     func glucoseEffects<Sample>(of samples: [Sample], startingAt start: Date, endingAt end: Date?, effectVelocities: [LoopKit.GlucoseEffectVelocity]) throws -> [LoopKit.GlucoseEffect] where Sample : LoopKit.CarbEntry {
-        return []
+        return glucoseEffectsOverride ?? []
     }
     
     func getCarbsOnBoardValues(start: Date, end: Date?, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (CarbStoreResult<[CarbValue]>) -> Void) {

@@ -72,6 +72,8 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
 
     private var totalRetrospectiveCorrection: HKQuantity?
 
+    private var currentInsulinOnBoard: Double?
+
     private var refreshContext = RefreshContext.all
 
     private var chartStartDate: Date {
@@ -131,6 +133,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         reloadGroup.enter()
         deviceManager.loopManager.getLoopState { (manager, state) in
             self.retrospectiveGlucoseDiscrepancies = state.retrospectiveGlucoseDiscrepancies
+            self.currentInsulinOnBoard = state.insulinOnBoard?.value
             totalRetrospectiveCorrection = state.totalRetrospectiveCorrection
             self.glucoseChart.setPredictedGlucoseValues(state.predictedGlucoseIncludingPendingInsulin ?? [])
 
@@ -197,7 +200,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
 
     private var eventualGlucoseDescription: String?
 
-    private var availableInputs: [PredictionInputEffect] = [.carbs, .insulin, .momentum, .retrospection, .suspend]
+    private var availableInputs: [PredictionInputEffect] = [.carbs, .insulin, .negativeIOB, .momentum, .retrospection, .suspend]
 
     private var selectedInputs = PredictionInputEffect.all
 
@@ -295,6 +298,20 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
                 subtitleText = String(format: "%@\n%@", subtitleText, retro)
             }
         
+        }
+
+        if input == .negativeIOB {
+            let status: String
+            if !UserDefaults.standard.negativeIOBClampEnabled {
+                status = NSLocalizedString("Experiment is Off (Settings → Algorithm Experiments)", comment: "Status on the negative IOB clamp forecast row when the experiment is disabled")
+            } else if let iob = currentInsulinOnBoard {
+                status = iob < 0
+                    ? String(format: NSLocalizedString("IOB %1$.2f U counted as 0", comment: "Status when negative IOB is being clamped. (1: IOB in units)"), iob)
+                    : String(format: NSLocalizedString("IOB %1$.2f U is not negative, no change", comment: "Status when IOB is not negative. (1: IOB in units)"), iob)
+            } else {
+                status = NSLocalizedString("IOB unavailable", comment: "Status when IOB is unknown")
+            }
+            subtitleText = String(format: "%@\n%@", subtitleText, status)
         }
 
         cell.subtitleLabel?.text = subtitleText

@@ -41,6 +41,7 @@ public struct ExperimentRow: View {
 public struct ExperimentsSettingsView: View {
     @AppStorage(UserDefaults.Key.GlucoseBasedApplicationFactorEnabled.rawValue) private var isGlucoseBasedApplicationFactorEnabled = false
     @AppStorage(UserDefaults.Key.IntegralRetrospectiveCorrectionEnabled.rawValue) private var isIntegralRetrospectiveCorrectionEnabled = false
+    @AppStorage(UserDefaults.Key.NegativeIOBClampEnabled.rawValue) private var isNegativeIOBClampEnabled = false
     var automaticDosingStrategy: AutomaticDosingStrategy
 
     public var body: some View {
@@ -70,6 +71,11 @@ public struct ExperimentsSettingsView: View {
                         name: NSLocalizedString("Integral Retrospective Correction", comment: "Title of integral retrospective correction experiment"),
                         enabled: isIntegralRetrospectiveCorrectionEnabled)
                 }
+                NavigationLink(destination: NegativeIOBClampSelectionView(isNegativeIOBClampEnabled: $isNegativeIOBClampEnabled)) {
+                    ExperimentRow(
+                        name: NSLocalizedString("Negative IOB Clamp", comment: "Title of negative IOB clamp experiment"),
+                        enabled: isNegativeIOBClampEnabled)
+                }
                 Spacer()
             }
             .padding()
@@ -77,12 +83,45 @@ public struct ExperimentsSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+public struct NegativeIOBClampSelectionView: View {
+    @Binding var isNegativeIOBClampEnabled: Bool
 
+    public var body: some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                Text(NSLocalizedString("Negative IOB Clamp", comment: "Title for negative IOB clamp experiment description"))
+                    .font(.headline)
+                    .padding(.bottom, 20)
+
+                Divider()
+
+                Text(NSLocalizedString("When insulin on board (IOB) is negative, for example after a long period of suspended or reduced basal delivery, Loop counts it as 0 instead.\n\nThis applies to the glucose forecast, so negative IOB no longer raises the predicted glucose and no longer reduces the recommended bolus. It also applies to the simple bolus calculation and to the automatic dosing IOB limit.\n\nThe IOB shown in the app and uploaded to Nightscout is not changed.", comment: "Description of Negative IOB Clamp toggle."))
+                    .foregroundColor(.secondary)
+                Divider()
+
+                Toggle(NSLocalizedString("Enable Negative IOB Clamp", comment: "Title for Negative IOB Clamp toggle"), isOn: $isNegativeIOBClampEnabled)
+                    .padding(.top, 20)
+            }
+            .padding()
+        }
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
 
 extension UserDefaults {
     fileprivate enum Key: String {
         case GlucoseBasedApplicationFactorEnabled = "com.loopkit.algorithmExperiments.glucoseBasedApplicationFactorEnabled"
         case IntegralRetrospectiveCorrectionEnabled = "com.loopkit.algorithmExperiments.integralRetrospectiveCorrectionEnabled"
+        case NegativeIOBClampEnabled = "com.loopkit.algorithmExperiments.negativeIOBClampEnabled"
+    }
+
+    var negativeIOBClampEnabled: Bool {
+        get {
+            bool(forKey: Key.NegativeIOBClampEnabled.rawValue) as Bool
+        }
+        set {
+            set(newValue, forKey: Key.NegativeIOBClampEnabled.rawValue)
+        }
     }
 
     var glucoseBasedApplicationFactorEnabled: Bool {
