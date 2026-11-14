@@ -154,7 +154,7 @@ enum PowerPackBridge {
     /// shared record. If Health refuses, the record is kept so the removal can be retried.
     static func carbEntryDeleted(_ entry: StoredCarbEntry) {
         // A delayed entry removed on its own leaves its meal untouched; only the link goes.
-        if BolusProFPU.isFPUEntry(foodType: entry.foodType) { forgetFPULink(for: entry) }
+        if BolusProFPU.isFPUEntry(foodType: entry.foodType, startDate: entry.startDate) { forgetFPULink(for: entry) }
         guard let syncIdentifier = entry.syncIdentifier,
               let directory = SharedContainer.directory() else { return }
         let store = SharedMealStore(directory: directory)

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import BolusPro
 import HealthKit
 import Intents
 import LoopCore
@@ -191,10 +192,22 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
 
         if shouldUpdateCarbs {
             reloadGroup.enter()
-            deviceManager.carbStore.getTotalCarbs(since: midnight) { (result) in
+            // The daily total leaves out the delayed fat/protein (FPU) entries; they still count in the prediction.
+            deviceManager.carbStore.getCarbStatus(start: midnight, end: nil, effectVelocities: nil) { (result) in
                 switch result {
-                case .success(let total):
-                    carbTotal = total
+                case .success(let statuses):
+                    let records = statuses.map { status in
+                        BolusProCarbRecord(
+                            grams: status.entry.quantity.doubleValue(for: .gram()),
+                            startDate: status.entry.startDate,
+                            absorptionTime: status.entry.absorptionTime ?? 0,
+                            foodType: status.entry.foodType
+                        )
+                    }
+                    carbTotal = CarbValue(
+                        startDate: statuses.map { $0.entry.startDate }.min() ?? midnight,
+                        value: BolusProDailyTotal.grams(of: records, since: midnight)
+                    )
                 case .failure(let error):
                     self.log.error("CarbStore failed to get total carbs: %{public}@", String(describing: error))
                     retryContext.update(with: .carbs)
