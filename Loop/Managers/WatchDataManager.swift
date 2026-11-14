@@ -490,7 +490,8 @@ extension WatchDataManager: WCSessionDelegate {
     }
 
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
-        assertionFailure("We currently don't expect any userInfo messages transferred from the watch side")
+        // Unsupported background messages must not interrupt Loop, even in debug builds.
+        log.error("Ignoring unexpected userInfo message transferred from the watch side")
     }
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
