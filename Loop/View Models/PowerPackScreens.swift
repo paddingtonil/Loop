@@ -6,6 +6,7 @@
 //  Nothing here changes a value without the user's tap.
 //
 
+import AVFoundation
 import HealthKit
 import Foundation
 import SwiftUI
@@ -752,6 +753,8 @@ struct FoodFinderEntrySection: View {
     @StateObject private var coordinator = FoodFinderCoordinator()
 
     @State private var showCamera = false
+    @State private var isRequestingCameraAccess = false
+    @State private var cameraError: String?
     @State private var showLibrary = false
     @State private var showDescription = false
     @State private var showBarcode = false
@@ -772,8 +775,8 @@ struct FoodFinderEntrySection: View {
                 // Four buttons do not fit one row on a narrow phone, so two rows of two.
                 VStack(spacing: 8) {
                     HStack(spacing: 8) {
-                        inputButton("Photo", "camera") { showCamera = true }
-                            .disabled(coordinator.photosRemaining == 0)
+                        inputButton("Photo", "camera") { openCamera() }
+                            .disabled(coordinator.photosRemaining == 0 || isRequestingCameraAccess)
                         inputButton("Library", "photo.on.rectangle") { showLibrary = true }
                             .disabled(coordinator.photosRemaining == 0)
                     }
@@ -784,6 +787,10 @@ struct FoodFinderEntrySection: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(coordinator.phase != .idle)
+            }
+
+            if let cameraError {
+                Text(cameraError).font(.footnote).foregroundColor(.red)
             }
 
             if let errorText = coordinator.errorText {
@@ -804,7 +811,7 @@ struct FoodFinderEntrySection: View {
         .padding(12)
         .background(CardBackground())
         .padding(.horizontal)
-        .sheet(isPresented: $showCamera) {
+        .fullScreenCover(isPresented: $showCamera) {
             FoodCameraView(
                 onImage: { data in showCamera = false; coordinator.analyzePhotos([data], into: viewModel) },
                 onCancel: { showCamera = false }
@@ -846,6 +853,37 @@ struct FoodFinderEntrySection: View {
             }
             .navigationViewStyle(.stack)
             .interactiveDismissDisabled(coordinator.isRechecking)
+        }
+    }
+
+    @MainActor
+    private func openCamera() {
+        guard !isRequestingCameraAccess else { return }
+        cameraError = nil
+        guard FoodCameraView.isAvailable else {
+            cameraError = NSLocalizedString("No camera is available. Use Library to choose a meal photo.", comment: "Meal camera unavailable")
+            return
+        }
+
+        isRequestingCameraAccess = true
+        Task { @MainActor in
+            defer { isRequestingCameraAccess = false }
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            let authorized: Bool
+            if status == .notDetermined {
+                authorized = await AVCaptureDevice.requestAccess(for: .video)
+            } else {
+                authorized = status == .authorized
+            }
+
+            // Create the picker only after permission is resolved, so capture can start.
+            if authorized {
+                showCamera = true
+            } else if status == .restricted {
+                cameraError = NSLocalizedString("Camera access is restricted on this device. Use Library to choose a meal photo.", comment: "Meal camera restricted")
+            } else {
+                cameraError = NSLocalizedString("Camera access is off. Enable Camera for Loop in Settings, or use Library to choose a meal photo.", comment: "Meal camera permission denied")
+            }
         }
     }
 

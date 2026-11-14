@@ -10302,6 +10302,12 @@
         }
       }
     },
+    "Camera access is off. Enable Camera for Loop in Settings, or use Library to choose a meal photo." : {
+      "comment" : "Meal camera permission denied"
+    },
+    "Camera access is restricted on this device. Use Library to choose a meal photo." : {
+      "comment" : "Meal camera restricted"
+    },
     "Cancel" : {
       "comment" : "Button label for cancel\nButton text to cancel\nCancel button for reset loop alert\nCancel export button title\nThe title of the cancel action in an action sheet",
       "localizations" : {
@@ -28547,6 +28553,9 @@
           }
         }
       }
+    },
+    "No camera is available. Use Library to choose a meal photo." : {
+      "comment" : "Meal camera unavailable"
     },
     "No connected devices, or failure during device connection" : {
       "comment" : "The error message displayed for device connection errors.",
