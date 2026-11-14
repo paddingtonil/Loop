@@ -98,8 +98,7 @@ class MockCarbStore: CarbStoreProtocol {
     
     func getTotalCarbs(since start: Date, completion: @escaping (CarbStoreResult<CarbValue>) -> Void) {
         completion(.failure(.notConfigured))
-    }
-    
+    }    
     func deleteCarbEntry(_ entry: StoredCarbEntry, completion: @escaping (CarbStoreResult<Bool>) -> Void) {
         completion(.failure(.notConfigured))
     }
