@@ -17,7 +17,9 @@ import Combine
 
 final class DeviceDataManager {
 
-    private let queue = DispatchQueue(label: "com.loopkit.DeviceManagerQueue", qos: .utility)
+    // Pump command sessions run at userInitiated QoS and may wait for delegate confirmations.
+    // Match their priority so those sessions do not wait on utility-priority delegate work.
+    private let queue = DispatchQueue(label: "com.loopkit.DeviceManagerQueue", qos: .userInitiated)
     
     private let log = DiagnosticLog(category: "DeviceDataManager")
 
